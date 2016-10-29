@@ -1,0 +1,5 @@
+game_client
+game_server
+standalone
+*.o
+*.pyc

@@ -7,7 +7,7 @@
 #define MAP_SIZE 4096
 
 #define SCANNER_RADIUS 100
-#define CAPTURE_RADIUS 20
+#define CAPTURE_RADIUS 15
 
 #define DEFAULT_SPAWN_TIME (15 * 60)
 

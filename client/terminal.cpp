@@ -46,7 +46,9 @@ void Terminal::QuitCallback(int)
 void Terminal::TerminalReset()
 {
 	tcsetattr(0, TCSAFLUSH, &m_terminal->m_startupTerminalSettings);
+	m_terminal->EndOututQueue();
 	m_terminal->Output("\033[?1049l");
+	m_terminal->Output("\033[0m");
 	m_terminal->ShowCursor();
 }
 
@@ -78,8 +80,20 @@ void Terminal::UpdateWindowSize()
 }
 
 
+void Terminal::BeginOututQueue()
+{
+	m_queue = true;
+}
+
+
 void Terminal::Output(const string& contents)
 {
+	if (m_queue)
+	{
+		m_queueContents += contents;
+		return;
+	}
+
 	const char* ptr = contents.c_str();
 	size_t len = contents.size();
 	while (len > 0)
@@ -97,9 +111,23 @@ void Terminal::Output(const string& contents)
 }
 
 
+void Terminal::EndOututQueue()
+{
+	m_queue = false;
+	Output(m_queueContents);
+	m_queueContents = "";
+}
+
+
 void Terminal::ClearScreen()
 {
 	Output("\033[2J");
+}
+
+
+void Terminal::ClearLine()
+{
+	Output("\033[K");
 }
 
 
@@ -123,6 +151,14 @@ void Terminal::SetCursorPosition(size_t x, size_t y)
 }
 
 
+void Terminal::SetColor(uint8_t foreground, uint8_t background)
+{
+	char cmd[32];
+	sprintf(cmd, "\033[38;5;%dm\033[48;5;%dm", foreground, background);
+	Output(cmd);
+}
+
+
 string Terminal::GetInput()
 {
 	fd_set readfds;
@@ -141,4 +177,28 @@ string Terminal::GetInput()
 	if (result <= 0)
 		return "";
 	return string(buf, (size_t)result);
+}
+
+
+bool Terminal::IsInputUpMovement(const string& input)
+{
+	return (input == "\033[A") || (input == "w") || (input == "W") || (input == "k") || (input == "K");
+}
+
+
+bool Terminal::IsInputDownMovement(const string& input)
+{
+	return (input == "\033[B") || (input == "s") || (input == "S") || (input == "j") || (input == "J");
+}
+
+
+bool Terminal::IsInputLeftMovement(const string& input)
+{
+	return (input == "\033[D") || (input == "a") || (input == "A") || (input == "h") || (input == "H");
+}
+
+
+bool Terminal::IsInputRightMovement(const string& input)
+{
+	return (input == "\033[C") || (input == "d") || (input == "D") || (input == "l") || (input == "L");
 }

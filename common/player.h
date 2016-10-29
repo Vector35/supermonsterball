@@ -4,6 +4,8 @@
 #include "monster.h"
 #include "item.h"
 
+#define MIN_MOVEMENT_INTERVAL 100
+
 enum BallThrowResult
 {
 	THROW_RESULT_BREAK_OUT_AFTER_ONE = 1,
@@ -19,6 +21,8 @@ public:
 	virtual std::string GetName() = 0;
 	virtual uint32_t GetLevel() = 0;
 	virtual uint32_t GetTotalExperience() = 0;
+	uint32_t GetTotalExperienceNeededForCurrentLevel();
+	uint32_t GetTotalExperienceNeededForNextLevel();
 	virtual uint32_t GetPowder() = 0;
 
 	virtual std::vector<std::shared_ptr<Monster>> GetMonsters() = 0;

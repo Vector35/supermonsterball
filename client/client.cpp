@@ -2,6 +2,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <time.h>
+#include <chrono>
 #include "client.h"
 #include "map.h"
 
@@ -20,6 +21,7 @@ void GameLoop(Player* player)
 	map.Paint();
 
 	time_t lastForcedRefresh = time(NULL);
+	chrono::steady_clock::time_point lastMovement = chrono::steady_clock::now();
 
 	while (!term->HasQuit())
 	{
@@ -43,37 +45,48 @@ void GameLoop(Player* player)
 		if ((input == "q") || (input == "Q"))
 			break;
 
-		if (input == "\033[A")
+		chrono::steady_clock::time_point curTime = chrono::steady_clock::now();
+		if (chrono::duration_cast<chrono::milliseconds>(curTime - lastMovement).count() >= MIN_MOVEMENT_INTERVAL)
 		{
-			int32_t x = player->GetLastLocationX();
-			int32_t y = player->GetLastLocationY() - 1;
-			player->ReportLocation(x, y);
-			map.EnsurePlayerVisible();
-			map.Paint();
+			if (term->IsInputUpMovement(input))
+			{
+				lastMovement = chrono::steady_clock::now();
+				int32_t x = player->GetLastLocationX();
+				int32_t y = player->GetLastLocationY() - 1;
+				player->ReportLocation(x, y);
+				map.EnsurePlayerVisible();
+				map.Paint();
+			}
+			if (term->IsInputDownMovement(input))
+			{
+				lastMovement = chrono::steady_clock::now();
+				int32_t x = player->GetLastLocationX();
+				int32_t y = player->GetLastLocationY() + 1;
+				player->ReportLocation(x, y);
+				map.EnsurePlayerVisible();
+				map.Paint();
+			}
 		}
-		if (input == "\033[B")
+		if (chrono::duration_cast<chrono::milliseconds>(curTime - lastMovement).count() >= (MIN_MOVEMENT_INTERVAL / 2))
 		{
-			int32_t x = player->GetLastLocationX();
-			int32_t y = player->GetLastLocationY() + 1;
-			player->ReportLocation(x, y);
-			map.EnsurePlayerVisible();
-			map.Paint();
-		}
-		if (input == "\033[C")
-		{
-			int32_t x = player->GetLastLocationX() + 1;
-			int32_t y = player->GetLastLocationY();
-			player->ReportLocation(x, y);
-			map.EnsurePlayerVisible();
-			map.Paint();
-		}
-		if (input == "\033[D")
-		{
-			int32_t x = player->GetLastLocationX() - 1;
-			int32_t y = player->GetLastLocationY();
-			player->ReportLocation(x, y);
-			map.EnsurePlayerVisible();
-			map.Paint();
+			if (term->IsInputLeftMovement(input))
+			{
+				lastMovement = chrono::steady_clock::now();
+				int32_t x = player->GetLastLocationX() - 1;
+				int32_t y = player->GetLastLocationY();
+				player->ReportLocation(x, y);
+				map.EnsurePlayerVisible();
+				map.Paint();
+			}
+			if (term->IsInputRightMovement(input))
+			{
+				lastMovement = chrono::steady_clock::now();
+				int32_t x = player->GetLastLocationX() + 1;
+				int32_t y = player->GetLastLocationY();
+				player->ReportLocation(x, y);
+				map.EnsurePlayerVisible();
+				map.Paint();
+			}
 		}
 	}
 }

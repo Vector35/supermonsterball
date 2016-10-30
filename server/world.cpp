@@ -174,6 +174,8 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 	uint32_t pick = (uint32_t)((n >> 16) % (uint64_t)total);
 	uint32_t iv = (uint32_t)(ivBase >> 16) & 0xfff;
 	uint32_t level = (uint32_t)((levelBase >> 16) % trainerLevel) + 1;
+	if (level > 30)
+		level = 30;
 
 	// Find the chosen spawn out of the possible spawns and return result
 	uint32_t cur = 0;

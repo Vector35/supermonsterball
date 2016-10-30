@@ -14,6 +14,9 @@ InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 	m_y = 0;
 
 	m_inventory[ITEM_STANDARD_BALL] = 30;
+	m_inventory[ITEM_SUPER_BALL] = 5;
+	m_inventory[ITEM_UBER_BALL] = 3;
+	m_inventory[ITEM_MEGA_SEED] = 10;
 }
 
 
@@ -39,6 +42,15 @@ uint32_t InMemoryPlayer::GetTreatsForSpecies(MonsterSpecies* species)
 {
 	auto i = m_treats.find(species->GetIndex());
 	if (i == m_treats.end())
+		return 0;
+	return i->second;
+}
+
+
+uint32_t InMemoryPlayer::GetItemCount(ItemType type)
+{
+	auto i = m_inventory.find(type);
+	if (i == m_inventory.end())
 		return 0;
 	return i->second;
 }
@@ -95,25 +107,74 @@ shared_ptr<Monster> InMemoryPlayer::StartWildEncounter(int32_t x, int32_t y)
 }
 
 
-void InMemoryPlayer::GiveSeed()
+bool InMemoryPlayer::GiveSeed()
 {
 	if (!m_encounter)
-		return;
+		return false;
+	if (m_seedGiven)
+		return false;
 	if (!UseItem(ITEM_MEGA_SEED))
-		return;
+		return false;
 	m_seedGiven = true;
+	return true;
+}
+
+
+void InMemoryPlayer::EndEncounter(bool caught)
+{
+	m_encounter.reset();
 }
 
 
 BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 {
 	if (!m_encounter)
-		return THROW_RESULT_RUN_AWAY;
+		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
 	if ((type != ITEM_STANDARD_BALL) && (type != ITEM_SUPER_BALL) && (type != ITEM_UBER_BALL))
-		return THROW_RESULT_RUN_AWAY;
+	{
+		EndEncounter(false);
+		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
+	}
 
 	if (!UseItem(type))
-		return THROW_RESULT_RUN_AWAY;
+	{
+		EndEncounter(false);
+		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
+	}
 
-	return THROW_RESULT_CATCH;
+	switch (rand() % 15)
+	{
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+		EndEncounter(true);
+		return THROW_RESULT_CATCH;
+	case 6:
+	case 7:
+		return THROW_RESULT_BREAK_OUT_AFTER_ONE;
+	case 8:
+	case 9:
+		return THROW_RESULT_BREAK_OUT_AFTER_TWO;
+	case 10:
+	case 11:
+		return THROW_RESULT_BREAK_OUT_AFTER_THREE;
+	case 12:
+		EndEncounter(true);
+		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
+	case 13:
+		EndEncounter(true);
+		return THROW_RESULT_RUN_AWAY_AFTER_TWO;
+	default:
+		EndEncounter(true);
+		return THROW_RESULT_RUN_AWAY_AFTER_THREE;
+	}
+}
+
+
+void InMemoryPlayer::RunFromEncounter()
+{
+	m_encounter.reset();
 }

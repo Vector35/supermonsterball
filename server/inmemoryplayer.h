@@ -14,6 +14,8 @@ class InMemoryPlayer: public Player
 	std::shared_ptr<Monster> m_encounter;
 	bool m_seedGiven;
 
+	void EndEncounter(bool caught);
+
 public:
 	InMemoryPlayer(const std::string& name);
 
@@ -28,6 +30,7 @@ public:
 	virtual uint32_t GetTreatsForSpecies(MonsterSpecies* species) override;
 
 	virtual std::map<ItemType, uint32_t> GetInventory() override { return m_inventory; }
+	virtual uint32_t GetItemCount(ItemType type) override;
 	virtual bool UseItem(ItemType type) override;
 
 	virtual int32_t GetLastLocationX() override { return m_x; }
@@ -36,6 +39,7 @@ public:
 	virtual std::vector<MonsterSighting> GetMonstersInRange() override;
 
 	virtual std::shared_ptr<Monster> StartWildEncounter(int32_t x, int32_t y) override;
-	virtual void GiveSeed() override;
+	virtual bool GiveSeed() override;
 	virtual BallThrowResult ThrowBall(ItemType type) override;
+	virtual void RunFromEncounter() override;
 };

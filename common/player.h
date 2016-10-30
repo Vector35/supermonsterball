@@ -12,7 +12,9 @@ enum BallThrowResult
 	THROW_RESULT_BREAK_OUT_AFTER_TWO = 2,
 	THROW_RESULT_BREAK_OUT_AFTER_THREE = 3,
 	THROW_RESULT_CATCH = 4,
-	THROW_RESULT_RUN_AWAY = 5
+	THROW_RESULT_RUN_AWAY_AFTER_ONE = 5,
+	THROW_RESULT_RUN_AWAY_AFTER_TWO = 6,
+	THROW_RESULT_RUN_AWAY_AFTER_THREE = 7,
 };
 
 class Player
@@ -31,6 +33,7 @@ public:
 	virtual uint32_t GetTreatsForSpecies(MonsterSpecies* species) = 0;
 
 	virtual std::map<ItemType, uint32_t> GetInventory() = 0;
+	virtual uint32_t GetItemCount(ItemType type) = 0;
 	virtual bool UseItem(ItemType type) = 0;
 
 	virtual int32_t GetLastLocationX() = 0;
@@ -39,6 +42,7 @@ public:
 	virtual std::vector<MonsterSighting> GetMonstersInRange() = 0;
 
 	virtual std::shared_ptr<Monster> StartWildEncounter(int32_t x, int32_t y) = 0;
-	virtual void GiveSeed() = 0;
+	virtual bool GiveSeed() = 0;
 	virtual BallThrowResult ThrowBall(ItemType type) = 0;
+	virtual void RunFromEncounter() = 0;
 };

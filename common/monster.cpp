@@ -42,7 +42,7 @@ void MonsterSpecies::Init()
 	Move* chomp = new Move("Chomp", Normal, ThreeChargeMove, 80, 23);
 
 	Move* leafCutter = new Move("Leaf Cutter", Grass, QuickMove, 0, 0);
-	Move* leafCutter = new Move("Twig Twirl", Grass, QuickMove, 0, 0);
+	Move* twigTwirl = new Move("Twig Twirl", Grass, QuickMove, 0, 0);
 
 	Move* flare = new Move("Flare", Fire, QuickMove, 60, 15);
 	Move* fireball = new Move("Fireball", Fire, QuickMove, 80, 20);

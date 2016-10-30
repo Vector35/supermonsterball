@@ -17,6 +17,13 @@ enum BallThrowResult
 	THROW_RESULT_RUN_AWAY_AFTER_THREE = 7,
 };
 
+struct LevelUpItem
+{
+	ItemType type;
+	uint32_t count;
+	LevelUpItem(ItemType t, uint32_t c): type(t), count(c) {}
+};
+
 class Player
 {
 public:
@@ -25,6 +32,7 @@ public:
 	virtual uint32_t GetTotalExperience() = 0;
 	uint32_t GetTotalExperienceNeededForCurrentLevel();
 	uint32_t GetTotalExperienceNeededForNextLevel();
+	std::vector<LevelUpItem> GetItemsOnLevelUp(uint32_t level);
 	virtual uint32_t GetPowder() = 0;
 
 	virtual std::vector<std::shared_ptr<Monster>> GetMonsters() = 0;

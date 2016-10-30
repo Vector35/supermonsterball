@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <set>
 #include "inmemoryplayer.h"
 #include "world.h"
 
@@ -84,6 +85,25 @@ vector<MonsterSighting> InMemoryPlayer::GetMonstersInRange()
 		shared_ptr<Monster> monster = World::GetWorld()->GetMonsterAt(i.x, i.y, m_level);
 		if (monster)
 		{
+			// Ensure the monster hasn't already been encountered
+			bool valid = true;
+			auto j = m_recentEncounters.find(monster->GetSpawnTime());
+			if (j != m_recentEncounters.end())
+			{
+				for (auto& k : j->second)
+				{
+					if ((k->GetSpawnX() == i.x) && (k->GetSpawnY() == i.y))
+					{
+						// Already finished encounter with this one
+						valid = false;
+						break;
+					}
+				}
+			}
+
+			if (!valid)
+				continue;
+
 			MonsterSighting sighting;
 			sighting.species = monster->GetSpecies();
 			sighting.x = i.x;
@@ -120,9 +140,39 @@ bool InMemoryPlayer::GiveSeed()
 }
 
 
-void InMemoryPlayer::EndEncounter(bool caught)
+void InMemoryPlayer::EndEncounter(bool caught, ItemType ball)
 {
+	if (!m_encounter)
+		return;
+
+	m_encounter->SetCapture(caught, ball);
+	m_recentEncounters[m_encounter->GetSpawnTime()].push_back(m_encounter);
+
+	// Clear out old encounters
+	set<uint32_t> toDelete;
+	for (auto& i : m_recentEncounters)
+	{
+		if (i.first < (m_encounter->GetSpawnTime() - 2))
+			toDelete.insert(i.first);
+	}
+	for (auto i : toDelete)
+	{
+		m_recentEncounters.erase(i);
+	}
+
 	m_encounter.reset();
+}
+
+
+void InMemoryPlayer::EarnExperience(uint32_t xp)
+{
+	m_xp += xp;
+	while ((m_level < 40) && (m_xp >= GetTotalExperienceNeededForNextLevel()))
+	{
+		for (auto& i : GetItemsOnLevelUp(m_level))
+			m_inventory[i.type] += i.count;
+		m_level++;
+	}
 }
 
 
@@ -150,7 +200,14 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 	case 3:
 	case 4:
 	case 5:
-		EndEncounter(true);
+		if (GetNumberCaptured(m_encounter->GetSpecies()) == 0)
+			EarnExperience(600);
+		else
+			EarnExperience(100);
+		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
+		m_captured[m_encounter->GetSpecies()->GetIndex()]++;
+		m_monsters.push_back(m_encounter);
+		EndEncounter(true, type);
 		return THROW_RESULT_CATCH;
 	case 6:
 	case 7:
@@ -162,13 +219,16 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 	case 11:
 		return THROW_RESULT_BREAK_OUT_AFTER_THREE;
 	case 12:
-		EndEncounter(true);
+		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
+		EndEncounter(false, type);
 		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
 	case 13:
-		EndEncounter(true);
+		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
+		EndEncounter(false, type);
 		return THROW_RESULT_RUN_AWAY_AFTER_TWO;
 	default:
-		EndEncounter(true);
+		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
+		EndEncounter(false, type);
 		return THROW_RESULT_RUN_AWAY_AFTER_THREE;
 	}
 }
@@ -176,5 +236,5 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 
 void InMemoryPlayer::RunFromEncounter()
 {
-	m_encounter.reset();
+	EndEncounter(false);
 }

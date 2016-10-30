@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <inttypes.h>
+#include "item.h"
 
 enum Element
 {
@@ -109,9 +110,13 @@ class Monster
 	uint32_t m_currentHP;
 	uint32_t m_attackIV, m_defenseIV, m_staminaIV;
 	uint32_t m_level;
+	int32_t m_x, m_y;
+	uint32_t m_spawnTime;
+	bool m_captured;
+	ItemType m_ball;
 
 public:
-	Monster(MonsterSpecies* species);
+	Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTime);
 
 	MonsterSpecies* GetSpecies() const { return m_species; }
 	uint32_t GetAttackIV() const { return m_attackIV; }
@@ -119,9 +124,15 @@ public:
 	uint32_t GetStaminaIV() const { return m_staminaIV; }
 	uint32_t GetLevel() const { return m_level; }
 	uint32_t GetCurrentHP() const { return m_currentHP; }
+	int32_t GetSpawnX() const { return m_x; }
+	int32_t GetSpawnY() const { return m_y; }
+	uint32_t GetSpawnTime() const { return m_spawnTime; }
+	bool WasCaptured() const { return m_captured; }
+	ItemType GetBallType() const { return m_ball; }
 
 	void SetIV(uint32_t attack, uint32_t def, uint32_t stamina);
 	void SetLevel(uint32_t level);
+	void SetCapture(bool captured, ItemType ball);
 	void ResetHP();
 };
 

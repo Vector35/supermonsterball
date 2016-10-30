@@ -10,11 +10,13 @@ class InMemoryPlayer: public Player
 	std::map<ItemType, uint32_t> m_inventory;
 	std::map<uint32_t, uint32_t> m_seen, m_captured;
 	std::map<uint32_t, uint32_t> m_treats;
+	std::map<uint32_t, std::vector<std::shared_ptr<Monster>>> m_recentEncounters;
 	int32_t m_x, m_y;
 	std::shared_ptr<Monster> m_encounter;
 	bool m_seedGiven;
 
-	void EndEncounter(bool caught);
+	void EndEncounter(bool caught, ItemType ball = ITEM_STANDARD_BALL);
+	void EarnExperience(uint32_t xp);
 
 public:
 	InMemoryPlayer(const std::string& name);

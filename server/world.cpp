@@ -183,7 +183,7 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 	{
 		if (pick < (cur + i.weight))
 		{
-			std::shared_ptr<Monster> monster(new Monster(i.species));
+			std::shared_ptr<Monster> monster(new Monster(i.species, x, y, hour));
 			monster->SetIV((iv >> 8) & 0xf, (iv >> 4) & 0xf, iv & 0xf);
 			monster->SetLevel(level);
 			monster->ResetHP();

@@ -596,12 +596,15 @@ vector<Element> MonsterSpecies::GetTypes() const
 }
 
 
-Monster::Monster(MonsterSpecies* species): m_species(species)
+Monster::Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTime): m_species(species),
+	m_x(x), m_y(y), m_spawnTime(spawnTime)
 {
 	m_name = species->GetName();
 	m_currentHP = 0;
 	m_attackIV = m_defenseIV = m_staminaIV = 0;
 	m_level = 1;
+	m_captured = false;
+	m_ball = ITEM_STANDARD_BALL;
 }
 
 
@@ -616,6 +619,13 @@ void Monster::SetIV(uint32_t attack, uint32_t def, uint32_t stamina)
 void Monster::SetLevel(uint32_t level)
 {
 	m_level = level;
+}
+
+
+void Monster::SetCapture(bool captured, ItemType ball)
+{
+	m_captured = captured;
+	m_ball = ball;
 }
 
 

@@ -174,12 +174,23 @@ void GameLoop(Player* player)
 				continue;
 
 			// Transition to encounter
-			Encounter(player, i.x, i.y);
+			shared_ptr<Monster> caught = Encounter(player, i.x, i.y);
 
 			// Repaint map after encounter
 			lastForcedRefresh = time(NULL);
 			map.SetMonsters(player->GetMonstersInRange());
 			map.Paint();
+
+			if (caught)
+			{
+				// Caught a monster, show the details
+				ShowMonsterDetails(player, caught);
+
+				// Repaint map after details
+				lastForcedRefresh = time(NULL);
+				map.SetMonsters(player->GetMonstersInRange());
+				map.Paint();
+			}
 			break;
 		}
 	}
@@ -564,14 +575,14 @@ static void AnimateCatchResult(shared_ptr<Monster> monster, size_t x, size_t y, 
 }
 
 
-void Encounter(Player* player, int32_t x, int32_t y)
+shared_ptr<Monster> Encounter(Player* player, int32_t x, int32_t y)
 {
 	Terminal* term = Terminal::GetTerminal();
 
 	// Get the monster object that we are going to encounter
 	shared_ptr<Monster> monster = player->StartWildEncounter(x, y);
 	if (!monster)
-		return;
+		return nullptr;
 
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
@@ -604,7 +615,7 @@ void Encounter(Player* player, int32_t x, int32_t y)
 						player->RunFromEncounter();
 						ShowEncounterText(encounterBoxX, encounterBoxY, encounterBoxWidth, encounterBoxHeight,
 							"You don't have the balls to catch it.");
-						return;
+						return nullptr;
 					}
 				}
 			}
@@ -618,7 +629,7 @@ void Encounter(Player* player, int32_t x, int32_t y)
 			player->RunFromEncounter();
 			ShowEncounterText(encounterBoxX, encounterBoxY, encounterBoxWidth, encounterBoxHeight,
 				"You ran away safely.");
-			return;
+			return nullptr;
 		}
 		else if (option == 1)
 		{
@@ -685,6 +696,7 @@ void Encounter(Player* player, int32_t x, int32_t y)
 		else if (option == 0)
 		{
 			// Throw ball
+			uint32_t alreadyCaught = player->GetNumberCaptured(monster->GetSpecies());
 			BallThrowResult result = player->ThrowBall(ball);
 
 			string ballImage = "⚪";
@@ -714,26 +726,39 @@ void Encounter(Player* player, int32_t x, int32_t y)
 			case THROW_RESULT_CATCH:
 				ShowEncounterText(encounterBoxX, encounterBoxY, encounterBoxWidth, encounterBoxHeight,
 					monster->GetSpecies()->GetName() + " was caught!");
+				if (alreadyCaught == 0)
+				{
+					ShowEncounterText(encounterBoxX, encounterBoxY, encounterBoxWidth, encounterBoxHeight,
+						player->GetName() + " earned 600 XP.");
+				}
+				else
+				{
+					ShowEncounterText(encounterBoxX, encounterBoxY, encounterBoxWidth, encounterBoxHeight,
+						player->GetName() + " earned 100 XP.");
+				}
 				break;
 			}
 
 			if (result == THROW_RESULT_CATCH)
 			{
 				// Caught monster, show details screen
-				break;
+				return monster;
 			}
 
 			if ((result == THROW_RESULT_RUN_AWAY_AFTER_ONE) || (result == THROW_RESULT_RUN_AWAY_AFTER_TWO) ||
 				(result == THROW_RESULT_RUN_AWAY_AFTER_THREE))
 			{
 				// Ran away, encounter is complete
-				break;
+				return nullptr;
 			}
 
 			// Broke out, give player another chance
 			continue;
 		}
 	}
+
+	// No catch
+	return nullptr;
 }
 
 
@@ -750,4 +775,9 @@ void InterruptableWait(uint32_t ms)
 		if (chrono::duration_cast<chrono::milliseconds>(cur - start).count() >= ms)
 			break;
 	}
+}
+
+
+void ShowMonsterDetails(Player* player, shared_ptr<Monster> monster)
+{
 }

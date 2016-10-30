@@ -1,5 +1,6 @@
 #include <set>
 #include <time.h>
+#include <stdlib.h>
 #include "world.h"
 
 using namespace std;
@@ -29,35 +30,33 @@ static uint32_t CoordToGridNumber(int32_t x, int32_t y)
 
 World::World()
 {
-	SpawnPoint s;
-	s.x = -5;
-	s.y = -5;
-	s.timeOffset = 0;
-	s.timeActive = DEFAULT_SPAWN_TIME;
-	s.biome = Biome::GetByName("grass");
-	AddSpawnPoint(s);
-
-	s.x = 5;
-	s.timeOffset = 12 * 60;
-	s.biome = Biome::GetByName("water");
-	AddSpawnPoint(s);
-
-	s.x = 0;
-	s.y = -5;
-	s.timeOffset = 24 * 60;
-	s.biome = Biome::GetByName("city");
-	AddSpawnPoint(s);
-
-	s.x = 2;
-	s.timeOffset = 36 * 60;
-	s.biome = Biome::GetByName("city");
-	AddSpawnPoint(s);
-
-	s.x = 0;
-	s.y = 5;
-	s.timeOffset = 48 * 60;
-	s.biome = Biome::GetByName("grass");
-	AddSpawnPoint(s);
+	for (size_t i = 0; i < 100000; i++)
+	{
+		SpawnPoint s;
+		s.x = (rand() % MAP_SIZE) - (MAP_SIZE / 2);
+		s.y = (rand() % MAP_SIZE) - (MAP_SIZE / 2);
+		s.timeOffset = rand() % 3600;
+		s.timeActive = DEFAULT_SPAWN_TIME;
+		switch (rand() % 5)
+		{
+		case 0:
+			s.biome = Biome::GetByName("grass");
+			break;
+		case 1:
+			s.biome = Biome::GetByName("water");
+			break;
+		case 2:
+			s.biome = Biome::GetByName("mountain");
+			break;
+		case 3:
+			s.biome = Biome::GetByName("desert");
+			break;
+		default:
+			s.biome = Biome::GetByName("city");
+			break;
+		}
+		AddSpawnPoint(s);
+	}
 }
 
 

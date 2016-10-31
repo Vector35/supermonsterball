@@ -561,6 +561,7 @@ bool ShowMainMenu(Player* player, MapRenderer* map)
 
 	if (option == 2)
 	{
+		ShowMonsterIndex(player, map);
 		return false;
 	}
 

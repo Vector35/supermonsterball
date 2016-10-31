@@ -79,7 +79,7 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 				{
 					selected = list.size() - 1;
 					if (list.size() > height)
-						scroll = list.size() - (height - 1);
+						scroll = selected - (height - 1);
 					else
 						scroll = 0;
 				}
@@ -102,6 +102,48 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 			else if (selected >= (scroll + height))
 			{
 				scroll = selected - (height - 1);
+			}
+		}
+		else if (term->IsInputLeftMovement(input) || (input == "\033[5~"))
+		{
+			if (scroll > height)
+			{
+				scroll -= height;
+				if (selected > height)
+					selected -= height;
+				else
+					selected = 0;
+			}
+			else
+			{
+				scroll = 0;
+				selected = 0;
+			}
+		}
+		else if (term->IsInputRightMovement(input) || (input == "\033[6~"))
+		{
+			size_t maxScroll = 0;
+			if (list.size() > height)
+				maxScroll = (list.size() - 1) - (height - 1);
+			if (scroll < (maxScroll - height))
+			{
+				scroll += height;
+				selected += height;
+				if (selected >= list.size())
+				{
+					if (list.size() > 0)
+						selected = list.size() - 1;
+					else
+						selected = 0;
+				}
+			}
+			else
+			{
+				scroll = maxScroll;
+				if (list.size() > 0)
+					selected = list.size() - 1;
+				else
+					selected = 0;
 			}
 		}
 	}

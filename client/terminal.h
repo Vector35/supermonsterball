@@ -33,9 +33,9 @@ public:
 
 	void UpdateWindowSize();
 
-	void BeginOututQueue();
+	void BeginOutputQueue();
 	void Output(const std::string& contents);
-	void EndOututQueue();
+	void EndOutputQueue();
 
 	void ClearScreen();
 	void ClearLine();

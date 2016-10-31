@@ -46,7 +46,7 @@ void Terminal::QuitCallback(int)
 void Terminal::TerminalReset()
 {
 	tcsetattr(0, TCSAFLUSH, &m_terminal->m_startupTerminalSettings);
-	m_terminal->EndOututQueue();
+	m_terminal->EndOutputQueue();
 	m_terminal->Output("\033[?1049l");
 	m_terminal->Output("\033[0m");
 	m_terminal->ShowCursor();
@@ -80,7 +80,7 @@ void Terminal::UpdateWindowSize()
 }
 
 
-void Terminal::BeginOututQueue()
+void Terminal::BeginOutputQueue()
 {
 	m_queue = true;
 }
@@ -111,7 +111,7 @@ void Terminal::Output(const string& contents)
 }
 
 
-void Terminal::EndOututQueue()
+void Terminal::EndOutputQueue()
 {
 	m_queue = false;
 	Output(m_queueContents);

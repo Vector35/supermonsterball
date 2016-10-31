@@ -1,12 +1,15 @@
 #pragma once
 
 #include "player.h"
+#include "map.h"
 
 #define TEXT_WAIT_TIME 3000
 
 void GameLoop(Player* player);
 std::shared_ptr<Monster> Encounter(Player* player, int32_t x, int32_t y);
 void ShowMonsterDetails(Player* player, std::shared_ptr<Monster> monster);
+void ShowMonsterList(Player* player, MapRenderer* map);
+bool ShowMainMenu(Player* player, MapRenderer* map);
 
 void InterruptableWait(uint32_t ms);
 

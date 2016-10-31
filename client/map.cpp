@@ -29,7 +29,7 @@ void MapRenderer::Paint()
 
 	for (size_t y = 0; y < height; y++)
 	{
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(0, y);
 		term->SetColor(255, 29);
 
@@ -81,11 +81,11 @@ void MapRenderer::Paint()
 		if (x < width)
 			term->Output(" ");
 
-		term->EndOututQueue();
+		term->EndOutputQueue();
 	}
 
 	// Show player name and level in the status bar
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	term->SetCursorPosition(0, height);
 	term->SetColor(255, 16);
 	term->ClearLine();
@@ -148,7 +148,7 @@ void MapRenderer::Paint()
 		}
 	}
 
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 

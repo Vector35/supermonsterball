@@ -9,7 +9,7 @@ void DrawMonsterDetails(size_t x, size_t y, size_t width, size_t height, Player*
 	Terminal* term = Terminal::GetTerminal();
 	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
 
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	term->SetColor(255, 234);
 
 	term->SetCursorPosition(x + 1, y);
@@ -127,7 +127,7 @@ void DrawMonsterDetails(size_t x, size_t y, size_t width, size_t height, Player*
 		curY++;
 	}
 
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 

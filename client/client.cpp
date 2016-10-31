@@ -14,7 +14,7 @@ void DrawBox(size_t x, size_t y, size_t width, size_t height, uint32_t color)
 	Terminal* term = Terminal::GetTerminal();
 	term->SetColor(255, color);
 
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 
 	term->SetCursorPosition(x, y);
 	term->Output("╭");
@@ -37,14 +37,14 @@ void DrawBox(size_t x, size_t y, size_t width, size_t height, uint32_t color)
 		term->Output("─");
 	term->Output("╯");
 
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 
 void DrawBoxText(size_t x, size_t y, size_t width, size_t height, const string& text)
 {
 	Terminal* term = Terminal::GetTerminal();
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 
 	term->SetCursorPosition(x, y + height - 2);
 	term->SetColor(255, 234);
@@ -58,14 +58,14 @@ void DrawBoxText(size_t x, size_t y, size_t width, size_t height, const string& 
 	term->SetCursorPosition(x + 1, y + height - 1);
 	term->Output(text);
 
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 
 void EraseBoxText(size_t x, size_t y, size_t width, size_t height)
 {
 	Terminal* term = Terminal::GetTerminal();
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	term->SetColor(255, 234);
 	for (size_t dy = (height - 2); dy < height; dy++)
 	{
@@ -73,7 +73,7 @@ void EraseBoxText(size_t x, size_t y, size_t width, size_t height)
 		for (size_t dx = 0; dx < width; dx++)
 			term->Output(" ");
 	}
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 
@@ -89,7 +89,7 @@ static void DrawBoxOptions(size_t x, size_t y, size_t width, size_t height, cons
 	int32_t selected)
 {
 	Terminal* term = Terminal::GetTerminal();
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 
 	term->SetCursorPosition(x, y + height - 2);
 	term->SetColor(255, 234);
@@ -118,7 +118,7 @@ static void DrawBoxOptions(size_t x, size_t y, size_t width, size_t height, cons
 		term->Output(" ");
 	}
 
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 
@@ -321,6 +321,18 @@ void GameLoop(Player* player)
 		if ((input == "q") || (input == "Q"))
 			break;
 
+		if ((input == "\033") || (input == "`") || (input == "m") || (input == "M") || (input == " ") ||
+			(input == "\r") || (input == "\n"))
+		{
+			if (ShowMainMenu(player, &map))
+				break;
+
+			lastForcedRefresh = time(NULL);
+			map.SetMonsters(player->GetMonstersInRange());
+			map.Paint();
+			continue;
+		}
+
 		chrono::steady_clock::time_point curTime = chrono::steady_clock::now();
 		if (chrono::duration_cast<chrono::milliseconds>(curTime - lastMovement).count() >= MIN_MOVEMENT_INTERVAL)
 		{
@@ -425,7 +437,7 @@ string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, u
 
 	while (!term->HasQuit())
 	{
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(x, y);
 		term->SetColor(foregroundColor, backgroundColor);
 
@@ -435,7 +447,7 @@ string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, u
 		term->SetColor(foregroundColor, backgroundColor);
 		for (size_t i = result.size(); i < width; i++)
 			term->Output(" ");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		string input = term->GetInput();
 		if (input == "\033")
@@ -456,4 +468,104 @@ string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, u
 	}
 
 	return defaultString;
+}
+
+
+static void DrawMainMenuOptions(size_t x, size_t y, size_t width, const vector<string>& options, int32_t selected)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+
+	for (size_t i = 0; i < options.size(); i++)
+	{
+		if ((int32_t)i == selected)
+			term->SetColor(234, 255);
+		else
+			term->SetColor(255, 234);
+
+		term->SetCursorPosition(x, y + i);
+		for (size_t dx = 0; dx < width; dx++)
+			term->Output(" ");
+
+		term->SetCursorPosition(x + 1, y + i);
+		term->Output(options[i]);
+	}
+
+	term->EndOutputQueue();
+}
+
+
+static int32_t ShowMainMenuOptions(size_t width, const vector<string>& options)
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t height = options.size();
+	size_t x = centerX - (width / 2);
+	size_t y = centerY - (height / 2);
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+	int32_t selected = 0;
+	while (true)
+	{
+		if (term->HasQuit())
+		{
+			selected = -1;
+			break;
+		}
+
+		DrawMainMenuOptions(x, y, width, options, selected);
+
+		string input = term->GetInput();
+		if (term->IsInputUpMovement(input))
+		{
+			selected--;
+			if (selected < 0)
+				selected = (int32_t)(options.size() - 1);
+		}
+		else if (term->IsInputDownMovement(input))
+		{
+			selected++;
+			if (selected >= (int32_t)options.size())
+				selected = 0;
+		}
+		else if ((input == "q") || (input == "Q") || (input == "\033"))
+		{
+			selected = -1;
+			break;
+		}
+		else if ((input == "\n") || (input == "\r") || (input == " ") || (input == "e") || (input == "E"))
+		{
+			break;
+		}
+	}
+
+	return selected;
+}
+
+
+bool ShowMainMenu(Player* player, MapRenderer* map)
+{
+	int32_t option = ShowMainMenuOptions(20, vector<string>{"Continue", "Your Captures", "Monster Index", "Inventory",
+		"Quit Game"});
+	if ((option == -1) || (option == 0))
+		return false;
+
+	if (option == 1)
+	{
+		ShowMonsterList(player, map);
+		return false;
+	}
+
+	if (option == 2)
+	{
+		return false;
+	}
+
+	if (option == 3)
+	{
+		return false;
+	}
+
+	return true;
 }

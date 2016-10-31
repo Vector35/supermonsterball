@@ -23,7 +23,7 @@ static const char* g_encounterGraphics[] =
 static void DrawEncounter(shared_ptr<Monster> monster, size_t x, size_t y, size_t width, size_t height)
 {
 	Terminal* term = Terminal::GetTerminal();
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	for (size_t dy = 0; dy < height; dy++)
 	{
 		term->SetCursorPosition(x, y + dy);
@@ -37,14 +37,14 @@ static void DrawEncounter(shared_ptr<Monster> monster, size_t x, size_t y, size_
 	term->Output(monster->GetSpecies()->GetImage());
 	term->SetCursorPosition(x + ((width * 2) / 3), y + 6);
 	term->Output("🚶");
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 
 void EraseEncounterText(size_t x, size_t y, size_t height)
 {
 	Terminal* term = Terminal::GetTerminal();
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	for (size_t dy = (height - 2); dy < height; dy++)
 	{
 		term->SetCursorPosition(x, y + dy);
@@ -54,7 +54,7 @@ void EraseEncounterText(size_t x, size_t y, size_t height)
 			term->SetColor(255, 23);
 		term->Output(g_encounterGraphics[dy]);
 	}
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 
@@ -70,7 +70,7 @@ static void DrawEncounterLongOptions(size_t x, size_t y, size_t width, size_t he
 	int32_t selected)
 {
 	Terminal* term = Terminal::GetTerminal();
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 
 	term->SetCursorPosition(x, y + height - (options.size() + 1));
 	term->SetColor(255, 234);
@@ -92,7 +92,7 @@ static void DrawEncounterLongOptions(size_t x, size_t y, size_t width, size_t he
 		term->Output(options[i]);
 	}
 
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 
@@ -147,7 +147,7 @@ static void AnimateThrow(size_t x, size_t y, size_t width, const std::string& it
 	size_t destX = x + (width / 3);
 	size_t dist = sourceX - destX;
 
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	term->SetColor(255, 23);
 
 	for (size_t curX = sourceX - 1; curX > (destX + 1); curX--)
@@ -162,16 +162,16 @@ static void AnimateThrow(size_t x, size_t y, size_t width, const std::string& it
 
 		term->SetCursorPosition(curX, sourceY + yOffset);
 		term->Output(item);
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		usleep(66000);
 
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(curX, sourceY + yOffset);
 		term->Output(" ");
 	}
 
-	term->EndOututQueue();
+	term->EndOutputQueue();
 }
 
 
@@ -182,11 +182,11 @@ static void AnimateCatchResult(shared_ptr<Monster> monster, size_t x, size_t y, 
 	size_t monsterY = y + 6;
 	size_t monsterX = x + (width / 3);
 
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	term->SetColor(255, 23);
 	term->SetCursorPosition(monsterX, monsterY);
 	term->Output(" " + item + " ");
-	term->EndOututQueue();
+	term->EndOutputQueue();
 
 	size_t shakes;
 	switch (result)
@@ -210,87 +210,87 @@ static void AnimateCatchResult(shared_ptr<Monster> monster, size_t x, size_t y, 
 
 	for (size_t i = 0; i < shakes; i++)
 	{
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX, monsterY);
 		term->Output(item + "  ");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		usleep(66000);
 
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX, monsterY);
 		term->Output(" " + item + " ");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		usleep(66000);
 
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX, monsterY);
 		term->Output("  " + item);
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		usleep(66000);
 
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX, monsterY);
 		term->Output(" " + item + " ");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		usleep(500000);
 	}
 
 	if (result == THROW_RESULT_CATCH)
 	{
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX - 1, monsterY);
 		term->Output(" ✨" + item + "✨ ");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		usleep(125000);
 
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX - 1, monsterY);
 		term->Output("✨ " + item + " ✨");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		usleep(125000);
 
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX - 1, monsterY);
 		term->Output("  " + item + "  ");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		return;
 	}
 
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	term->SetCursorPosition(monsterX, monsterY);
 	term->Output(" 💥 ");
-	term->EndOututQueue();
+	term->EndOutputQueue();
 
 	usleep(250000);
 
-	term->BeginOututQueue();
+	term->BeginOutputQueue();
 	term->SetCursorPosition(monsterX, monsterY);
 	term->Output(monster->GetSpecies()->GetImage());
-	term->EndOututQueue();
+	term->EndOutputQueue();
 
 	sleep(1);
 
 	if ((result == THROW_RESULT_RUN_AWAY_AFTER_ONE) || (result == THROW_RESULT_RUN_AWAY_AFTER_TWO) ||
 		(result == THROW_RESULT_RUN_AWAY_AFTER_THREE))
 	{
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX, monsterY);
 		term->Output(" 💨 ");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 
 		sleep(1);
 
-		term->BeginOututQueue();
+		term->BeginOutputQueue();
 		term->SetCursorPosition(monsterX, monsterY);
 		term->Output("   ");
-		term->EndOututQueue();
+		term->EndOutputQueue();
 		return;
 	}
 }

@@ -551,6 +551,8 @@ bool ShowMainMenu(Player* player, MapRenderer* map)
 	if ((option == -1) || (option == 0))
 		return false;
 
+	map->Paint();
+
 	if (option == 1)
 	{
 		ShowMonsterList(player, map);
@@ -564,6 +566,7 @@ bool ShowMainMenu(Player* player, MapRenderer* map)
 
 	if (option == 3)
 	{
+		ShowInventory(player, map);
 		return false;
 	}
 

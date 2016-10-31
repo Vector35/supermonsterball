@@ -12,7 +12,7 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 	size_t centerY = term->GetHeight() / 2;
 	size_t width = 40;
 	size_t height = 16;
-	size_t x = centerX - (width / 2);
+	size_t x = (centerX - (width / 2)) | 1;
 	size_t y = centerY - ((height + 2) / 2);
 	DrawBox(x - 1, y - 1, width + 2, height + 4, 234);
 

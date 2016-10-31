@@ -282,9 +282,9 @@ void ShowMonsterDetails(Player* player, shared_ptr<Monster> monster)
 	Terminal* term = Terminal::GetTerminal();
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
-	size_t detailBoxWidth = 45;
+	size_t detailBoxWidth = 46;
 	size_t detailBoxHeight = 14;
-	size_t detailBoxX = centerX - (detailBoxWidth / 2);
+	size_t detailBoxX = (centerX - (detailBoxWidth / 2)) | 1;
 	size_t detailBoxY = centerY - (detailBoxHeight / 2);
 
 	DrawMonsterDetails(detailBoxX, detailBoxY, detailBoxWidth, detailBoxHeight, player, monster);

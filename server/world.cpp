@@ -1,7 +1,9 @@
 #include <set>
 #include <time.h>
 #include <stdlib.h>
+#include <math.h>
 #include "world.h"
+#include "perlin2d.h"
 
 using namespace std;
 
@@ -30,6 +32,86 @@ static uint32_t CoordToGridNumber(int32_t x, int32_t y)
 
 World::World()
 {
+	m_mapData = new uint8_t[MAP_SIZE * MAP_SIZE];
+	memset(m_mapData, TILE_GRASS, MAP_SIZE * MAP_SIZE);
+
+	Perlin2D water(0xbaadcafec0debabeLL);
+	Perlin2D population(0xdeadbeeffeedfaceLL);
+	Perlin2D temp(0xc01dc01ddeaddeadLL);
+
+	uint64_t seed = 0xbaadbaaddeadc0deLL;
+	for (size_t y = 0; y < MAP_SIZE; y++)
+	{
+		for (size_t x = 0; x < MAP_SIZE; x++)
+		{
+			uint8_t tile = TILE_GRASS;
+			float wet = water.GetValue(x / 32.0f, y / 32.0f);
+			float dense = population.GetValue(x / 64.0f, y / 64.0f);
+			float cold = temp.GetValue(x / 64.0f, y / 64.0f);
+
+			int32_t fromCenterX = (int32_t)x - (MAP_SIZE / 2);
+			int32_t fromCenterY = (int32_t)y - (MAP_SIZE / 2);
+			if (fromCenterX < 0)
+				fromCenterX = -fromCenterX;
+			if (fromCenterY < 0)
+				fromCenterY = -fromCenterY;
+			float fromCenter = sqrt((fromCenterX * fromCenterX * 0.8f) + (fromCenterY * fromCenterY));
+			if (fromCenter < 50)
+				dense += 0.5f;
+			else if (fromCenter < 120)
+				dense += 0.5f * (1.0f - ((fromCenter - 50) / 70.0f));
+
+			if (wet > 0.35f)
+				tile = TILE_WATER;
+			else if (dense > 0.4f)
+			{
+				tile = TILE_CITY;
+				if (((x % 4) != 0) && ((y % 4) != 0))
+				{
+					uint32_t decorationValue = (seed >> 16) & 0xffff;
+					seed = (seed * 25214903917LL) + 11LL;
+					if (decorationValue < 0x4000)
+						tile = TILE_CITY_BUILDING_1;
+					else if (decorationValue < 0x4800)
+						tile = TILE_CITY_BUILDING_2;
+					else if (decorationValue < 0x4a00)
+						tile = TILE_CITY_BUILDING_3;
+					else if (decorationValue < 0x4c00)
+						tile = TILE_CITY_BUILDING_4;
+					else if (decorationValue < 0x4e00)
+						tile = TILE_CITY_BUILDING_5;
+				}
+			}
+			else if (wet < -0.3f)
+			{
+				tile = TILE_DESERT;
+				uint32_t decorationValue = (seed >> 16) & 0xffff;
+				seed = (seed * 25214903917LL) + 11LL;
+				if ((dense > 0.4f) && (decorationValue < 0x2000))
+					tile = TILE_DESERT_HOUSE;
+				else if (decorationValue < 0x200)
+					tile = TILE_DESERT_CACTUS;
+			}
+			else
+			{
+				tile = TILE_GRASS;
+				uint32_t decorationValue = (seed >> 16) & 0xffff;
+				seed = (seed * 25214903917LL) + 11LL;
+				if ((dense > 0.3f) && (decorationValue < 0x800))
+					tile = TILE_SUBURB_HOUSE;
+				else if ((dense > 0.3f) && (decorationValue < 0x900))
+					tile = TILE_SUBURB_CHURCH;
+				else if ((wet > 0.3f) && (decorationValue < 0x200))
+					tile = TILE_GRASS_PALM_TREE;
+				else if (decorationValue < 0x100)
+					tile = TILE_GRASS_TREE_1;
+				else if (decorationValue < 0x200)
+					tile = TILE_GRASS_TREE_2;
+			}
+			m_mapData[(y * MAP_SIZE) + x] = tile;
+		}
+	}
+
 	for (size_t i = 0; i < 100000; i++)
 	{
 		SpawnPoint s;
@@ -194,4 +276,20 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 		cur += i.weight;
 	}
 	return shared_ptr<Monster>();
+}
+
+
+uint8_t World::GetMapTile(int32_t x, int32_t y)
+{
+	x += MAP_SIZE / 2;
+	y += MAP_SIZE / 2;
+	if (x < 0)
+		return TILE_GRASS;
+	if (y < 0)
+		return TILE_GRASS;
+	if (x >= MAP_SIZE)
+		return TILE_GRASS;
+	if (y >= MAP_SIZE)
+		return TILE_GRASS;
+	return m_mapData[(y * MAP_SIZE) + x];
 }

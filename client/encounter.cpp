@@ -309,7 +309,7 @@ shared_ptr<Monster> Encounter(Player* player, int32_t x, int32_t y)
 	size_t centerY = term->GetHeight() / 2;
 	size_t encounterBoxWidth = strlen(g_encounterGraphics[0]);
 	size_t encounterBoxHeight = sizeof(g_encounterGraphics) / sizeof(char*);
-	size_t encounterBoxX = centerX - (encounterBoxWidth / 2);
+	size_t encounterBoxX = (centerX - (encounterBoxWidth / 2)) | 1;
 	size_t encounterBoxY = centerY - (encounterBoxHeight / 2);
 
 	DrawBox(encounterBoxX - 1, encounterBoxY - 1, encounterBoxWidth + 2, encounterBoxHeight + 2, 234);

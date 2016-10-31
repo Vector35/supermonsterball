@@ -21,35 +21,58 @@ void MapRenderer::Paint()
 	size_t width = term->GetWidth();
 	size_t height = term->GetHeight() - 1;
 
-	int32_t leftX = m_centerX - (int32_t)(width / 2);
+	int32_t leftX = m_centerX - (int32_t)(width / 4);
 	int32_t topY = m_centerY - (int32_t)(height / 2);
 
 	int32_t playerX = m_player->GetLastLocationX();
 	int32_t playerY = m_player->GetLastLocationY();
 
+	uint8_t lastColor = 0;
 	for (size_t y = 0; y < height; y++)
 	{
 		term->BeginOutputQueue();
 		term->SetCursorPosition(0, y);
-		term->SetColor(255, 29);
 
 		size_t x;
-		for (x = 0; x < (width - 1); x++)
+		for (x = 0; x < (width - 1); x += 2)
 		{
-			int32_t curX = leftX + (int32_t)x;
+			int32_t curX = leftX + (int32_t)(x / 2);
 			int32_t curY = topY + (int32_t)y;
+
+			uint8_t tile = m_player->GetMapTile(curX, curY);
+			uint8_t newColor;
+			switch (tile)
+			{
+			case TILE_WATER:
+				newColor = 25;
+				break;
+			case TILE_DESERT:
+			case TILE_DESERT_HOUSE:
+			case TILE_DESERT_CACTUS:
+				newColor = 58;
+				break;
+			case TILE_CITY:
+			case TILE_CITY_BUILDING_1:
+			case TILE_CITY_BUILDING_2:
+			case TILE_CITY_BUILDING_3:
+			case TILE_CITY_BUILDING_4:
+			case TILE_CITY_BUILDING_5:
+				newColor = 242;
+				break;
+			default:
+				newColor = 29;
+				break;
+			}
+			if (newColor != lastColor)
+			{
+				lastColor = newColor;
+				term->SetColor(255, newColor);
+			}
 
 			// Show player avatar
 			if ((curX == m_player->GetLastLocationX()) && (curY == m_player->GetLastLocationY()))
 			{
-				term->Output("🚶");
-				continue;
-			}
-
-			// Don't draw monsters if they would hide the player avatar
-			if ((((curX + 1) == playerX) || ((curX + 2) == playerX)) && (curY == playerY))
-			{
-				term->Output(" ");
+				term->Output("🚶 ");
 				continue;
 			}
 
@@ -57,25 +80,60 @@ void MapRenderer::Paint()
 			bool found = false;
 			for (auto& i : m_sightings)
 			{
-				uint32_t distSq = ((curX - playerX) * (curX - playerX)) + (4 * ((curY - playerY) * (curY - playerY)));
+				uint32_t distSq = ((curX - playerX) * (curX - playerX)) + ((curY - playerY) * (curY - playerY));
 				if (distSq > (CAPTURE_RADIUS * CAPTURE_RADIUS))
 					continue;
 
 				if ((curX == i.x) && (curY == i.y))
 				{
-					term->Output(i.species->GetImage());
+					term->Output(i.species->GetImage().substr(0, i.species->GetImage().size() - 1));
 					found = true;
 					break;
 				}
 			}
 			if (found)
-			{
-				// Monsters are three characters wide
-				x += 2;
 				continue;
-			}
 
-			term->Output(" ");
+			switch (tile)
+			{
+			case TILE_GRASS_TREE_1:
+				term->Output("🌲 ");
+				break;
+			case TILE_GRASS_TREE_2:
+				term->Output("🌳 ");
+				break;
+			case TILE_GRASS_PALM_TREE:
+				term->Output("🌴 ");
+				break;
+			case TILE_DESERT_HOUSE:
+			case TILE_SUBURB_HOUSE:
+				term->Output("🏠 ");
+				break;
+			case TILE_SUBURB_CHURCH:
+				term->Output("⛪ ");
+				break;
+			case TILE_DESERT_CACTUS:
+				term->Output("🌵 ");
+				break;
+			case TILE_CITY_BUILDING_1:
+				term->Output("🏢 ");
+				break;
+			case TILE_CITY_BUILDING_2:
+				term->Output("🏨 ");
+				break;
+			case TILE_CITY_BUILDING_3:
+				term->Output("🏦 ");
+				break;
+			case TILE_CITY_BUILDING_4:
+				term->Output("🏪 ");
+				break;
+			case TILE_CITY_BUILDING_5:
+				term->Output("🏬 ");
+				break;
+			default:
+				term->Output("  ");
+				break;
+			}
 		}
 
 		if (x < width)
@@ -116,8 +174,8 @@ void MapRenderer::Paint()
 	// Show nearby monsters in the status bar
 	std::vector<MonsterSighting> nearby = m_sightings;
 	sort(nearby.begin(), nearby.end(), [&](const MonsterSighting& a, const MonsterSighting& b) {
-		uint32_t aDistSq = ((a.x - playerX) * (a.x - playerX)) + (4 * ((a.y - playerY) * (a.y - playerY)));
-		uint32_t bDistSq = ((b.x - playerX) * (b.x - playerX)) + (4 * ((b.y - playerY) * (b.y - playerY)));
+		uint32_t aDistSq = ((a.x - playerX) * (a.x - playerX)) + ((a.y - playerY) * (a.y - playerY));
+		uint32_t bDistSq = ((b.x - playerX) * (b.x - playerX)) + ((b.y - playerY) * (b.y - playerY));
 		return aDistSq < bDistSq;
 	});
 
@@ -136,7 +194,7 @@ void MapRenderer::Paint()
 			term->Output(nearby[i].species->GetImage());
 
 			uint32_t distSq = ((nearby[i].x - playerX) * (nearby[i].x - playerX)) +
-				(4 * ((nearby[i].y - playerY) * (nearby[i].y - playerY)));
+				((nearby[i].y - playerY) * (nearby[i].y - playerY));
 			if (distSq < (16 * 16))
 				term->Output("  ");
 			else if (distSq < (25 * 25))
@@ -169,10 +227,10 @@ void MapRenderer::EnsurePlayerVisible()
 	int32_t distFromCenterX = playerX - m_centerX;
 	int32_t distFromCenterY = playerY - m_centerY;
 
-	if (distFromCenterX < (-width / 4))
-		m_centerX = playerX + (width / 4);
-	else if (distFromCenterX > (width / 4))
-		m_centerX = playerX - (width / 4);
+	if (distFromCenterX < (-width / 8))
+		m_centerX = playerX + (width / 8);
+	else if (distFromCenterX > (width / 8))
+		m_centerX = playerX - (width / 8);
 	if (distFromCenterY < (-height / 4))
 		m_centerY = playerY + (height / 4);
 	else if (distFromCenterY > (height / 4))

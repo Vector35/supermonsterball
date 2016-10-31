@@ -9,7 +9,7 @@ void ShowMonsterInfo(Player* player, MonsterSpecies* species)
 	Terminal* term = Terminal::GetTerminal();
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
-	size_t width = 45;
+	size_t width = 46;
 
 	string desc = species->GetDescription();
 	vector<string> descLines;
@@ -62,7 +62,7 @@ void ShowMonsterInfo(Player* player, MonsterSpecies* species)
 	if (player->GetNumberCaptured(species) > 0)
 		height += 1 + descLines.size();
 
-	size_t x = centerX - (width / 2);
+	size_t x = (centerX - (width / 2)) | 1;
 	size_t y = centerY - (height / 2);
 
 	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);

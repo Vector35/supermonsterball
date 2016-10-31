@@ -50,4 +50,6 @@ public:
 	virtual bool EvolveMonster(std::shared_ptr<Monster> monster) override;
 	virtual void TransferMonster(std::shared_ptr<Monster> monster) override;
 	virtual void SetMonsterName(std::shared_ptr<Monster> monster, const std::string& name) override;
+
+	virtual uint8_t GetMapTile(int32_t x, int32_t y) override;
 };

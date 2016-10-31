@@ -67,4 +67,6 @@ public:
 	virtual bool EvolveMonster(std::shared_ptr<Monster> monster) = 0;
 	virtual void TransferMonster(std::shared_ptr<Monster> monster) = 0;
 	virtual void SetMonsterName(std::shared_ptr<Monster> monster, const std::string& name) = 0;
+
+	virtual uint8_t GetMapTile(int32_t x, int32_t y) = 0;
 };

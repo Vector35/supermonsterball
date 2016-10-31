@@ -294,3 +294,9 @@ void InMemoryPlayer::SetMonsterName(std::shared_ptr<Monster> monster, const stri
 {
 	monster->SetName(name);
 }
+
+
+uint8_t InMemoryPlayer::GetMapTile(int32_t x, int32_t y)
+{
+	return World::GetWorld()->GetMapTile(x, y);
+}

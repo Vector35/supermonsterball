@@ -353,9 +353,6 @@ void GameLoop(Player* player)
 				map.EnsurePlayerVisible();
 				map.Paint();
 			}
-		}
-		if (chrono::duration_cast<chrono::milliseconds>(curTime - lastMovement).count() >= (MIN_MOVEMENT_INTERVAL / 2))
-		{
 			if (term->IsInputLeftMovement(input))
 			{
 				lastMovement = chrono::steady_clock::now();
@@ -384,7 +381,7 @@ void GameLoop(Player* player)
 		{
 			if (i.y != playerY)
 				continue;
-			if ((i.x != playerX) && ((i.x + 1) != playerX) && ((i.x + 2) != playerX))
+			if ((i.x != playerX) && ((i.x + 1) != playerX))
 				continue;
 
 			// Transition to encounter
@@ -500,7 +497,7 @@ static int32_t ShowMainMenuOptions(size_t width, const vector<string>& options)
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
 	size_t height = options.size();
-	size_t x = centerX - (width / 2);
+	size_t x = (centerX - (width / 2)) | 1;
 	size_t y = centerY - (height / 2);
 	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
 

@@ -170,9 +170,11 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 	uint64_t n = ((uint64_t)seed * 25214903917LL) + 11LL;
 	uint64_t ivBase = ((uint64_t)n * 25214903917LL) + 11LL;
 	uint64_t levelBase = ((uint64_t)(ivBase + ((uint64_t)trainerLevel * 277LL)) * 25214903917LL) + 11LL;
+	uint64_t sizeBase = ((uint64_t)levelBase * 25214903917LL) + 11LL;
 	uint32_t pick = (uint32_t)((n >> 16) % (uint64_t)total);
 	uint32_t iv = (uint32_t)(ivBase >> 16) & 0xfff;
 	uint32_t level = (uint32_t)((levelBase >> 16) % trainerLevel) + 1;
+	uint32_t size = sizeBase % 32;
 	if (level > 30)
 		level = 30;
 
@@ -184,6 +186,7 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 		{
 			std::shared_ptr<Monster> monster(new Monster(i.species, x, y, hour));
 			monster->SetIV((iv >> 8) & 0xf, (iv >> 4) & 0xf, iv & 0xf);
+			monster->SetSize(size);
 			monster->SetLevel(level);
 			monster->ResetHP();
 			return monster;

@@ -14,6 +14,7 @@ class InMemoryPlayer: public Player
 	int32_t m_x, m_y;
 	std::shared_ptr<Monster> m_encounter;
 	bool m_seedGiven;
+	uint64_t m_nextMonsterID;
 
 	void EndEncounter(bool caught, ItemType ball = ITEM_STANDARD_BALL);
 	void EarnExperience(uint32_t xp);
@@ -47,4 +48,5 @@ public:
 
 	virtual bool PowerUpMonster(std::shared_ptr<Monster> monster) override;
 	virtual bool EvolveMonster(std::shared_ptr<Monster> monster) override;
+	virtual void TransferMonster(std::shared_ptr<Monster> monster) override;
 };

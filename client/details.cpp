@@ -131,7 +131,7 @@ void DrawMonsterDetails(size_t x, size_t y, size_t width, size_t height, Player*
 }
 
 
-static void ShowMonsterOptions(Player* player, shared_ptr<Monster> monster, size_t x, size_t y,
+static bool ShowMonsterOptions(Player* player, shared_ptr<Monster> monster, size_t x, size_t y,
 	size_t width, size_t height)
 {
 	Terminal* term = Terminal::GetTerminal();
@@ -141,7 +141,121 @@ static void ShowMonsterOptions(Player* player, shared_ptr<Monster> monster, size
 			vector<string>{"Appraise", "Rename", "Transfer", "Cancel"});
 		if ((option == -1) || (option == 3))
 			break;
+
+		if (option == 0)
+		{
+			// Appraise
+			uint32_t totalIV = monster->GetAttackIV() + monster->GetDefenseIV() + monster->GetStaminaIV();
+			if (totalIV <= 12)
+			{
+				ShowBoxText(x, y, width, height, "Your " +
+					monster->GetName() + " is terrible.");
+				ShowBoxText(x, y, width, height, "Get that awful thing out of my sight.");
+				continue;
+			}
+			else if (totalIV < 23)
+			{
+				ShowBoxText(x, y, width, height, "Your " +
+					monster->GetName() + " is not great.");
+				ShowBoxText(x, y, width, height, "You should go find another one.");
+				continue;
+			}
+			else if (totalIV < 30)
+			{
+				ShowBoxText(x, y, width, height, "Your " +
+					monster->GetName() + " is just average.");
+			}
+			else if (totalIV < 37)
+			{
+				ShowBoxText(x, y, width, height, "Your " +
+					monster->GetName() + " is strong and resourceful.");
+			}
+			else if (totalIV < 45)
+			{
+				ShowBoxText(x, y, width, height, "Your " +
+					monster->GetName() + " is amazing!");
+			}
+			else if (totalIV == 45)
+			{
+				ShowBoxText(x, y, width, height, "Your " +
+					monster->GetName() + " is perfect in every way!");
+				ShowBoxText(x, y, width, height, "I've never seen one so strong!");
+				continue;
+			}
+
+			uint32_t highestIV = monster->GetAttackIV();
+			if (monster->GetDefenseIV() > highestIV)
+				highestIV = monster->GetDefenseIV();
+			if (monster->GetStaminaIV() > highestIV)
+				highestIV = monster->GetStaminaIV();
+
+			bool first = true;
+			if (monster->GetAttackIV() == highestIV)
+			{
+				ShowBoxText(x, y, width, height, "Its strongest quality is its attack.");
+				first = false;
+			}
+			if (monster->GetDefenseIV() == highestIV)
+			{
+				if (first)
+					ShowBoxText(x, y, width, height, "Its strongest quality is its defense.");
+				else
+					ShowBoxText(x, y, width, height, "I'm just as happy with its defense.");
+				first = false;
+			}
+			if (monster->GetStaminaIV() == highestIV)
+			{
+				if (first)
+					ShowBoxText(x, y, width, height, "Its strongest quality is its stamina.");
+				else
+					ShowBoxText(x, y, width, height, "I'm just as happy with its stamina.");
+			}
+
+			if (highestIV < 9)
+				ShowBoxText(x, y, width, height, "It isn't that great though.");
+			else if (highestIV < 12)
+				ShowBoxText(x, y, width, height, "It'll get the job done.");
+			else if (highestIV < 15)
+				ShowBoxText(x, y, width, height, "It is quite strong.");
+			else
+				ShowBoxText(x, y, width, height, "It is astoundingly good.");
+
+			if (monster->GetAttackIV() == 0)
+				ShowBoxText(x, y, width, height, "Its attack, though, is horrifyingly bad.");
+			else if (monster->GetDefenseIV() == 0)
+				ShowBoxText(x, y, width, height, "Its defense, though, is horrifyingly bad.");
+			else if (monster->GetStaminaIV() == 0)
+				ShowBoxText(x, y, width, height, "Its stamina, though, is horrifyingly bad.");
+			else if (monster->GetAttackIV() <= 2)
+				ShowBoxText(x, y, width, height, "Its attack, though, is terrible.");
+			else if (monster->GetDefenseIV() <= 2)
+				ShowBoxText(x, y, width, height, "Its defense, though, is terrible.");
+			else if (monster->GetStaminaIV() <= 2)
+				ShowBoxText(x, y, width, height, "Its stamina, though, is terrible.");
+
+			if (monster->GetSize() == 0)
+				ShowBoxText(x, y, width, height, "Your " + monster->GetName() + " is impossibly small.");
+			else if (monster->GetSize() < 8)
+				ShowBoxText(x, y, width, height, "Your " + monster->GetName() + " is very small.");
+			else if (monster->GetSize() == 31)
+				ShowBoxText(x, y, width, height, "Your " + monster->GetName() + " is simply colassal.");
+			else if (monster->GetSize() > 29)
+				ShowBoxText(x, y, width, height, "Your " + monster->GetName() + " is gigantic.");
+			else if (monster->GetSize() > 24)
+				ShowBoxText(x, y, width, height, "Your " + monster->GetName() + " is quite a big one.");
+		}
+		else if (option == 2)
+		{
+			// Transfer
+			player->TransferMonster(monster);
+			ShowBoxText(x, y, width, height, "You gave " +
+				monster->GetName() + " to the Professor.");
+			ShowBoxText(x, y, width, height, "You got one " +
+				monster->GetSpecies()->GetBaseForm()->GetName() + " treat for it.");
+			return false;
+		}
 	}
+	return true;
 }
 
 
@@ -187,7 +301,8 @@ void ShowMonsterDetails(Player* player, shared_ptr<Monster> monster)
 
 		if (option == 1)
 		{
-			ShowMonsterOptions(player, monster, detailBoxX, detailBoxY, detailBoxWidth, detailBoxHeight);
+			if (!ShowMonsterOptions(player, monster, detailBoxX, detailBoxY, detailBoxWidth, detailBoxHeight))
+				break;
 		}
 		else if (option == powerUpOption)
 		{

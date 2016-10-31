@@ -28,6 +28,18 @@ MonsterSpecies::MonsterSpecies(const string& image, const string& name, const st
 {
 	m_type[0] = type1;
 	m_type[1] = type2;
+	m_baseForm = this;
+
+	for (auto& i : evolutions)
+		i->SetBaseForm(this);
+}
+
+
+void MonsterSpecies::SetBaseForm(MonsterSpecies* baseForm)
+{
+	m_baseForm = baseForm;
+	for (auto& i : m_evolutions)
+		i->SetBaseForm(baseForm);
 }
 
 
@@ -603,9 +615,16 @@ Monster::Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTi
 	m_name = species->GetName();
 	m_currentHP = 0;
 	m_attackIV = m_defenseIV = m_staminaIV = 0;
+	m_size = 16;
 	m_level = 1;
 	m_captured = false;
 	m_ball = ITEM_STANDARD_BALL;
+}
+
+
+void Monster::SetID(uint64_t id)
+{
+	m_id = id;
 }
 
 
@@ -614,6 +633,12 @@ void Monster::SetIV(uint32_t attack, uint32_t def, uint32_t stamina)
 	m_attackIV = attack;
 	m_defenseIV = def;
 	m_staminaIV = stamina;
+}
+
+
+void Monster::SetSize(uint32_t size)
+{
+	m_size = size;
 }
 
 

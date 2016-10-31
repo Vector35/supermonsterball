@@ -65,4 +65,5 @@ public:
 
 	virtual bool PowerUpMonster(std::shared_ptr<Monster> monster) = 0;
 	virtual bool EvolveMonster(std::shared_ptr<Monster> monster) = 0;
+	virtual void TransferMonster(std::shared_ptr<Monster> monster) = 0;
 };

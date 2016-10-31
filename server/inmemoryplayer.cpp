@@ -13,6 +13,7 @@ InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 	m_powder = 0;
 	m_x = 0;
 	m_y = 0;
+	m_nextMonsterID = 1;
 
 	m_inventory[ITEM_STANDARD_BALL] = 30;
 	m_inventory[ITEM_SUPER_BALL] = 5;
@@ -41,7 +42,7 @@ uint32_t InMemoryPlayer::GetNumberSeen(MonsterSpecies* species)
 
 uint32_t InMemoryPlayer::GetTreatsForSpecies(MonsterSpecies* species)
 {
-	auto i = m_treats.find(species->GetIndex());
+	auto i = m_treats.find(species->GetBaseForm()->GetIndex());
 	if (i == m_treats.end())
 		return 0;
 	return i->second;
@@ -122,6 +123,7 @@ shared_ptr<Monster> InMemoryPlayer::StartWildEncounter(int32_t x, int32_t y)
 		return nullptr;
 
 	m_encounter = World::GetWorld()->GetMonsterAt(x, y, m_level);
+	m_encounter->SetID(m_nextMonsterID++);
 	m_seedGiven = false;
 	return m_encounter;
 }
@@ -206,7 +208,7 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 			EarnExperience(100);
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
 		m_captured[m_encounter->GetSpecies()->GetIndex()]++;
-		m_treats[m_encounter->GetSpecies()->GetIndex()] += 3;
+		m_treats[m_encounter->GetSpecies()->GetBaseForm()->GetIndex()] += 3;
 		m_powder += 100;
 		m_monsters.push_back(m_encounter);
 		EndEncounter(true, type);
@@ -254,7 +256,7 @@ bool InMemoryPlayer::PowerUpMonster(std::shared_ptr<Monster> monster)
 	if (GetPowder() < GetPowerUpCost(monster->GetLevel()).powder)
 		return false;
 
-	m_treats[monster->GetSpecies()->GetIndex()] -= GetPowerUpCost(monster->GetLevel()).treats;
+	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= GetPowerUpCost(monster->GetLevel()).treats;
 	m_powder -= GetPowerUpCost(monster->GetLevel()).powder;
 	monster->SetLevel(monster->GetLevel() + 1);
 	return true;
@@ -268,7 +270,21 @@ bool InMemoryPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
 	if (GetTreatsForSpecies(monster->GetSpecies()) < monster->GetSpecies()->GetEvolutionCost())
 		return false;
 
-	m_treats[monster->GetSpecies()->GetIndex()] -= monster->GetSpecies()->GetEvolutionCost();
+	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= monster->GetSpecies()->GetEvolutionCost();
 	monster->Evolve();
 	return true;
+}
+
+
+void InMemoryPlayer::TransferMonster(std::shared_ptr<Monster> monster)
+{
+	for (auto i = m_monsters.begin(); i != m_monsters.end(); ++i)
+	{
+		if ((*i)->GetID() == monster->GetID())
+		{
+			m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]++;
+			m_monsters.erase(i);
+			break;
+		}
+	}
 }

@@ -244,6 +244,17 @@ static bool ShowMonsterOptions(Player* player, shared_ptr<Monster> monster, size
 			else if (monster->GetSize() > 24)
 				ShowBoxText(x, y, width, height, "Your " + monster->GetName() + " is quite a big one.");
 		}
+		else if (option == 1)
+		{
+			// Rename
+			DrawBoxText(x, y, width, height, "Name: ");
+			string name = InputString(x + 7, y + height - 1, 16, 255, 234, monster->GetName());
+			if (name.size() == 0)
+				name = monster->GetSpecies()->GetName();
+			if (name != monster->GetName())
+				player->SetMonsterName(monster, name);
+			DrawMonsterDetails(x, y, width, height, player, monster);
+		}
 		else if (option == 2)
 		{
 			// Transfer

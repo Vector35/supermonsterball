@@ -288,3 +288,9 @@ void InMemoryPlayer::TransferMonster(std::shared_ptr<Monster> monster)
 		}
 	}
 }
+
+
+void InMemoryPlayer::SetMonsterName(std::shared_ptr<Monster> monster, const string& name)
+{
+	monster->SetName(name);
+}

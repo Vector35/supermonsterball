@@ -655,6 +655,12 @@ void Monster::SetCapture(bool captured, ItemType ball)
 }
 
 
+void Monster::SetName(const string& name)
+{
+	m_name = name;
+}
+
+
 void Monster::ResetHP()
 {
 }

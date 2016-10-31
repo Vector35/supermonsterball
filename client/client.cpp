@@ -415,3 +415,45 @@ void InterruptableWait(uint32_t ms)
 			break;
 	}
 }
+
+
+string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, uint32_t backgroundColor,
+	const string& defaultString)
+{
+	Terminal* term = Terminal::GetTerminal();
+	string result = defaultString;
+
+	while (!term->HasQuit())
+	{
+		term->BeginOututQueue();
+		term->SetCursorPosition(x, y);
+		term->SetColor(foregroundColor, backgroundColor);
+
+		term->Output(result);
+		term->SetColor(backgroundColor, foregroundColor);
+		term->Output(" ");
+		term->SetColor(foregroundColor, backgroundColor);
+		for (size_t i = result.size(); i < width; i++)
+			term->Output(" ");
+		term->EndOututQueue();
+
+		string input = term->GetInput();
+		if (input == "\033")
+			break;
+		else if (input == "\b")
+		{
+			if (result.size() > 0)
+				result = result.substr(0, result.size() - 1);
+		}
+		else if ((input == "\r") || (input == "\n"))
+		{
+			return result;
+		}
+		else if ((result.size() < width) && (input.size() == 1) && (input[0] >= ' ') && (input[0] <= 0x7e))
+		{
+			result += input;
+		}
+	}
+
+	return defaultString;
+}

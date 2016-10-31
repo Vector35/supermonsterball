@@ -49,4 +49,5 @@ public:
 	virtual bool PowerUpMonster(std::shared_ptr<Monster> monster) override;
 	virtual bool EvolveMonster(std::shared_ptr<Monster> monster) override;
 	virtual void TransferMonster(std::shared_ptr<Monster> monster) override;
+	virtual void SetMonsterName(std::shared_ptr<Monster> monster, const std::string& name) override;
 };

@@ -144,6 +144,7 @@ public:
 	void SetSize(uint32_t size);
 	void SetLevel(uint32_t level);
 	void SetCapture(bool captured, ItemType ball);
+	void SetName(const std::string& name);
 	void ResetHP();
 
 	void Evolve();

@@ -622,6 +622,13 @@ Monster::Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTi
 }
 
 
+uint32_t Monster::GetCP() const
+{
+	// FIXME
+	return m_level;
+}
+
+
 void Monster::SetID(uint64_t id)
 {
 	m_id = id;

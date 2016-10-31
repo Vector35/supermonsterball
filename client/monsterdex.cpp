@@ -210,7 +210,7 @@ void ShowMonsterIndex(Player* player, MapRenderer* map)
 		{
 			term->SetCursorPosition(x + 1, y + i);
 
-			if (i >= list.size())
+			if ((scroll + i) >= list.size())
 			{
 				term->SetColor(255, 234);
 				for (size_t dx = 1; dx < (width - 1); dx++)
@@ -333,7 +333,7 @@ void ShowMonsterIndex(Player* player, MapRenderer* map)
 			size_t maxScroll = 0;
 			if (list.size() > height)
 				maxScroll = (list.size() - 1) - (height - 1);
-			if (scroll < (maxScroll - height))
+			if ((maxScroll > height) && (scroll < (maxScroll - height)))
 			{
 				scroll += height;
 				selected += height;

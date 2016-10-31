@@ -17,6 +17,13 @@ void DrawMonsterDetails(size_t x, size_t y, size_t width, size_t height, Player*
 	term->Output(" ");
 	term->Output(monster->GetName());
 
+	char cpStr[32];
+	sprintf(cpStr, "CP %d", monster->GetCP());
+	term->SetCursorPosition(x + width - (strlen(cpStr) + 1), y);
+	term->SetColor(81, 234);
+	term->Output(cpStr);
+	term->SetColor(255, 234);
+
 	term->SetCursorPosition(x + 1, y + 1);
 	term->SetColor(GetElementTextColor(monster->GetSpecies()->GetTypes()[0]),
 		GetElementColor(monster->GetSpecies()->GetTypes()[0]));

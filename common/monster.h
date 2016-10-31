@@ -132,6 +132,7 @@ public:
 	uint32_t GetStaminaIV() const { return m_staminaIV; }
 	uint32_t GetSize() const { return m_size; }
 	uint32_t GetLevel() const { return m_level; }
+	uint32_t GetCP() const;
 	uint32_t GetCurrentHP() const { return m_currentHP; }
 	int32_t GetSpawnX() const { return m_x; }
 	int32_t GetSpawnY() const { return m_y; }

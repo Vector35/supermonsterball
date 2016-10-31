@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "client.h"
 
 using namespace std;
@@ -10,16 +11,48 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
 	size_t width = 40;
-	size_t height = 20;
+	size_t height = 16;
 	size_t x = centerX - (width / 2);
-	size_t y = centerY - (height / 2);
-	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+	size_t y = centerY - ((height + 2) / 2);
+	DrawBox(x - 1, y - 1, width + 2, height + 4, 234);
+
+	static uint32_t sortOrder = 0;
+	static vector<string> sortOrderNames = vector<string>{"Index", "CP", "Alphabetical"};
 
 	size_t scroll = 0;
 	size_t selected = 0;
 	while (!term->HasQuit())
 	{
 		vector<shared_ptr<Monster>> list = player->GetMonsters();
+		switch (sortOrder)
+		{
+		case 1:
+			sort(list.begin(), list.end(), [](shared_ptr<Monster> a, shared_ptr<Monster> b) {
+				if (a->GetCP() == b->GetCP())
+					return a->GetID() < b->GetID();
+				return b->GetCP() < a->GetCP();
+			});
+			break;
+		case 2:
+			sort(list.begin(), list.end(), [](shared_ptr<Monster> a, shared_ptr<Monster> b) {
+				if (a->GetName() == b->GetName())
+					return a->GetID() < b->GetID();
+				return a->GetName() < b->GetName();
+			});
+			break;
+		default:
+			sort(list.begin(), list.end(), [](shared_ptr<Monster> a, shared_ptr<Monster> b) {
+				if (a->GetSpecies()->GetIndex() == b->GetSpecies()->GetIndex())
+				{
+					if (a->GetCP() == b->GetCP())
+						return a->GetID() < b->GetID();
+					return b->GetCP() < a->GetCP();
+				}
+				return a->GetSpecies()->GetIndex() < b->GetSpecies()->GetIndex();
+			});
+			break;
+		}
+
 		if (selected >= list.size())
 		{
 			if (list.size() > 0)
@@ -35,7 +68,7 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 		{
 			term->SetCursorPosition(x + 1, y + i);
 
-			if (i >= list.size())
+			if ((scroll + i) >= list.size())
 			{
 				term->SetColor(255, 234);
 				for (size_t dx = 1; dx < (width - 1); dx++)
@@ -52,9 +85,27 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 			term->Output(" ");
 			term->Output(list[scroll + i]->GetName());
 
-			for (size_t dx = 4 + list[scroll + i]->GetName().size(); dx < (width - 1); dx++)
+			for (size_t dx = 12 + list[scroll + i]->GetName().size(); dx < (width - 1); dx++)
 				term->Output(" ");
+
+			char cpStr[32];
+			sprintf(cpStr, "CP %d", list[scroll + i]->GetCP());
+			for (size_t dx = strlen(cpStr); dx < 7; dx++)
+				term->Output(" ");
+			term->Output(cpStr);
+			term->Output(" ");
 		}
+
+		term->SetColor(255, 234);
+		term->SetCursorPosition(x, y + height);
+		for (size_t i = 0; i < width; i++)
+			term->Output("┄");
+		term->SetCursorPosition(x, y + height + 1);
+		term->Output("Sort \033[4mO\033[24mrder: ");
+		term->Output(sortOrderNames[sortOrder]);
+		for (size_t i = 0; i < (width - (12 + sortOrderNames[sortOrder].size())); i++)
+			term->Output(" ");
+
 		term->EndOutputQueue();
 
 		string input = term->GetInput();
@@ -69,7 +120,7 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 			map->Paint();
 			ShowMonsterDetails(player, list[selected]);
 			map->Paint();
-			DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+			DrawBox(x - 1, y - 1, width + 2, height + 4, 234);
 		}
 		if (term->IsInputUpMovement(input))
 		{
@@ -125,7 +176,7 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 			size_t maxScroll = 0;
 			if (list.size() > height)
 				maxScroll = (list.size() - 1) - (height - 1);
-			if (scroll < (maxScroll - height))
+			if ((maxScroll > height) && (scroll < (maxScroll - height)))
 			{
 				scroll += height;
 				selected += height;
@@ -145,6 +196,12 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 				else
 					selected = 0;
 			}
+		}
+		else if ((input == "o") || (input == "O"))
+		{
+			sortOrder++;
+			if (sortOrder >= 3)
+				sortOrder = 0;
 		}
 	}
 }

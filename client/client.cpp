@@ -318,11 +318,10 @@ void GameLoop(Player* player)
 		string input = term->GetInput();
 		if (input.size() == 0)
 			continue;
-		if ((input == "q") || (input == "Q"))
-			break;
 
 		if ((input == "\033") || (input == "`") || (input == "m") || (input == "M") || (input == " ") ||
-			(input == "\r") || (input == "\n"))
+			(input == "\r") || (input == "\n") || (input == "e") || (input == "E") ||
+			(input == "q") || (input == "Q"))
 		{
 			if (ShowMainMenu(player, &map))
 				break;

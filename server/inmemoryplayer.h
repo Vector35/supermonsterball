@@ -44,4 +44,7 @@ public:
 	virtual bool GiveSeed() override;
 	virtual BallThrowResult ThrowBall(ItemType type) override;
 	virtual void RunFromEncounter() override;
+
+	virtual bool PowerUpMonster(std::shared_ptr<Monster> monster) override;
+	virtual bool EvolveMonster(std::shared_ptr<Monster> monster) override;
 };

@@ -1,4 +1,5 @@
 #include <map>
+#include <stdlib.h>
 #include "monster.h"
 
 using namespace std;
@@ -631,6 +632,21 @@ void Monster::SetCapture(bool captured, ItemType ball)
 
 void Monster::ResetHP()
 {
+}
+
+
+void Monster::Evolve()
+{
+	if (m_species->GetEvolutions().size() == 0)
+		return;
+
+	bool renamed = (m_name != m_species->GetName());
+
+	size_t choice = rand() % m_species->GetEvolutions().size();
+	m_species = m_species->GetEvolutions()[choice];
+
+	if (!renamed)
+		m_name = m_species->GetName();
 }
 
 

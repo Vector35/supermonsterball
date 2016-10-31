@@ -206,6 +206,8 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 			EarnExperience(100);
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
 		m_captured[m_encounter->GetSpecies()->GetIndex()]++;
+		m_treats[m_encounter->GetSpecies()->GetIndex()] += 3;
+		m_powder += 100;
 		m_monsters.push_back(m_encounter);
 		EndEncounter(true, type);
 		return THROW_RESULT_CATCH;
@@ -237,4 +239,36 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 void InMemoryPlayer::RunFromEncounter()
 {
 	EndEncounter(false);
+}
+
+
+bool InMemoryPlayer::PowerUpMonster(std::shared_ptr<Monster> monster)
+{
+	if (monster->GetLevel() >= GetLevel())
+		return false;
+	if (monster->GetLevel() >= 40)
+		return false;
+
+	if (GetTreatsForSpecies(monster->GetSpecies()) < GetPowerUpCost(monster->GetLevel()).treats)
+		return false;
+	if (GetPowder() < GetPowerUpCost(monster->GetLevel()).powder)
+		return false;
+
+	m_treats[monster->GetSpecies()->GetIndex()] -= GetPowerUpCost(monster->GetLevel()).treats;
+	m_powder -= GetPowerUpCost(monster->GetLevel()).powder;
+	monster->SetLevel(monster->GetLevel() + 1);
+	return true;
+}
+
+
+bool InMemoryPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
+{
+	if (monster->GetSpecies()->GetEvolutions().size() == 0)
+		return false;
+	if (GetTreatsForSpecies(monster->GetSpecies()) < monster->GetSpecies()->GetEvolutionCost())
+		return false;
+
+	m_treats[monster->GetSpecies()->GetIndex()] -= monster->GetSpecies()->GetEvolutionCost();
+	monster->Evolve();
+	return true;
 }

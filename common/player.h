@@ -24,6 +24,13 @@ struct LevelUpItem
 	LevelUpItem(ItemType t, uint32_t c): type(t), count(c) {}
 };
 
+struct PowerUpCost
+{
+	uint32_t treats;
+	uint32_t powder;
+	PowerUpCost(uint32_t t, uint32_t p): treats(t), powder(p) {}
+};
+
 class Player
 {
 public:
@@ -40,6 +47,8 @@ public:
 	virtual uint32_t GetNumberSeen(MonsterSpecies* species) = 0;
 	virtual uint32_t GetTreatsForSpecies(MonsterSpecies* species) = 0;
 
+	PowerUpCost GetPowerUpCost(uint32_t level);
+
 	virtual std::map<ItemType, uint32_t> GetInventory() = 0;
 	virtual uint32_t GetItemCount(ItemType type) = 0;
 	virtual bool UseItem(ItemType type) = 0;
@@ -53,4 +62,7 @@ public:
 	virtual bool GiveSeed() = 0;
 	virtual BallThrowResult ThrowBall(ItemType type) = 0;
 	virtual void RunFromEncounter() = 0;
+
+	virtual bool PowerUpMonster(std::shared_ptr<Monster> monster) = 0;
+	virtual bool EvolveMonster(std::shared_ptr<Monster> monster) = 0;
 };

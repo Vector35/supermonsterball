@@ -119,6 +119,7 @@ public:
 	Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTime);
 
 	MonsterSpecies* GetSpecies() const { return m_species; }
+	const std::string& GetName() const { return m_name; }
 	uint32_t GetAttackIV() const { return m_attackIV; }
 	uint32_t GetDefenseIV() const { return m_defenseIV; }
 	uint32_t GetStaminaIV() const { return m_staminaIV; }
@@ -134,6 +135,8 @@ public:
 	void SetLevel(uint32_t level);
 	void SetCapture(bool captured, ItemType ball);
 	void ResetHP();
+
+	void Evolve();
 };
 
 struct MonsterSighting

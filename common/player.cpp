@@ -75,6 +75,16 @@ static vector<LevelUpItem> g_levelItems[39] = {
 		LevelUpItem(ITEM_MEGA_SEED, 20)} // Level 39
 };
 
+static PowerUpCost g_powerUpCost[39] = {
+	PowerUpCost(1, 100), PowerUpCost(1, 100), PowerUpCost(1, 100), PowerUpCost(1, 100), PowerUpCost(1, 100),
+	PowerUpCost(1, 200), PowerUpCost(1, 200), PowerUpCost(1, 200), PowerUpCost(1, 200), PowerUpCost(1, 200),
+	PowerUpCost(2, 300), PowerUpCost(2, 300), PowerUpCost(2, 400), PowerUpCost(2, 400), PowerUpCost(2, 500),
+	PowerUpCost(3, 500), PowerUpCost(3, 700), PowerUpCost(3, 700), PowerUpCost(3, 1000), PowerUpCost(3, 1000),
+	PowerUpCost(4, 1500), PowerUpCost(4, 1500), PowerUpCost(4, 2000), PowerUpCost(4, 2000), PowerUpCost(4, 2500),
+	PowerUpCost(5, 2500), PowerUpCost(5, 3000), PowerUpCost(5, 3000), PowerUpCost(5, 4000), PowerUpCost(5, 4000),
+	PowerUpCost(6, 5000), PowerUpCost(6, 5000), PowerUpCost(7, 6000), PowerUpCost(7, 6000), PowerUpCost(8, 7000),
+	PowerUpCost(8, 7000), PowerUpCost(9, 8000), PowerUpCost(9, 8000), PowerUpCost(9, 9000)
+};
 
 uint32_t Player::GetTotalExperienceNeededForCurrentLevel()
 {
@@ -106,7 +116,15 @@ uint32_t Player::GetTotalExperienceNeededForNextLevel()
 
 vector<LevelUpItem> Player::GetItemsOnLevelUp(uint32_t level)
 {
-	if (level >= 40)
+	if ((level >= 40) || (level == 0))
 		return vector<LevelUpItem>{};
-	return g_levelItems[level];
+	return g_levelItems[level - 1];
+}
+
+
+PowerUpCost Player::GetPowerUpCost(uint32_t level)
+{
+	if ((level >= 40) || (level == 0))
+		return PowerUpCost(0, 0);
+	return g_powerUpCost[level - 1];
 }

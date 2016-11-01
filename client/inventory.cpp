@@ -76,52 +76,53 @@ static int32_t ShowInventoryOptions(size_t width, const vector<string>& options)
 }
 
 
+static string GetStringForInventoryItem(ItemType item, uint32_t count)
+{
+	char nameStr[64];
+	switch (item)
+	{
+	case ITEM_STANDARD_BALL:
+		sprintf(nameStr, "%3u ⨯ ⚪  Standard Ball", count);
+		break;
+	case ITEM_SUPER_BALL:
+		sprintf(nameStr, "%3u ⨯ 🔵  Super Ball", count);
+		break;
+	case ITEM_UBER_BALL:
+		sprintf(nameStr, "%3u ⨯ 🔴  Über Ball", count);
+		break;
+	case ITEM_STANDARD_HEAL:
+		sprintf(nameStr, "%3u ⨯ 🍎  Standard Heal", count);
+		break;
+	case ITEM_SUPER_HEAL:
+		sprintf(nameStr, "%3u ⨯ 💉  Super Heal", count);
+		break;
+	case ITEM_KEG_OF_HEALTH:
+		sprintf(nameStr, "%3u ⨯ 🍺  Keg of Health", count);
+		break;
+	case ITEM_MEGA_SEED:
+		sprintf(nameStr, "%3u ⨯ 🍇  Mega Seed", count);
+		break;
+	default:
+		sprintf(nameStr, "%3u ⨯ ?  MissingNo", count);
+		break;
+	}
+	return nameStr;
+}
+
+
 void ShowInventory(Player* player, MapRenderer* map)
 {
 	vector<ItemType> items;
 	vector<string> names;
-	char nameStr[32];
-	if (player->GetItemCount(ITEM_STANDARD_BALL))
+	static vector<ItemType> itemOrdering {ITEM_STANDARD_BALL, ITEM_SUPER_BALL, ITEM_UBER_BALL,
+		ITEM_STANDARD_HEAL, ITEM_SUPER_HEAL, ITEM_KEG_OF_HEALTH, ITEM_MEGA_SEED};
+	for (auto& i : itemOrdering)
 	{
-		items.push_back(ITEM_STANDARD_BALL);
-		sprintf(nameStr, "%3u ⨯ ⚪  Standard Ball", player->GetItemCount(ITEM_STANDARD_BALL));
-		names.push_back(nameStr);
-	}
-	if (player->GetItemCount(ITEM_SUPER_BALL))
-	{
-		items.push_back(ITEM_SUPER_BALL);
-		sprintf(nameStr, "%3u ⨯ 🔵  Super Ball", player->GetItemCount(ITEM_SUPER_BALL));
-		names.push_back(nameStr);
-	}
-	if (player->GetItemCount(ITEM_UBER_BALL))
-	{
-		items.push_back(ITEM_UBER_BALL);
-		sprintf(nameStr, "%3u ⨯ 🔴  Über Ball", player->GetItemCount(ITEM_UBER_BALL));
-		names.push_back(nameStr);
-	}
-	if (player->GetItemCount(ITEM_STANDARD_HEAL))
-	{
-		items.push_back(ITEM_STANDARD_HEAL);
-		sprintf(nameStr, "%3u ⨯ 🍎  Standard Heal", player->GetItemCount(ITEM_STANDARD_HEAL));
-		names.push_back(nameStr);
-	}
-	if (player->GetItemCount(ITEM_SUPER_HEAL))
-	{
-		items.push_back(ITEM_SUPER_HEAL);
-		sprintf(nameStr, "%3u ⨯ 💉  Super Heal", player->GetItemCount(ITEM_SUPER_HEAL));
-		names.push_back(nameStr);
-	}
-	if (player->GetItemCount(ITEM_KEG_OF_HEALTH))
-	{
-		items.push_back(ITEM_KEG_OF_HEALTH);
-		sprintf(nameStr, "%3u ⨯ 🍺  Keg of Health", player->GetItemCount(ITEM_KEG_OF_HEALTH));
-		names.push_back(nameStr);
-	}
-	if (player->GetItemCount(ITEM_MEGA_SEED))
-	{
-		items.push_back(ITEM_MEGA_SEED);
-		sprintf(nameStr, "%3u ⨯ 🍇  Mega Seed", player->GetItemCount(ITEM_MEGA_SEED));
-		names.push_back(nameStr);
+		if (player->GetItemCount(i))
+		{
+			items.push_back(i);
+			names.push_back(GetStringForInventoryItem(i, player->GetItemCount(i)));
+		}
 	}
 
 	while (true)
@@ -131,5 +132,50 @@ void ShowInventory(Player* player, MapRenderer* map)
 			break;
 
 		map->Paint();
+	}
+}
+
+
+void GetAndShowItemsFromStop(Player* player, int32_t x, int32_t y)
+{
+	map<ItemType, uint32_t> items = player->GetItemsFromStop(x, y);
+	if (items.size() == 0)
+		return;
+
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t width = 30;
+	size_t height = items.size() + 2;
+	size_t boxX = (centerX - (width / 2)) | 1;
+	size_t boxY = centerY - (height / 2);
+	DrawBox(boxX - 1, boxY - 1, width + 2, height + 2, 234);
+
+	term->BeginOutputQueue();
+	term->SetColor(255, 234);
+
+	term->SetCursorPosition(boxX + 1, boxY);
+	term->Output("Items Obtained:");
+	term->SetCursorPosition(boxX, boxY + 1);
+	for (size_t dx = 0; dx < width; dx++)
+		term->Output("┄");
+
+	size_t i = 0;
+	for (auto& item : items)
+	{
+		term->SetCursorPosition(boxX + 1, boxY + i + 2);
+		term->Output(GetStringForInventoryItem(item.first, item.second));
+
+		i++;
+	}
+
+	term->EndOutputQueue();
+
+	while (!term->HasQuit())
+	{
+		string input = term->GetInput();
+		if ((input == "\033") || (input == " ") || (input == "\r") || (input == "\n") || (input == "e") ||
+			(input == "E") || (input == "q") || (input == "Q"))
+			break;
 	}
 }

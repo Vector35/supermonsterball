@@ -13,6 +13,7 @@ void ShowInventory(Player* player, MapRenderer* map);
 void ShowMonsterIndex(Player* player, MapRenderer* map);
 void ShowMonsterInfo(Player* player, MonsterSpecies* species);
 bool ShowMainMenu(Player* player, MapRenderer* map);
+void GetAndShowItemsFromStop(Player* player, int32_t x, int32_t y);
 
 void InterruptableWait(uint32_t ms);
 

@@ -339,6 +339,18 @@ void ShowMonsterDetails(Player* player, shared_ptr<Monster> monster)
 
 			ShowBoxText(detailBoxX, detailBoxY, detailBoxWidth, detailBoxHeight, "Your " +
 				oldSpecies + " evolved into " + monster->GetSpecies()->GetName() + ".");
+
+			if (player->GetNumberCaptured(monster->GetSpecies()) == 1)
+			{
+				ShowBoxText(detailBoxX, detailBoxY, detailBoxWidth, detailBoxHeight, player->GetName() +
+					" earned 1000 XP.");
+			}
+			else
+			{
+				ShowBoxText(detailBoxX, detailBoxY, detailBoxWidth, detailBoxHeight, player->GetName() +
+					" earned 500 XP.");
+			}
+
 			DrawMonsterDetails(detailBoxX, detailBoxY, detailBoxWidth, detailBoxHeight, player, monster);
 		}
 	}

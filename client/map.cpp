@@ -56,8 +56,16 @@ void MapRenderer::Paint()
 			case TILE_CITY_BUILDING_2:
 			case TILE_CITY_BUILDING_3:
 			case TILE_CITY_BUILDING_4:
-			case TILE_CITY_BUILDING_5:
 				newColor = 242;
+				break;
+			case TILE_STOP:
+				if (m_player->IsStopAvailable(curX, curY))
+					newColor = 81;
+				else
+					newColor = 225;
+				break;
+			case TILE_NOT_LOADED:
+				newColor = 236;
 				break;
 			default:
 				newColor = 29;
@@ -125,10 +133,10 @@ void MapRenderer::Paint()
 				term->Output("🏦 ");
 				break;
 			case TILE_CITY_BUILDING_4:
-				term->Output("🏪 ");
-				break;
-			case TILE_CITY_BUILDING_5:
 				term->Output("🏬 ");
+				break;
+			case TILE_STOP:
+				term->Output("🚏 ");
 				break;
 			default:
 				term->Output("  ");

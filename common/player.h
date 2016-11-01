@@ -5,6 +5,7 @@
 #include "item.h"
 
 #define MIN_MOVEMENT_INTERVAL 100
+#define MAX_STOPS_WITHIN_COOLDOWN 100
 
 enum BallThrowResult
 {
@@ -69,4 +70,8 @@ public:
 	virtual void SetMonsterName(std::shared_ptr<Monster> monster, const std::string& name) = 0;
 
 	virtual uint8_t GetMapTile(int32_t x, int32_t y) = 0;
+	bool IsMapTileTraversable(int32_t x, int32_t y);
+
+	virtual bool IsStopAvailable(int32_t x, int32_t y) = 0;
+	virtual std::map<ItemType, uint32_t> GetItemsFromStop(int32_t x, int32_t y) = 0;
 };

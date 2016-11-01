@@ -4,6 +4,12 @@
 
 class InMemoryPlayer: public Player
 {
+	struct RecentStopVisit
+	{
+		int32_t x, y;
+		time_t visitTime;
+	};
+
 	std::string m_name;
 	uint32_t m_level, m_xp, m_powder;
 	std::vector<std::shared_ptr<Monster>> m_monsters;
@@ -11,6 +17,7 @@ class InMemoryPlayer: public Player
 	std::map<uint32_t, uint32_t> m_seen, m_captured;
 	std::map<uint32_t, uint32_t> m_treats;
 	std::map<uint32_t, std::vector<std::shared_ptr<Monster>>> m_recentEncounters;
+	std::vector<RecentStopVisit> m_recentStopsVisited;
 	int32_t m_x, m_y;
 	std::shared_ptr<Monster> m_encounter;
 	bool m_seedGiven;
@@ -52,4 +59,7 @@ public:
 	virtual void SetMonsterName(std::shared_ptr<Monster> monster, const std::string& name) override;
 
 	virtual uint8_t GetMapTile(int32_t x, int32_t y) override;
+
+	virtual bool IsStopAvailable(int32_t x, int32_t y) override;
+	virtual std::map<ItemType, uint32_t> GetItemsFromStop(int32_t x, int32_t y) override;
 };

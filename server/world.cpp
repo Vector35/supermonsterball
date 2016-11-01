@@ -40,6 +40,8 @@ World::World()
 	Perlin2D temp(0xc01dc01ddeaddeadLL);
 
 	uint64_t seed = 0xbaadbaaddeadc0deLL;
+	bool afterSpawn = false;
+	bool afterChurch = false;
 	for (size_t y = 0; y < MAP_SIZE; y++)
 	{
 		for (size_t x = 0; x < MAP_SIZE; x++)
@@ -61,12 +63,24 @@ World::World()
 			else if (fromCenter < 120)
 				dense += 0.5f * (1.0f - ((fromCenter - 50) / 70.0f));
 
+			uint32_t spawnValue = (seed >> 16) & 0xffff;
+			seed = (seed * 25214903917LL) + 11LL;
+			uint32_t requiredSpawnValue = (uint32_t)(0x40 + (0x200 * (dense / 0.4f)));
+			if (requiredSpawnValue > 0x400)
+				requiredSpawnValue = 0x400;
+			bool spawnHere = spawnValue < requiredSpawnValue;
+			const char* spawnType = "grass";
+
 			if (wet > 0.35f)
+			{
 				tile = TILE_WATER;
+				spawnHere = false;
+			}
 			else if (dense > 0.4f)
 			{
 				tile = TILE_CITY;
-				if (((x % 4) != 0) && ((y % 4) != 0))
+				spawnType = "city";
+				if ((!afterSpawn) && (!spawnHere) && ((x % 4) != 0) && ((y % 4) != 0))
 				{
 					uint32_t decorationValue = (seed >> 16) & 0xffff;
 					seed = (seed * 25214903917LL) + 11LL;
@@ -78,66 +92,85 @@ World::World()
 						tile = TILE_CITY_BUILDING_3;
 					else if (decorationValue < 0x4c00)
 						tile = TILE_CITY_BUILDING_4;
-					else if (decorationValue < 0x4e00)
-						tile = TILE_CITY_BUILDING_5;
 				}
 			}
 			else if (wet < -0.3f)
 			{
 				tile = TILE_DESERT;
-				uint32_t decorationValue = (seed >> 16) & 0xffff;
-				seed = (seed * 25214903917LL) + 11LL;
-				if ((dense > 0.4f) && (decorationValue < 0x2000))
-					tile = TILE_DESERT_HOUSE;
-				else if (decorationValue < 0x200)
-					tile = TILE_DESERT_CACTUS;
+				spawnType = "desert";
+				if ((!afterSpawn) && (!spawnHere))
+				{
+					uint32_t decorationValue = (seed >> 16) & 0xffff;
+					seed = (seed * 25214903917LL) + 11LL;
+					if ((dense > 0.4f) && (decorationValue < 0x2000))
+						tile = TILE_DESERT_HOUSE;
+					else if (decorationValue < 0x200)
+						tile = TILE_DESERT_CACTUS;
+				}
 			}
 			else
 			{
 				tile = TILE_GRASS;
-				uint32_t decorationValue = (seed >> 16) & 0xffff;
-				seed = (seed * 25214903917LL) + 11LL;
-				if ((dense > 0.3f) && (decorationValue < 0x800))
-					tile = TILE_SUBURB_HOUSE;
-				else if ((dense > 0.3f) && (decorationValue < 0x900))
-					tile = TILE_SUBURB_CHURCH;
-				else if ((wet > 0.3f) && (decorationValue < 0x200))
-					tile = TILE_GRASS_PALM_TREE;
-				else if (decorationValue < 0x100)
-					tile = TILE_GRASS_TREE_1;
-				else if (decorationValue < 0x200)
-					tile = TILE_GRASS_TREE_2;
-			}
-			m_mapData[(y * MAP_SIZE) + x] = tile;
-		}
-	}
+				if ((!afterSpawn) && (!spawnHere))
+				{
+					uint32_t decorationValue = (seed >> 16) & 0xffff;
+					seed = (seed * 25214903917LL) + 11LL;
+					if ((dense > 0.3f) && (decorationValue < 0x800))
+						tile = TILE_SUBURB_HOUSE;
+					else if ((dense > 0.3f) && (decorationValue < 0x900))
+						tile = TILE_SUBURB_CHURCH;
+					else if ((wet > 0.3f) && (decorationValue < 0x200))
+						tile = TILE_GRASS_PALM_TREE;
+					else if (decorationValue < 0x100)
+						tile = TILE_GRASS_TREE_1;
+					else if (decorationValue < 0x200)
+						tile = TILE_GRASS_TREE_2;
+				}
 
-	for (size_t i = 0; i < 100000; i++)
-	{
-		SpawnPoint s;
-		s.x = (rand() % MAP_SIZE) - (MAP_SIZE / 2);
-		s.y = (rand() % MAP_SIZE) - (MAP_SIZE / 2);
-		s.timeOffset = rand() % 3600;
-		s.timeActive = DEFAULT_SPAWN_TIME;
-		switch (rand() % 5)
-		{
-		case 0:
-			s.biome = Biome::GetByName("grass");
-			break;
-		case 1:
-			s.biome = Biome::GetByName("water");
-			break;
-		case 2:
-			s.biome = Biome::GetByName("mountain");
-			break;
-		case 3:
-			s.biome = Biome::GetByName("desert");
-			break;
-		default:
-			s.biome = Biome::GetByName("city");
-			break;
+				if (wet > 0.3f)
+					spawnType = "water";
+				else if (cold > 0.25f)
+					spawnType = "mountain";
+			}
+
+			if (tile != TILE_WATER)
+			{
+				uint32_t stopValue = (seed >> 16) & 0xffff;
+				seed = (seed * 25214903917LL) + 11LL;
+				uint32_t requiredStopValue = (uint32_t)(0x8 + (0x100 * (dense / 0.4f)));
+				if (dense < 0.25f)
+					requiredStopValue = 0x8;
+				if (requiredStopValue > 0x140)
+					requiredStopValue = 0x140;
+				if (afterChurch)
+					requiredStopValue = 0x6000;
+				if (stopValue < requiredStopValue)
+				{
+					tile = TILE_STOP;
+					spawnHere = false;
+				}
+			}
+
+			m_mapData[(y * MAP_SIZE) + x] = tile;
+
+			afterChurch = (tile == TILE_SUBURB_CHURCH);
+
+			afterSpawn = false;
+			if (spawnHere)
+			{
+				uint32_t timeValue = (seed >> 16) & 0xffff;
+				seed = (seed * 25214903917LL) + 11LL;
+
+				SpawnPoint s;
+				s.x = x - (MAP_SIZE / 2);
+				s.y = y - (MAP_SIZE / 2);
+				s.timeOffset = timeValue % 3600;
+				s.timeActive = DEFAULT_SPAWN_TIME;
+				s.biome = Biome::GetByName(spawnType);
+				AddSpawnPoint(s);
+				afterSpawn = true;
+			}
 		}
-		AddSpawnPoint(s);
 	}
 }
 
@@ -284,12 +317,12 @@ uint8_t World::GetMapTile(int32_t x, int32_t y)
 	x += MAP_SIZE / 2;
 	y += MAP_SIZE / 2;
 	if (x < 0)
-		return TILE_GRASS;
+		return TILE_NOT_LOADED;
 	if (y < 0)
-		return TILE_GRASS;
+		return TILE_NOT_LOADED;
 	if (x >= MAP_SIZE)
-		return TILE_GRASS;
+		return TILE_NOT_LOADED;
 	if (y >= MAP_SIZE)
-		return TILE_GRASS;
+		return TILE_NOT_LOADED;
 	return m_mapData[(y * MAP_SIZE) + x];
 }

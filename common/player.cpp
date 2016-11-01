@@ -1,4 +1,5 @@
 #include "player.h"
+#include "world.h"
 
 using namespace std;
 
@@ -127,4 +128,18 @@ PowerUpCost Player::GetPowerUpCost(uint32_t level)
 	if ((level >= 40) || (level == 0))
 		return PowerUpCost(0, 0);
 	return g_powerUpCost[level - 1];
+}
+
+
+bool Player::IsMapTileTraversable(int32_t x, int32_t y)
+{
+	switch (GetMapTile(x, y))
+	{
+	case TILE_GRASS:
+	case TILE_CITY:
+	case TILE_DESERT:
+		return true;
+	default:
+		return false;
+	}
 }

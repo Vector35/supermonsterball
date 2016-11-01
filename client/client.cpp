@@ -337,38 +337,58 @@ void GameLoop(Player* player)
 		{
 			if (term->IsInputUpMovement(input))
 			{
-				lastMovement = chrono::steady_clock::now();
 				int32_t x = player->GetLastLocationX();
 				int32_t y = player->GetLastLocationY() - 1;
-				player->ReportLocation(x, y);
-				map.EnsurePlayerVisible();
+				if (player->IsStopAvailable(x, y))
+					GetAndShowItemsFromStop(player, x, y);
+				else if (player->IsMapTileTraversable(x, y))
+				{
+					lastMovement = chrono::steady_clock::now();
+					player->ReportLocation(x, y);
+					map.EnsurePlayerVisible();
+				}
 				map.Paint();
 			}
 			if (term->IsInputDownMovement(input))
 			{
-				lastMovement = chrono::steady_clock::now();
 				int32_t x = player->GetLastLocationX();
 				int32_t y = player->GetLastLocationY() + 1;
-				player->ReportLocation(x, y);
-				map.EnsurePlayerVisible();
+				if (player->IsStopAvailable(x, y))
+					GetAndShowItemsFromStop(player, x, y);
+				else if (player->IsMapTileTraversable(x, y))
+				{
+					lastMovement = chrono::steady_clock::now();
+					player->ReportLocation(x, y);
+					map.EnsurePlayerVisible();
+				}
 				map.Paint();
 			}
 			if (term->IsInputLeftMovement(input))
 			{
-				lastMovement = chrono::steady_clock::now();
 				int32_t x = player->GetLastLocationX() - 1;
 				int32_t y = player->GetLastLocationY();
-				player->ReportLocation(x, y);
-				map.EnsurePlayerVisible();
+				if (player->IsStopAvailable(x, y))
+					GetAndShowItemsFromStop(player, x, y);
+				else if (player->IsMapTileTraversable(x, y))
+				{
+					lastMovement = chrono::steady_clock::now();
+					player->ReportLocation(x, y);
+					map.EnsurePlayerVisible();
+				}
 				map.Paint();
 			}
 			if (term->IsInputRightMovement(input))
 			{
-				lastMovement = chrono::steady_clock::now();
 				int32_t x = player->GetLastLocationX() + 1;
 				int32_t y = player->GetLastLocationY();
-				player->ReportLocation(x, y);
-				map.EnsurePlayerVisible();
+				if (player->IsStopAvailable(x, y))
+					GetAndShowItemsFromStop(player, x, y);
+				else if (player->IsMapTileTraversable(x, y))
+				{
+					lastMovement = chrono::steady_clock::now();
+					player->ReportLocation(x, y);
+					map.EnsurePlayerVisible();
+				}
 				map.Paint();
 			}
 		}

@@ -272,6 +272,14 @@ bool InMemoryPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
 
 	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= monster->GetSpecies()->GetEvolutionCost();
 	monster->Evolve();
+
+	if (GetNumberCaptured(monster->GetSpecies()) == 0)
+		EarnExperience(1000);
+	else
+		EarnExperience(500);
+	m_seen[monster->GetSpecies()->GetIndex()]++;
+	m_captured[monster->GetSpecies()->GetIndex()]++;
+	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]++;
 	return true;
 }
 
@@ -299,4 +307,88 @@ void InMemoryPlayer::SetMonsterName(std::shared_ptr<Monster> monster, const stri
 uint8_t InMemoryPlayer::GetMapTile(int32_t x, int32_t y)
 {
 	return World::GetWorld()->GetMapTile(x, y);
+}
+
+
+bool InMemoryPlayer::IsStopAvailable(int32_t x, int32_t y)
+{
+	if (GetMapTile(x, y) != TILE_STOP)
+		return false;
+	for (auto& i : m_recentStopsVisited)
+	{
+		if ((i.x == x) && (i.y == y) && ((time(NULL) - i.visitTime) < 300))
+			return false;
+	}
+	return true;
+}
+
+
+map<ItemType, uint32_t> InMemoryPlayer::GetItemsFromStop(int32_t x, int32_t y)
+{
+	if (!IsStopAvailable(x, y))
+		return map<ItemType, uint32_t>();
+
+	// Clear out old visits from recent list
+	for (size_t i = 0; i < m_recentStopsVisited.size(); )
+	{
+		if ((m_recentStopsVisited[i].visitTime - time(NULL)) > 300)
+		{
+			m_recentStopsVisited.erase(m_recentStopsVisited.begin() + i);
+			continue;
+		}
+		i++;
+	}
+
+	if (m_recentStopsVisited.size() > MAX_STOPS_WITHIN_COOLDOWN)
+		return map<ItemType, uint32_t>();
+
+	map<ItemType, uint32_t> itemWeights;
+	itemWeights[ITEM_STANDARD_BALL] = 20;
+	itemWeights[ITEM_MEGA_SEED] = 3;
+	if (GetLevel() >= 5)
+		itemWeights[ITEM_STANDARD_HEAL] = 8;
+	if (GetLevel() >= 10)
+		itemWeights[ITEM_SUPER_BALL] = 7;
+	if (GetLevel() >= 15)
+		itemWeights[ITEM_SUPER_HEAL] = 3;
+	if (GetLevel() >= 20)
+		itemWeights[ITEM_UBER_BALL] = 3;
+	if (GetLevel() >= 25)
+		itemWeights[ITEM_KEG_OF_HEALTH] = 1;
+	uint32_t totalWeight = 0;
+	for (auto& i : itemWeights)
+		totalWeight += i.second;
+
+	map<ItemType, uint32_t> result;
+	for (size_t count = 0; ; count++)
+	{
+		if (count >= 3)
+		{
+			if ((rand() % 10) > 3)
+				break;
+		}
+
+		uint32_t value = rand() % totalWeight;
+		uint32_t cur = 0;
+		for (auto& i : itemWeights)
+		{
+			if (value < (cur + i.second))
+			{
+				result[i.first]++;
+				break;
+			}
+			cur += i.second;
+		}
+	}
+
+	for (auto& i : result)
+		m_inventory[i.first] += i.second;
+
+	// Add this visit to the recent list so that it can't be used until the cooldown expires
+	RecentStopVisit visit;
+	visit.x = x;
+	visit.y = y;
+	visit.visitTime = time(NULL);
+	m_recentStopsVisited.push_back(visit);
+	return result;
 }

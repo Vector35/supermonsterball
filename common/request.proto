@@ -1,0 +1,51 @@
+syntax = "proto3";
+package request;
+
+message Request
+{
+	enum RequestType
+	{
+		Invalid = 0;
+		Login = 1;
+		Register = 2;
+		GetPlayerDetails = 3;
+		GetMonsterList = 4;
+		GetMonstersSeenAndCaptured = 5;
+		GetTreats = 6;
+		GetInventory = 7;
+		GetMonstersInRange = 8;
+		StartEncounter = 9;
+		GiveSeed = 10;
+		ThrowBall = 11;
+		RunFromEncounter = 12;
+		PowerUpMonster = 13;
+		EvolveMonster = 14;
+		TransferMonster = 15;
+		SetMonsterName = 16;
+		GetMapTiles = 17;
+		GetRecentStops = 18;
+		GetItemsFromStop = 19;
+	}
+
+	RequestType type = 1;
+	bytes data = 2;
+}
+
+message LoginRequest
+{
+	string username = 1;
+	string password = 2;
+}
+
+message LoginResponse
+{
+	enum AccountStatus
+	{
+		Unknown = 0;
+		LoginOK = 1;
+		InvalidUsernameOrPassword = 2;
+		AccountBanned = 3;
+	}
+
+	AccountStatus status = 1;
+}

@@ -4,7 +4,7 @@ This is a CTF challenge released at CSAW 2016 that is a parody of the hit game P
 
 ## Building and running
 
-The game has been tested on Mac and Linux. The included Makefile will build the components of the game.
+The game has been tested on Mac and Linux. The included Makefile will build the components of the game. You must install the Google [protobuf](https://github.com/google/protobuf) and OpenSSL libraries to build.
 
 To run the game server, simply start `game_server`. The `game_client` executable is the client that is distributed to players during the CTF.
 

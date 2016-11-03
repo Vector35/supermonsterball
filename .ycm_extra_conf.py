@@ -48,6 +48,7 @@ flags = [
 '-I' + rootPath + '/common',
 '-I' + rootPath + '/client',
 '-I' + rootPath + '/server',
+'-I/usr/local/include',
 '-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/usr/include',
 '-F/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/System/Library/Frameworks',
 '-framework', 'CoreServices'

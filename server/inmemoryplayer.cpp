@@ -15,10 +15,8 @@ InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 	m_y = 0;
 	m_nextMonsterID = 1;
 
-	m_inventory[ITEM_STANDARD_BALL] = 30;
-	m_inventory[ITEM_SUPER_BALL] = 5;
-	m_inventory[ITEM_UBER_BALL] = 3;
-	m_inventory[ITEM_MEGA_SEED] = 10;
+	m_inventory[ITEM_STANDARD_BALL] = 20;
+	m_inventory[ITEM_MEGA_SEED] = 5;
 }
 
 

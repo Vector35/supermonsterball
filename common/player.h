@@ -4,6 +4,8 @@
 #include "monster.h"
 #include "item.h"
 
+#define SERVER_PORT 2525
+
 #define MIN_MOVEMENT_INTERVAL 100
 #define MAX_STOPS_WITHIN_COOLDOWN 100
 

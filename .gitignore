@@ -3,3 +3,5 @@ game_server
 standalone
 *.o
 *.pyc
+common/request.pb.h
+common/request.pb.cc

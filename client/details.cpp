@@ -179,8 +179,16 @@ static bool ShowMonsterOptions(Player* player, shared_ptr<Monster> monster, size
 			}
 			else if (totalIV < 45)
 			{
-				ShowBoxText(x, y, width, height, "Your " +
-					monster->GetName() + " is amazing!");
+				if (monster->GetSpecies()->GetName() == "Motherclucker")
+				{
+					ShowBoxText(x, y, width, height, "That's one badass " +
+						monster->GetName() + "!");
+				}
+				else
+				{
+					ShowBoxText(x, y, width, height, "Your " +
+						monster->GetName() + " is amazing!");
+				}
 			}
 			else if (totalIV == 45)
 			{

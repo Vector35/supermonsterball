@@ -446,7 +446,7 @@ void InterruptableWait(uint32_t ms)
 
 
 string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, uint32_t backgroundColor,
-	const string& defaultString)
+	const string& defaultString, bool isPassword)
 {
 	Terminal* term = Terminal::GetTerminal();
 	string result = defaultString;
@@ -457,7 +457,18 @@ string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, u
 		term->SetCursorPosition(x, y);
 		term->SetColor(foregroundColor, backgroundColor);
 
-		term->Output(result);
+		if (isPassword)
+		{
+			string bullets = "";
+			for (size_t i = 0; i < result.size(); i++)
+				bullets += "•";
+			term->Output(bullets);
+		}
+		else
+		{
+			term->Output(result);
+		}
+
 		term->SetColor(backgroundColor, foregroundColor);
 		term->Output(" ");
 		term->SetColor(foregroundColor, backgroundColor);

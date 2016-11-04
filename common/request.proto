@@ -49,3 +49,22 @@ message LoginResponse
 
 	AccountStatus status = 1;
 }
+
+message RegisterRequest
+{
+	string username = 1;
+	string password = 2;
+}
+
+message RegisterResponse
+{
+	enum RegisterStatus
+	{
+		Unknown = 0;
+		RegisterOK = 1;
+		InvalidOrDuplicateUsername = 2;
+		BadPassword = 3;
+	}
+
+	RegisterStatus status = 1;
+}

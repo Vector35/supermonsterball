@@ -8,9 +8,200 @@
 #include "player.h"
 #include "clientsocket.h"
 #include "clientrequest.h"
+#include "clientplayer.h"
+#include "client.h"
 
 using namespace std;
 using namespace request;
+
+
+static Player* ShowLoginPage()
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t width = 40;
+	size_t height = 6;
+	size_t x = (centerX - (width / 2)) | 1;
+	size_t y = centerY - (height / 2);
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+	term->BeginOutputQueue();
+	term->SetColor(255, 234);
+
+	term->SetCursorPosition(centerX - (strlen("Login") / 2), y + 1);
+	term->Output("Login");
+
+	term->SetCursorPosition(x + 1, y + 3);
+	term->Output("Username:");
+	term->SetCursorPosition(x + 1, y + 4);
+	term->Output("Password:");
+
+	string username = InputString(x + 11, y + 3, 16, 255, 234, "");
+	if (username == "")
+		return nullptr;
+	string password = InputString(x + 11, y + 4, 16, 255, 234, "", true);
+	if (password == "")
+		return nullptr;
+
+	LoginResponse_AccountStatus status = ClientRequest::GetClient()->Login(username, password);
+	if (status == LoginResponse_AccountStatus_LoginOK)
+		return new ClientPlayer(username);
+
+	return nullptr;
+}
+
+
+static Player* ShowRegisterPage()
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t width = 40;
+	size_t height = 7;
+	size_t x = (centerX - (width / 2)) | 1;
+	size_t y = centerY - (height / 2);
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+	term->BeginOutputQueue();
+	term->SetColor(255, 234);
+
+	term->SetCursorPosition(centerX - (strlen("Register") / 2), y + 1);
+	term->Output("Register");
+
+	term->SetCursorPosition(x + 1, y + 3);
+	term->Output("Username:");
+	term->SetCursorPosition(x + 1, y + 4);
+	term->Output("Password:");
+	term->SetCursorPosition(x + 1, y + 5);
+	term->Output("Password:");
+
+	string username = InputString(x + 11, y + 3, 16, 255, 234, "");
+	if (username == "")
+		return nullptr;
+	string password = InputString(x + 11, y + 4, 16, 255, 234, "", true);
+	if (password == "")
+		return nullptr;
+	string passwordRepeat = InputString(x + 11, y + 5, 16, 255, 234, "", true);
+	if (passwordRepeat == "")
+		return nullptr;
+
+	if (password != passwordRepeat)
+	{
+		return nullptr;
+	}
+
+	RegisterResponse_RegisterStatus status = ClientRequest::GetClient()->Register(username, password);
+	if (status == RegisterResponse_RegisterStatus_RegisterOK)
+		return new ClientPlayer(username);
+
+	return nullptr;
+}
+
+
+static void DrawStartupOptions(size_t x, size_t y, size_t width, const vector<string>& options, int32_t selected)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+
+	for (size_t i = 0; i < options.size(); i++)
+	{
+		if ((int32_t)i == selected)
+			term->SetColor(234, 255);
+		else
+			term->SetColor(255, 234);
+
+		term->SetCursorPosition(x, y + i);
+		for (size_t dx = 0; dx < width; dx++)
+			term->Output(" ");
+
+		term->SetCursorPosition(x + 1, y + i);
+		term->Output(options[i]);
+	}
+
+	term->EndOutputQueue();
+}
+
+
+static int32_t ShowStartupOptions(size_t width, const vector<string>& options)
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t height = options.size();
+	size_t x = (centerX - (width / 2)) | 1;
+	size_t y = centerY - (height / 2);
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+	int32_t selected = 0;
+	while (true)
+	{
+		if (term->HasQuit())
+		{
+			selected = -1;
+			break;
+		}
+
+		DrawStartupOptions(x, y, width, options, selected);
+
+		string input = term->GetInput();
+		if (term->IsInputUpMovement(input))
+		{
+			selected--;
+			if (selected < 0)
+				selected = (int32_t)(options.size() - 1);
+		}
+		else if (term->IsInputDownMovement(input))
+		{
+			selected++;
+			if (selected >= (int32_t)options.size())
+				selected = 0;
+		}
+		else if ((input == "q") || (input == "Q") || (input == "\033"))
+		{
+			selected = -1;
+			break;
+		}
+		else if ((input == "\n") || (input == "\r") || (input == " ") || (input == "e") || (input == "E"))
+		{
+			break;
+		}
+	}
+
+	return selected;
+}
+
+
+static Player* ShowStartupMenu()
+{
+	while (true)
+	{
+		int32_t option = ShowStartupOptions(20, vector<string>{"Login", "New Account", "Quit Game"});
+		if ((option == -1) || (option == 2))
+			return nullptr;
+
+		if (option == 0)
+		{
+			Player* player = ShowLoginPage();
+			if (player)
+				return player;
+		}
+
+		if (option == 1)
+		{
+			Player* player = ShowRegisterPage();
+			if (player)
+				return player;
+		}
+	}
+}
+
+
+static void StartGameClient()
+{
+	Terminal::GetTerminal()->HideCursor();
+	Player* player = ShowStartupMenu();
+}
 
 
 int main(int argc, char* argv[])
@@ -103,8 +294,7 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		LoginResponse_AccountStatus status = ClientRequest::GetClient()->Login("test", "test");
-		printf("%d\n", status);
+		StartGameClient();
 	}
 	catch (exception& e)
 	{

@@ -5,3 +5,4 @@ standalone
 *.pyc
 common/request.pb.h
 common/request.pb.cc
+db.sqlite

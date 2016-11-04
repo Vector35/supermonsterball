@@ -27,4 +27,4 @@ std::string GetElementName(Element element);
 uint32_t GetElementColor(Element element);
 uint32_t GetElementTextColor(Element element);
 std::string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, uint32_t backgroundColor,
-	const std::string& defaultString);
+	const std::string& defaultString, bool isPassword = false);

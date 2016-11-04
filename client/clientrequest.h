@@ -18,4 +18,5 @@ public:
 	static ClientRequest* GetClient() { return m_requests; }
 
 	request::LoginResponse_AccountStatus Login(const std::string username, const std::string& password);
+	request::RegisterResponse_RegisterStatus Register(const std::string username, const std::string& password);
 };

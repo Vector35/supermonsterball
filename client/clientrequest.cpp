@@ -62,3 +62,17 @@ LoginResponse_AccountStatus ClientRequest::Login(const string username, const st
 		throw NetworkException("Invalid login response");
 	return response.status();
 }
+
+
+RegisterResponse_RegisterStatus ClientRequest::Register(const string username, const string& password)
+{
+	RegisterRequest request;
+	request.set_username(username);
+	request.set_password(password);
+	WriteRequest(Request_RequestType_Register, request.SerializeAsString());
+
+	RegisterResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid login response");
+	return response.status();
+}

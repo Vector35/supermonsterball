@@ -10,6 +10,8 @@
 #include "clienthandler.h"
 #include "processingthread.h"
 #include "player.h"
+#include "world.h"
+#include "database.h"
 
 using namespace std;
 
@@ -46,6 +48,10 @@ static void LockingCallback(int mode, int n, const char* file, int line)
 int main(int argc, char* argv[])
 {
 	signal(SIGPIPE, SIG_IGN);
+
+	MonsterSpecies::Init();
+	World::Init();
+	Database::Init();
 
 	// Initialize OpenSSL
 	SSL_library_init();

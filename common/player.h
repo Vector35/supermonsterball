@@ -37,6 +37,8 @@ struct PowerUpCost
 class Player
 {
 public:
+	virtual ~Player() {}
+
 	virtual std::string GetName() = 0;
 	virtual uint32_t GetLevel() = 0;
 	virtual uint32_t GetTotalExperience() = 0;

@@ -68,3 +68,204 @@ message RegisterResponse
 
 	RegisterStatus status = 1;
 }
+
+message GetPlayerDetailsResponse
+{
+	uint32 level = 1;
+	uint32 xp = 2;
+	uint32 powder = 3;
+	int32 x = 4;
+	int32 y = 5;
+}
+
+message GetMonsterListResponse
+{
+	message MonsterDetails
+	{
+		uint64 id = 1;
+		uint32 species = 2;
+		string name = 3;
+		uint32 hp = 4;
+		uint32 attack = 5;
+		uint32 defense = 6;
+		uint32 stamina = 7;
+		uint32 size = 8;
+		uint32 level = 9;
+		int32 x = 10;
+		int32 y = 11;
+		uint32 spawntime = 12;
+		uint32 ball = 13;
+		uint32 quickmove = 14;
+		uint32 chargemove = 15;
+	}
+	repeated MonsterDetails monsters = 1;
+}
+
+message GetMonstersSeenAndCapturedResponse
+{
+	message SpeciesAndCount
+	{
+		uint32 species = 1;
+		uint32 count = 2;
+	}
+	repeated SpeciesAndCount seen = 1;
+	repeated SpeciesAndCount captured = 2;
+}
+
+message GetTreatsResponse
+{
+	message SpeciesAndCount
+	{
+		uint32 species = 1;
+		uint32 count = 2;
+	}
+	repeated SpeciesAndCount treats = 1;
+}
+
+message GetInventoryResponse
+{
+	message InventoryItem
+	{
+		uint32 item = 1;
+		uint32 count = 2;
+	}
+	repeated InventoryItem items = 1;
+}
+
+message GetMonstersInRangeRequest
+{
+	int32 x = 1;
+	int32 y = 2;
+}
+
+message GetMonstersInRangeResponse
+{
+	message MonsterSighting
+	{
+		uint32 species = 1;
+		int32 x = 2;
+		int32 y = 3;
+	}
+	repeated MonsterSighting sightings = 1;
+}
+
+message StartEncounterRequest
+{
+	int32 x = 1;
+	int32 y = 2;
+}
+
+message StartEncounterResponse
+{
+	bool valid = 1;
+	uint32 species = 2;
+	uint32 attack = 3;
+	uint32 defense = 4;
+	uint32 stamina = 5;
+	uint32 size = 6;
+	uint32 level = 7;
+	uint32 spawntime = 8;
+	uint32 quickmove = 9;
+	uint32 chargemove = 10;
+}
+
+message GiveSeedResponse
+{
+	bool ok = 1;
+}
+
+message ThrowBallRequest
+{
+	uint32 ball = 1;
+}
+
+message ThrowBallResponse
+{
+	enum BallThrowResult
+	{
+		THROW_RESULT_CATCH = 0;
+		THROW_RESULT_BREAK_OUT_AFTER_ONE = 1;
+		THROW_RESULT_BREAK_OUT_AFTER_TWO = 2;
+		THROW_RESULT_BREAK_OUT_AFTER_THREE = 3;
+		THROW_RESULT_RUN_AWAY_AFTER_ONE = 4;
+		THROW_RESULT_RUN_AWAY_AFTER_TWO = 5;
+		THROW_RESULT_RUN_AWAY_AFTER_THREE = 6;
+	}
+	BallThrowResult result = 1;
+	uint64 catchid = 2;
+}
+
+message GetMapTilesRequest
+{
+	int32 x = 1;
+	int32 y = 2;
+}
+
+message GetMapTilesResponse
+{
+	bytes data = 1;
+}
+
+message PowerUpMonsterRequest
+{
+	uint64 id = 1;
+}
+
+message PowerUpMonsterResponse
+{
+	bool ok = 1;
+	uint32 level = 2;
+}
+
+message EvolveMonsterRequest
+{
+	uint64 id = 1;
+}
+
+message EvolveMonsterResponse
+{
+	bool ok = 1;
+	uint32 species = 2;
+	string name = 3;
+	uint32 hp = 4;
+	uint32 quickmove = 5;
+	uint32 chargemove = 6;
+}
+
+message TransferMonsterRequest
+{
+	uint64 id = 1;
+}
+
+message SetMonsterNameRequest
+{
+	uint64 id = 1;
+	string name = 2;
+}
+
+message GetRecentStopsResponse
+{
+	message RecentStopVisit
+	{
+		int32 x = 1;
+		int32 y = 2;
+		uint32 t = 3;
+	}
+	repeated RecentStopVisit stops = 1;
+}
+
+message GetItemsFromStopRequest
+{
+	int32 x = 1;
+	int32 y = 2;
+}
+
+message GetItemsFromStopResponse
+{
+	message InventoryItem
+	{
+		uint32 item = 1;
+		uint32 count = 2;
+	}
+	repeated InventoryItem items = 1;
+}

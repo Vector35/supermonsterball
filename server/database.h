@@ -43,9 +43,34 @@ class Database
 	sqlite3_stmt* m_registerQuery;
 	sqlite3_stmt* m_checkUsernameQuery;
 
+	sqlite3_stmt* m_readInventoryQuery;
 	sqlite3_stmt* m_readInventoryItemQuery;
 	sqlite3_stmt* m_writeInventoryItemQuery;
 	sqlite3_stmt* m_insertInventoryItemQuery;
+
+	sqlite3_stmt* m_readSeenQuery;
+	sqlite3_stmt* m_readSeenItemQuery;
+	sqlite3_stmt* m_writeSeenItemQuery;
+	sqlite3_stmt* m_insertSeenItemQuery;
+
+	sqlite3_stmt* m_readCapturedQuery;
+	sqlite3_stmt* m_readCapturedItemQuery;
+	sqlite3_stmt* m_writeCapturedItemQuery;
+	sqlite3_stmt* m_insertCapturedItemQuery;
+
+	sqlite3_stmt* m_readTreatsQuery;
+	sqlite3_stmt* m_readTreatsItemQuery;
+	sqlite3_stmt* m_writeTreatsItemQuery;
+	sqlite3_stmt* m_insertTreatsItemQuery;
+
+	sqlite3_stmt* m_readMonstersQuery;
+	sqlite3_stmt* m_writeMonsterQuery;
+	sqlite3_stmt* m_insertMonsterQuery;
+	sqlite3_stmt* m_removeMonsterQuery;
+
+	sqlite3_stmt* m_setLocationQuery;
+	sqlite3_stmt* m_setExperienceQuery;
+	sqlite3_stmt* m_setPowderQuery;
 
 	bool InitStatements();
 	void FinishStatement(sqlite3_stmt* stmt);
@@ -62,5 +87,23 @@ public:
 	DatabaseLoginResult Login(const std::string& name, const std::string& password);
 	DatabaseRegisterResult Register(const std::string& name, const std::string& password);
 
+	std::map<uint32_t, uint32_t> GetInventory(uint64_t user);
 	void SetInventory(uint64_t user, uint32_t item, uint32_t count);
+
+	std::map<uint32_t, uint32_t> GetMonstersSeen(uint64_t user);
+	std::map<uint32_t, uint32_t> GetMonstersCaptured(uint64_t user);
+	void SetMonsterSeenCount(uint64_t user, uint32_t species, uint32_t count);
+	void SetMonsterCapturedCount(uint64_t user, uint32_t species, uint32_t count);
+
+	std::map<uint32_t, uint32_t> GetTreats(uint64_t user);
+	void SetTreats(uint64_t user, uint32_t species, uint32_t count);
+
+	std::vector<std::shared_ptr<Monster>> GetMonsters(uint64_t user);
+	uint64_t AddMonster(uint64_t user, std::shared_ptr<Monster> monster);
+	void UpdateMonster(uint64_t user, std::shared_ptr<Monster> monster);
+	void RemoveMonster(uint64_t user, std::shared_ptr<Monster> monster);
+
+	void SetLocation(uint64_t user, int32_t x, int32_t y);
+	void SetExperience(uint64_t user, uint32_t level, uint32_t xp);
+	void SetPowder(uint64_t user, uint32_t powder);
 };

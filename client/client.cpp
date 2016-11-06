@@ -486,6 +486,8 @@ string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, u
 		}
 		else if ((input == "\r") || (input == "\n"))
 		{
+			term->SetCursorPosition(x + input.size(), y);
+			term->Output(" ");
 			return result;
 		}
 		else if ((result.size() < width) && (input.size() == 1) && (input[0] >= ' ') && (input[0] <= 0x7e))

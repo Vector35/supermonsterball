@@ -1,30 +1,22 @@
 #pragma once
 
+#include <time.h>
 #include "player.h"
 
 class ClientPlayer: public Player
 {
-	struct RecentStopVisit
-	{
-		int32_t x, y;
-		time_t visitTime;
-	};
-
 	std::string m_name;
 	uint32_t m_level, m_xp, m_powder;
 	std::vector<std::shared_ptr<Monster>> m_monsters;
 	std::map<ItemType, uint32_t> m_inventory;
 	std::map<uint32_t, uint32_t> m_seen, m_captured;
 	std::map<uint32_t, uint32_t> m_treats;
-	std::map<uint32_t, std::vector<std::shared_ptr<Monster>>> m_recentEncounters;
 	std::vector<RecentStopVisit> m_recentStopsVisited;
 	int32_t m_x, m_y;
 	std::shared_ptr<Monster> m_encounter;
-	bool m_seedGiven;
-	uint64_t m_nextMonsterID;
-
-	void EndEncounter(bool caught, ItemType ball = ITEM_STANDARD_BALL);
-	void EarnExperience(uint32_t xp);
+	std::vector<MonsterSighting> m_recentSightings;
+	time_t m_lastSightingRequest;
+	uint8_t* m_mapData;
 
 public:
 	ClientPlayer(const std::string& name);
@@ -35,8 +27,12 @@ public:
 	virtual uint32_t GetPowder() override { return m_powder; }
 
 	virtual std::vector<std::shared_ptr<Monster>> GetMonsters() override { return m_monsters; }
+	virtual std::shared_ptr<Monster> GetMonsterByID(uint64_t id) override;
+	virtual const std::map<uint32_t, uint32_t>& GetNumberCaptured() override { return m_captured; }
 	virtual uint32_t GetNumberCaptured(MonsterSpecies* species) override;
+	virtual const std::map<uint32_t, uint32_t>& GetNumberSeen() override { return m_seen; }
 	virtual uint32_t GetNumberSeen(MonsterSpecies* species) override;
+	virtual const std::map<uint32_t, uint32_t>& GetTreats() override { return m_treats; }
 	virtual uint32_t GetTreatsForSpecies(MonsterSpecies* species) override;
 
 	virtual std::map<ItemType, uint32_t> GetInventory() override { return m_inventory; }
@@ -60,6 +56,7 @@ public:
 
 	virtual uint8_t GetMapTile(int32_t x, int32_t y) override;
 
+	virtual std::vector<RecentStopVisit> GetRecentStops() override { return m_recentStopsVisited; }
 	virtual bool IsStopAvailable(int32_t x, int32_t y) override;
 	virtual std::map<ItemType, uint32_t> GetItemsFromStop(int32_t x, int32_t y) override;
 };

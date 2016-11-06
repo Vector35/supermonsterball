@@ -15,6 +15,111 @@ using namespace std;
 using namespace request;
 
 
+static const char* g_logoStr[] = {
+	"       .▄▄ · ▄• ▄▌ ▄▄▄·▄▄▄ .▄▄▄          ",
+	"       ▐█ ▀. █▪██▌▐█ ▄█▀▄.▀·▀▄ █·        ",
+	"       ▄▀▀▀█▄█▌▐█▌ ██▀·▐▀▀▪▄▐▀▀▄         ",
+	"       ▐█▄▪▐█▐█▄█▌▐█▪·•▐█▄▄▌▐█•█▌        ",
+	"        ▀▀▀▀  ▀▀▀ .▀    ▀▀▀ .▀  ▀        ",
+	"• ▌ ▄ ·.        ▐ ▄ .▄▄ · ▄▄▄▄▄▄▄▄ .▄▄▄  ",
+	"·██ ▐███▪▪     •█▌▐█▐█ ▀. •██  ▀▄.▀·▀▄ █·",
+	"▐█ ▌▐▌▐█· ▄█▀▄ ▐█▐▐▌▄▀▀▀█▄ ▐█.▪▐▀▀▪▄▐▀▀▄ ",
+	"██ ██▌▐█▌▐█▌.▐▌██▐█▌▐█▄▪▐█ ▐█▌·▐█▄▄▌▐█•█▌",
+	"▀▀  █▪▀▀▀ ▀█▄▀▪▀▀ █▪ ▀▀▀▀  ▀▀▀  ▀▀▀ .▀  ▀",
+	"         ▄▄▄▄·  ▄▄▄· ▄▄▌  ▄▄▌            ",
+	"         ▐█ ▀█▪▐█ ▀█ ██•  ██•            ",
+	"         ▐█▀▀█▄▄█▀▀█ ██▪  ██▪            ",
+	"         ██▄▪▐█▐█ ▪▐▌▐█▌▐▌▐█▌▐▌          ",
+	"         ·▀▀▀▀  ▀  ▀ .▀▀▀ .▀▀▀           "
+};
+
+static const char* g_busted[] = {
+	"▀█████████▄  ███    █▄     ▄████████     ███        ▄████████ ████████▄  ",
+	"  ███    ███ ███    ███   ███    ███ ▀█████████▄   ███    ███ ███   ▀███ ",
+	"  ███    ███ ███    ███   ███    █▀     ▀███▀▀██   ███    █▀  ███    ███ ",
+	" ▄███▄▄▄██▀  ███    ███   ███            ███   ▀  ▄███▄▄▄     ███    ███ ",
+	"▀▀███▀▀▀██▄  ███    ███ ▀███████████     ███     ▀▀███▀▀▀     ███    ███ ",
+	"  ███    ██▄ ███    ███          ███     ███       ███    █▄  ███    ███ ",
+	"  ███    ███ ███    ███    ▄█    ███     ███       ███    ███ ███   ▄███ ",
+	"▄█████████▀  ████████▀   ▄████████▀     ▄████▀     ██████████ ████████▀  "
+};
+
+
+static void DrawLogo()
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t width = term->GetWidth();
+	size_t height = term->GetHeight();
+	size_t logoWidth = 41;
+	size_t logoHeight = sizeof(g_logoStr) / sizeof(const char*);
+	size_t logoX = (width / 2) - (logoWidth / 2);
+	size_t logoY = (height / 2) - (logoHeight / 2) - 6;
+
+	term->BeginOutputQueue();
+	term->SetColor(255, 16);
+
+	for (size_t y = 0; y < height; y++)
+	{
+		term->SetCursorPosition(0, y);
+		for (size_t x = 0; x < width; x++)
+			term->Output(" ");
+	}
+
+	for (size_t y = 0; y < logoHeight; y++)
+	{
+		term->SetCursorPosition(logoX, logoY + y);
+		term->Output(g_logoStr[y]);
+	}
+
+	term->EndOutputQueue();
+}
+
+
+static void ShowBannedMessage()
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t width = term->GetWidth();
+	size_t height = term->GetHeight();
+	size_t logoWidth = 73;
+	size_t logoHeight = sizeof(g_busted) / sizeof(const char*);
+	size_t logoX = (width / 2) - (logoWidth / 2);
+	size_t logoY = (height / 2) - (logoHeight / 2) - 6;
+
+	term->BeginOutputQueue();
+	term->SetColor(255, 16);
+
+	for (size_t y = 0; y < height; y++)
+	{
+		term->SetCursorPosition(0, y);
+		for (size_t x = 0; x < width; x++)
+			term->Output(" ");
+	}
+
+	for (size_t y = 0; y < logoHeight; y++)
+	{
+		term->SetCursorPosition(logoX, logoY + y);
+		term->Output(g_busted[y]);
+	}
+
+	static const char* msg1 = "Your use of third party applications has been detected.";
+	term->SetCursorPosition((width / 2) - (strlen(msg1) / 2), logoY + logoHeight + 3);
+	term->Output(msg1);
+
+	static const char* msg2 = "Your account has been permanently banned.";
+	term->SetCursorPosition((width / 2) - (strlen(msg2) / 2), logoY + logoHeight + 4);
+	term->Output(msg2);
+
+	term->EndOutputQueue();
+
+	while (!term->HasQuit())
+	{
+		string input = term->GetInput();
+		if ((input == " ") || (input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == "\033"))
+			break;
+	}
+}
+
+
 static Player* ShowLoginPage()
 {
 	Terminal* term = Terminal::GetTerminal();
@@ -22,8 +127,10 @@ static Player* ShowLoginPage()
 	size_t centerY = term->GetHeight() / 2;
 	size_t width = 40;
 	size_t height = 6;
+	size_t logoHeight = sizeof(g_logoStr) / sizeof(const char*);
 	size_t x = (centerX - (width / 2)) | 1;
-	size_t y = centerY - (height / 2);
+	size_t y = centerY + (logoHeight / 2) - (height / 2);
+	DrawLogo();
 	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
 
 	term->BeginOutputQueue();
@@ -48,6 +155,38 @@ static Player* ShowLoginPage()
 	if (status == LoginResponse_AccountStatus_LoginOK)
 		return new ClientPlayer(username);
 
+	if (status == LoginResponse_AccountStatus_AccountBanned)
+	{
+		ShowBannedMessage();
+		exit(0);
+	}
+
+	term->BeginOutputQueue();
+	term->SetColor(255, 16);
+
+	for (size_t dy = 0; dy < (height + 2); dy++)
+	{
+		term->SetCursorPosition(0, (y - 1) + dy);
+		for (size_t dx = 0; dx < term->GetWidth(); dx++)
+			term->Output(" ");
+	}
+
+	const char* msg = "Unkown error.";
+	if (status == LoginResponse_AccountStatus_InvalidUsernameOrPassword)
+		msg = "Invalid username or password.";
+
+	term->SetCursorPosition(centerX - (strlen(msg) / 2), y + (height / 2));
+	term->Output(msg);
+
+	term->EndOutputQueue();
+
+	while (!term->HasQuit())
+	{
+		string input = term->GetInput();
+		if ((input == " ") || (input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == "\033"))
+			break;
+	}
+
 	return nullptr;
 }
 
@@ -59,8 +198,10 @@ static Player* ShowRegisterPage()
 	size_t centerY = term->GetHeight() / 2;
 	size_t width = 40;
 	size_t height = 7;
+	size_t logoHeight = sizeof(g_logoStr) / sizeof(const char*);
 	size_t x = (centerX - (width / 2)) | 1;
-	size_t y = centerY - (height / 2);
+	size_t y = centerY + (logoHeight / 2) - (height / 2);
+	DrawLogo();
 	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
 
 	term->BeginOutputQueue();
@@ -70,19 +211,19 @@ static Player* ShowRegisterPage()
 	term->Output("Register");
 
 	term->SetCursorPosition(x + 1, y + 3);
-	term->Output("Username:");
+	term->Output("Username:       ");
 	term->SetCursorPosition(x + 1, y + 4);
-	term->Output("Password:");
+	term->Output("Password:       ");
 	term->SetCursorPosition(x + 1, y + 5);
-	term->Output("Password:");
+	term->Output("Repeat password:");
 
-	string username = InputString(x + 11, y + 3, 16, 255, 234, "");
+	string username = InputString(x + 18, y + 3, 16, 255, 234, "");
 	if (username == "")
 		return nullptr;
-	string password = InputString(x + 11, y + 4, 16, 255, 234, "", true);
+	string password = InputString(x + 18, y + 4, 16, 255, 234, "", true);
 	if (password == "")
 		return nullptr;
-	string passwordRepeat = InputString(x + 11, y + 5, 16, 255, 234, "", true);
+	string passwordRepeat = InputString(x + 18, y + 5, 16, 255, 234, "", true);
 	if (passwordRepeat == "")
 		return nullptr;
 
@@ -94,6 +235,34 @@ static Player* ShowRegisterPage()
 	RegisterResponse_RegisterStatus status = ClientRequest::GetClient()->Register(username, password);
 	if (status == RegisterResponse_RegisterStatus_RegisterOK)
 		return new ClientPlayer(username);
+
+	term->BeginOutputQueue();
+	term->SetColor(255, 16);
+
+	for (size_t dy = 0; dy < (height + 2); dy++)
+	{
+		term->SetCursorPosition(0, (y - 1) + dy);
+		for (size_t dx = 0; dx < term->GetWidth(); dx++)
+			term->Output(" ");
+	}
+
+	const char* msg = "Unkown error.";
+	if (status == RegisterResponse_RegisterStatus_BadPassword)
+		msg = "Invalid password.";
+	else if (status == RegisterResponse_RegisterStatus_InvalidOrDuplicateUsername)
+		msg = "Username is in use or invalid.";
+
+	term->SetCursorPosition(centerX - (strlen(msg) / 2), y + (height / 2));
+	term->Output(msg);
+
+	term->EndOutputQueue();
+
+	while (!term->HasQuit())
+	{
+		string input = term->GetInput();
+		if ((input == " ") || (input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == "\033"))
+			break;
+	}
 
 	return nullptr;
 }
@@ -129,8 +298,10 @@ static int32_t ShowStartupOptions(size_t width, const vector<string>& options)
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
 	size_t height = options.size();
+	size_t logoHeight = sizeof(g_logoStr) / sizeof(const char*);
 	size_t x = (centerX - (width / 2)) | 1;
-	size_t y = centerY - (height / 2);
+	size_t y = centerY + (logoHeight / 2) - (height / 2);
+	DrawLogo();
 	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
 
 	int32_t selected = 0;
@@ -201,6 +372,8 @@ static void StartGameClient()
 {
 	Terminal::GetTerminal()->HideCursor();
 	Player* player = ShowStartupMenu();
+	if (player)
+		GameLoop(player);
 }
 
 

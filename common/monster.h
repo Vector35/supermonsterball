@@ -146,9 +146,11 @@ public:
 	void SetLevel(uint32_t level);
 	void SetCapture(bool captured, ItemType ball);
 	void SetName(const std::string& name);
+	void SetHP(uint32_t hp);
 	void ResetHP();
 
 	void Evolve();
+	void SetSpecies(MonsterSpecies* species);
 };
 
 struct MonsterSighting

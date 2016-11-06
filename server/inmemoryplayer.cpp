@@ -20,6 +20,17 @@ InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 }
 
 
+shared_ptr<Monster> InMemoryPlayer::GetMonsterByID(uint64_t id)
+{
+	for (auto& i : m_monsters)
+	{
+		if (i->GetID() == id)
+			return i;
+	}
+	return nullptr;
+}
+
+
 uint32_t InMemoryPlayer::GetNumberCaptured(MonsterSpecies* species)
 {
 	auto i = m_captured.find(species->GetIndex());

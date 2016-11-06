@@ -11,13 +11,13 @@
 
 enum BallThrowResult
 {
+	THROW_RESULT_CATCH = 0,
 	THROW_RESULT_BREAK_OUT_AFTER_ONE = 1,
 	THROW_RESULT_BREAK_OUT_AFTER_TWO = 2,
 	THROW_RESULT_BREAK_OUT_AFTER_THREE = 3,
-	THROW_RESULT_CATCH = 4,
-	THROW_RESULT_RUN_AWAY_AFTER_ONE = 5,
-	THROW_RESULT_RUN_AWAY_AFTER_TWO = 6,
-	THROW_RESULT_RUN_AWAY_AFTER_THREE = 7,
+	THROW_RESULT_RUN_AWAY_AFTER_ONE = 4,
+	THROW_RESULT_RUN_AWAY_AFTER_TWO = 5,
+	THROW_RESULT_RUN_AWAY_AFTER_THREE = 6
 };
 
 struct LevelUpItem
@@ -34,6 +34,12 @@ struct PowerUpCost
 	PowerUpCost(uint32_t t, uint32_t p): treats(t), powder(p) {}
 };
 
+struct RecentStopVisit
+{
+	int32_t x, y;
+	time_t visitTime;
+};
+
 class Player
 {
 public:
@@ -48,8 +54,12 @@ public:
 	virtual uint32_t GetPowder() = 0;
 
 	virtual std::vector<std::shared_ptr<Monster>> GetMonsters() = 0;
+	virtual std::shared_ptr<Monster> GetMonsterByID(uint64_t id) = 0;
+	virtual const std::map<uint32_t, uint32_t>& GetNumberCaptured() = 0;
 	virtual uint32_t GetNumberCaptured(MonsterSpecies* species) = 0;
+	virtual const std::map<uint32_t, uint32_t>& GetNumberSeen() = 0;
 	virtual uint32_t GetNumberSeen(MonsterSpecies* species) = 0;
+	virtual const std::map<uint32_t, uint32_t>& GetTreats() = 0;
 	virtual uint32_t GetTreatsForSpecies(MonsterSpecies* species) = 0;
 
 	PowerUpCost GetPowerUpCost(uint32_t level);
@@ -76,6 +86,7 @@ public:
 	virtual uint8_t GetMapTile(int32_t x, int32_t y) = 0;
 	bool IsMapTileTraversable(int32_t x, int32_t y);
 
+	virtual std::vector<RecentStopVisit> GetRecentStops() = 0;
 	virtual bool IsStopAvailable(int32_t x, int32_t y) = 0;
 	virtual std::map<ItemType, uint32_t> GetItemsFromStop(int32_t x, int32_t y) = 0;
 };

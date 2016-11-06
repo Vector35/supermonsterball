@@ -30,6 +30,36 @@ ServerPlayer::ServerPlayer(const string& name, const DatabaseLoginResult& login)
 	m_powder = login.powder;
 	m_x = login.x;
 	m_y = login.y;
+
+	map<uint32_t, uint32_t> inventory = Database::GetDatabase()->GetInventory(m_id);
+	for (auto& i : inventory)
+		m_inventory[(ItemType)i.first] = i.second;
+
+	m_seen = Database::GetDatabase()->GetMonstersSeen(m_id);
+	m_captured = Database::GetDatabase()->GetMonstersCaptured(m_id);
+	m_treats = Database::GetDatabase()->GetTreats(m_id);
+
+	vector<shared_ptr<Monster>> monsters = Database::GetDatabase()->GetMonsters(m_id);
+	for (auto& i : monsters)
+		m_monsters[i->GetID()] = i;
+}
+
+
+vector<shared_ptr<Monster>> ServerPlayer::GetMonsters()
+{
+	vector<shared_ptr<Monster>> result;
+	for (auto& i : m_monsters)
+		result.push_back(i.second);
+	return result;
+}
+
+
+shared_ptr<Monster> ServerPlayer::GetMonsterByID(uint64_t id)
+{
+	auto i = m_monsters.find(id);
+	if (i == m_monsters.end())
+		return nullptr;
+	return i->second;
 }
 
 
@@ -77,6 +107,7 @@ bool ServerPlayer::UseItem(ItemType type)
 	if (i->second == 0)
 		return false;
 	i->second--;
+	Database::GetDatabase()->SetInventory(m_id, type, i->second);
 	return true;
 }
 
@@ -85,6 +116,7 @@ void ServerPlayer::ReportLocation(int32_t x, int32_t y)
 {
 	m_x = x;
 	m_y = y;
+	Database::GetDatabase()->SetLocation(m_id, x, y);
 }
 
 
@@ -134,7 +166,6 @@ shared_ptr<Monster> ServerPlayer::StartWildEncounter(int32_t x, int32_t y)
 		return nullptr;
 
 	m_encounter = World::GetWorld()->GetMonsterAt(x, y, m_level);
-//	m_encounter->SetID(m_nextMonsterID++);
 	m_seedGiven = false;
 	return m_encounter;
 }
@@ -183,9 +214,13 @@ void ServerPlayer::EarnExperience(uint32_t xp)
 	while ((m_level < 40) && (m_xp >= GetTotalExperienceNeededForNextLevel()))
 	{
 		for (auto& i : GetItemsOnLevelUp(m_level))
+		{
 			m_inventory[i.type] += i.count;
+			Database::GetDatabase()->SetInventory(m_id, i.type, m_inventory[i.type]);
+		}
 		m_level++;
 	}
+	Database::GetDatabase()->SetExperience(m_id, m_level, m_xp);
 }
 
 
@@ -218,10 +253,18 @@ BallThrowResult ServerPlayer::ThrowBall(ItemType type)
 		else
 			EarnExperience(100);
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
+		Database::GetDatabase()->SetMonsterSeenCount(m_id, m_encounter->GetSpecies()->GetIndex(),
+			m_seen[m_encounter->GetSpecies()->GetIndex()]);
 		m_captured[m_encounter->GetSpecies()->GetIndex()]++;
+		Database::GetDatabase()->SetMonsterCapturedCount(m_id, m_encounter->GetSpecies()->GetIndex(),
+			m_captured[m_encounter->GetSpecies()->GetIndex()]);
 		m_treats[m_encounter->GetSpecies()->GetBaseForm()->GetIndex()] += 3;
+		Database::GetDatabase()->SetTreats(m_id, m_encounter->GetSpecies()->GetBaseForm()->GetIndex(),
+			m_treats[m_encounter->GetSpecies()->GetBaseForm()->GetIndex()]);
 		m_powder += 100;
-		m_monsters.push_back(m_encounter);
+		Database::GetDatabase()->SetPowder(m_id, m_powder);
+		m_encounter->SetID(Database::GetDatabase()->AddMonster(m_id, m_encounter));
+		m_monsters[m_encounter->GetID()] = m_encounter;
 		EndEncounter(true, type);
 		return THROW_RESULT_CATCH;
 	case 6:
@@ -235,14 +278,20 @@ BallThrowResult ServerPlayer::ThrowBall(ItemType type)
 		return THROW_RESULT_BREAK_OUT_AFTER_THREE;
 	case 12:
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
+		Database::GetDatabase()->SetMonsterSeenCount(m_id, m_encounter->GetSpecies()->GetIndex(),
+			m_seen[m_encounter->GetSpecies()->GetIndex()]);
 		EndEncounter(false, type);
 		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
 	case 13:
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
+		Database::GetDatabase()->SetMonsterSeenCount(m_id, m_encounter->GetSpecies()->GetIndex(),
+			m_seen[m_encounter->GetSpecies()->GetIndex()]);
 		EndEncounter(false, type);
 		return THROW_RESULT_RUN_AWAY_AFTER_TWO;
 	default:
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
+		Database::GetDatabase()->SetMonsterSeenCount(m_id, m_encounter->GetSpecies()->GetIndex(),
+			m_seen[m_encounter->GetSpecies()->GetIndex()]);
 		EndEncounter(false, type);
 		return THROW_RESULT_RUN_AWAY_AFTER_THREE;
 	}
@@ -268,8 +317,12 @@ bool ServerPlayer::PowerUpMonster(std::shared_ptr<Monster> monster)
 		return false;
 
 	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= GetPowerUpCost(monster->GetLevel()).treats;
+	Database::GetDatabase()->SetTreats(m_id, monster->GetSpecies()->GetBaseForm()->GetIndex(),
+		m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]);
 	m_powder -= GetPowerUpCost(monster->GetLevel()).powder;
 	monster->SetLevel(monster->GetLevel() + 1);
+	Database::GetDatabase()->SetPowder(m_id, m_powder);
+	Database::GetDatabase()->UpdateMonster(m_id, monster);
 	return true;
 }
 
@@ -289,29 +342,37 @@ bool ServerPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
 	else
 		EarnExperience(500);
 	m_seen[monster->GetSpecies()->GetIndex()]++;
+	Database::GetDatabase()->SetMonsterSeenCount(m_id, monster->GetSpecies()->GetIndex(),
+		m_seen[monster->GetSpecies()->GetIndex()]);
 	m_captured[monster->GetSpecies()->GetIndex()]++;
+	Database::GetDatabase()->SetMonsterCapturedCount(m_id, monster->GetSpecies()->GetIndex(),
+		m_captured[monster->GetSpecies()->GetIndex()]);
 	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]++;
+	Database::GetDatabase()->SetTreats(m_id, monster->GetSpecies()->GetBaseForm()->GetIndex(),
+		m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]);
+	Database::GetDatabase()->UpdateMonster(m_id, monster);
 	return true;
 }
 
 
 void ServerPlayer::TransferMonster(std::shared_ptr<Monster> monster)
 {
-	for (auto i = m_monsters.begin(); i != m_monsters.end(); ++i)
-	{
-		if ((*i)->GetID() == monster->GetID())
-		{
-			m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]++;
-			m_monsters.erase(i);
-			break;
-		}
-	}
+	auto i = m_monsters.find(monster->GetID());
+	if (i == m_monsters.end())
+		return;
+
+	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]++;
+	Database::GetDatabase()->SetTreats(m_id, monster->GetSpecies()->GetBaseForm()->GetIndex(),
+		m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]);
+	Database::GetDatabase()->RemoveMonster(m_id, monster);
+	m_monsters.erase(i);
 }
 
 
 void ServerPlayer::SetMonsterName(std::shared_ptr<Monster> monster, const string& name)
 {
 	monster->SetName(name);
+	Database::GetDatabase()->UpdateMonster(m_id, monster);
 }
 
 
@@ -393,7 +454,10 @@ map<ItemType, uint32_t> ServerPlayer::GetItemsFromStop(int32_t x, int32_t y)
 	}
 
 	for (auto& i : result)
+	{
 		m_inventory[i.first] += i.second;
+		Database::GetDatabase()->SetInventory(m_id, i.first, m_inventory[i.first]);
+	}
 
 	// Add this visit to the recent list so that it can't be used until the cooldown expires
 	RecentStopVisit visit;

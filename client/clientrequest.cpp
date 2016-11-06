@@ -1,4 +1,6 @@
+#include <time.h>
 #include "clientrequest.h"
+#include "world.h"
 
 using namespace std;
 using namespace request;
@@ -75,4 +77,291 @@ RegisterResponse_RegisterStatus ClientRequest::Register(const string username, c
 	if (!response.ParseFromString(ReadResponse()))
 		throw NetworkException("Invalid login response");
 	return response.status();
+}
+
+
+GetPlayerDetailsResponse ClientRequest::GetPlayerDetails()
+{
+	WriteRequest(Request_RequestType_GetPlayerDetails, "");
+	GetPlayerDetailsResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid player details response");
+	return response;
+}
+
+
+vector<shared_ptr<Monster>> ClientRequest::GetMonsterList()
+{
+	WriteRequest(Request_RequestType_GetMonsterList, "");
+	GetMonsterListResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid monster list response");
+
+	vector<shared_ptr<Monster>> result;
+	for (int i = 0; i < response.monsters_size(); i++)
+	{
+		shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(response.monsters(i).species()),
+			response.monsters(i).x(), response.monsters(i).y(), response.monsters(i).spawntime()));
+		monster->SetID(response.monsters(i).id());
+		monster->SetName(response.monsters(i).name());
+		monster->SetHP(response.monsters(i).hp());
+		monster->SetIV(response.monsters(i).attack(), response.monsters(i).defense(), response.monsters(i).stamina());
+		monster->SetSize(response.monsters(i).size());
+		monster->SetLevel(response.monsters(i).level());
+		monster->SetCapture(true, (ItemType)response.monsters(i).ball());
+		result.push_back(monster);
+	}
+	return result;
+}
+
+
+GetMonstersSeenAndCapturedResponse ClientRequest::GetMonstersSeenAndCaptured()
+{
+	WriteRequest(Request_RequestType_GetMonstersSeenAndCaptured, "");
+	GetMonstersSeenAndCapturedResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid seen and captured response");
+	return response;
+}
+
+
+map<uint32_t, uint32_t> ClientRequest::GetTreats()
+{
+	WriteRequest(Request_RequestType_GetTreats, "");
+	GetTreatsResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid treats response");
+
+	map<uint32_t, uint32_t> result;
+	for (int i = 0; i < response.treats_size(); i++)
+		result[response.treats(i).species()] = response.treats(i).count();
+	return result;
+}
+
+
+map<ItemType, uint32_t> ClientRequest::GetInventory()
+{
+	WriteRequest(Request_RequestType_GetInventory, "");
+	GetInventoryResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid inventory response");
+
+	map<ItemType, uint32_t> result;
+	for (int i = 0; i < response.items_size(); i++)
+		result[(ItemType)response.items(i).item()] = response.items(i).count();
+	return result;
+}
+
+
+vector<MonsterSighting> ClientRequest::GetMonstersInRange(int32_t x, int32_t y)
+{
+	GetMonstersInRangeRequest request;
+	request.set_x(x);
+	request.set_y(y);
+	WriteRequest(Request_RequestType_GetMonstersInRange, request.SerializeAsString());
+
+	GetMonstersInRangeResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid sightings response");
+
+	vector<MonsterSighting> result;
+	for (int i = 0; i < response.sightings_size(); i++)
+	{
+		MonsterSighting sighting;
+		sighting.species = MonsterSpecies::GetByIndex(response.sightings(i).species());
+		sighting.x = response.sightings(i).x();
+		sighting.y = response.sightings(i).y();
+		result.push_back(sighting);
+	}
+	return result;
+}
+
+
+shared_ptr<Monster> ClientRequest::StartEncounter(int32_t x, int32_t y)
+{
+	StartEncounterRequest request;
+	request.set_x(x);
+	request.set_y(y);
+	WriteRequest(Request_RequestType_StartEncounter, request.SerializeAsString());
+
+	StartEncounterResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid encounter response");
+	if (!response.valid())
+		return nullptr;
+
+	shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(response.species()), x, y,
+		response.spawntime()));
+	monster->SetIV(response.attack(), response.defense(), response.stamina());
+	monster->SetSize(response.size());
+	monster->SetLevel(response.level());
+	monster->ResetHP();
+	return monster;
+}
+
+
+bool ClientRequest::GiveSeed()
+{
+	WriteRequest(Request_RequestType_GiveSeed, "");
+
+	GiveSeedResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid seed response");
+	return response.ok();
+}
+
+
+BallThrowResult ClientRequest::ThrowBall(ItemType ball, std::shared_ptr<Monster> monster)
+{
+	ThrowBallRequest request;
+	request.set_ball((uint32_t)ball);
+	WriteRequest(Request_RequestType_ThrowBall, request.SerializeAsString());
+
+	ThrowBallResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid ball throw response");
+
+	switch (response.result())
+	{
+	case ThrowBallResponse_BallThrowResult_THROW_RESULT_CATCH:
+		monster->SetID(response.catchid());
+		return THROW_RESULT_CATCH;
+	case ThrowBallResponse_BallThrowResult_THROW_RESULT_BREAK_OUT_AFTER_ONE:
+		return THROW_RESULT_BREAK_OUT_AFTER_ONE;
+	case ThrowBallResponse_BallThrowResult_THROW_RESULT_BREAK_OUT_AFTER_TWO:
+		return THROW_RESULT_BREAK_OUT_AFTER_TWO;
+	case ThrowBallResponse_BallThrowResult_THROW_RESULT_BREAK_OUT_AFTER_THREE:
+		return THROW_RESULT_BREAK_OUT_AFTER_THREE;
+	case ThrowBallResponse_BallThrowResult_THROW_RESULT_RUN_AWAY_AFTER_ONE:
+		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
+	case ThrowBallResponse_BallThrowResult_THROW_RESULT_RUN_AWAY_AFTER_TWO:
+		return THROW_RESULT_RUN_AWAY_AFTER_TWO;
+	case ThrowBallResponse_BallThrowResult_THROW_RESULT_RUN_AWAY_AFTER_THREE:
+		return THROW_RESULT_RUN_AWAY_AFTER_THREE;
+	default:
+		throw NetworkException("Invalid ball throw response");
+	}
+}
+
+
+void ClientRequest::RunFromEncounter()
+{
+	WriteRequest(Request_RequestType_RunFromEncounter, "");
+	ReadResponse();
+}
+
+
+bool ClientRequest::PowerUpMonster(shared_ptr<Monster> monster)
+{
+	PowerUpMonsterRequest request;
+	request.set_id(monster->GetID());
+	WriteRequest(Request_RequestType_PowerUpMonster, request.SerializeAsString());
+
+	PowerUpMonsterResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid power up response");
+
+	if (!response.ok())
+		return false;
+
+	monster->SetLevel(response.level());
+	return true;
+}
+
+
+bool ClientRequest::EvolveMonster(shared_ptr<Monster> monster)
+{
+	EvolveMonsterRequest request;
+	request.set_id(monster->GetID());
+	WriteRequest(Request_RequestType_EvolveMonster, request.SerializeAsString());
+
+	EvolveMonsterResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid evolve response");
+
+	if (!response.ok())
+		return false;
+
+	monster->SetSpecies(MonsterSpecies::GetByIndex(response.species()));
+	monster->SetName(response.name());
+	monster->SetHP(response.hp());
+	return true;
+}
+
+
+void ClientRequest::TransferMonster(shared_ptr<Monster> monster)
+{
+	TransferMonsterRequest request;
+	request.set_id(monster->GetID());
+	WriteRequest(Request_RequestType_TransferMonster, request.SerializeAsString());
+	ReadResponse();
+}
+
+
+void ClientRequest::SetMonsterName(shared_ptr<Monster> monster, const string& name)
+{
+	SetMonsterNameRequest request;
+	request.set_id(monster->GetID());
+	request.set_name(name);
+	WriteRequest(Request_RequestType_SetMonsterName, request.SerializeAsString());
+	ReadResponse();
+}
+
+
+void ClientRequest::GetMapTiles(int32_t x, int32_t y, uint8_t* data)
+{
+	GetMapTilesRequest request;
+	request.set_x(x);
+	request.set_y(y);
+	WriteRequest(Request_RequestType_GetMapTiles, request.SerializeAsString());
+
+	GetMapTilesResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid map tile response");
+	if (response.data().size() != (GRID_SIZE * GRID_SIZE / 2))
+		throw NetworkException("Invalid map tile response");
+
+	for (int32_t dy = 0; dy < GRID_SIZE; dy++)
+		for (int32_t dx = 0; dx < GRID_SIZE; dx++)
+			data[(dy * GRID_SIZE) + dx] = (response.data()[(dy * GRID_SIZE / 2) + (dx / 2)] >> (4 * (dx & 1))) & 0xf;
+}
+
+
+vector<RecentStopVisit> ClientRequest::GetRecentStops()
+{
+	WriteRequest(Request_RequestType_GetRecentStops, "");
+
+	GetRecentStopsResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid recent stops response");
+
+	vector<RecentStopVisit> result;
+	time_t cur = time(NULL);
+	for (int i = 0; i < response.stops_size(); i++)
+	{
+		RecentStopVisit visit;
+		visit.x = response.stops(i).x();
+		visit.y = response.stops(i).y();
+		visit.visitTime = cur - response.stops(i).t();
+		result.push_back(visit);
+	}
+	return result;
+}
+
+
+map<ItemType, uint32_t> ClientRequest::GetItemsFromStop(int32_t x, int32_t y)
+{
+	GetItemsFromStopRequest request;
+	request.set_x(x);
+	request.set_y(y);
+	WriteRequest(Request_RequestType_GetItemsFromStop, request.SerializeAsString());
+
+	GetItemsFromStopResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid items response");
+
+	map<ItemType, uint32_t> result;
+	for (int i = 0; i < response.items_size(); i++)
+		result[(ItemType)response.items(i).item()] = response.items(i).count();
+	return result;
 }

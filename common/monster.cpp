@@ -715,6 +715,12 @@ void Monster::SetName(const string& name)
 }
 
 
+void Monster::SetHP(uint32_t hp)
+{
+	m_currentHP = hp;
+}
+
+
 void Monster::ResetHP()
 {
 }
@@ -732,6 +738,12 @@ void Monster::Evolve()
 
 	if (!renamed)
 		m_name = m_species->GetName();
+}
+
+
+void Monster::SetSpecies(MonsterSpecies* species)
+{
+	m_species = species;
 }
 
 

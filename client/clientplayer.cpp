@@ -1,22 +1,50 @@
 #include <cstdlib>
 #include <set>
+#include <string.h>
 #include "clientplayer.h"
 #include "world.h"
+#include "clientrequest.h"
 
 using namespace std;
+using namespace request;
 
 
 ClientPlayer::ClientPlayer(const string& name): m_name(name)
 {
-	m_level = 1;
-	m_xp = 0;
-	m_powder = 0;
-	m_x = 0;
-	m_y = 0;
-	m_nextMonsterID = 1;
+	GetPlayerDetailsResponse details = ClientRequest::GetClient()->GetPlayerDetails();
+	m_level = details.level();
+	m_xp = details.xp();
+	m_powder = details.powder();
+	m_x = details.x();
+	m_y = details.y();
 
-	m_inventory[ITEM_STANDARD_BALL] = 20;
-	m_inventory[ITEM_MEGA_SEED] = 5;
+	m_monsters = ClientRequest::GetClient()->GetMonsterList();
+	m_inventory = ClientRequest::GetClient()->GetInventory();
+
+	GetMonstersSeenAndCapturedResponse seenAndCaptured = ClientRequest::GetClient()->GetMonstersSeenAndCaptured();
+	for (int i = 0; i < seenAndCaptured.seen_size(); i++)
+		m_seen[seenAndCaptured.seen(i).species()] = seenAndCaptured.seen(i).count();
+	for (int i = 0; i < seenAndCaptured.captured_size(); i++)
+		m_captured[seenAndCaptured.captured(i).species()] = seenAndCaptured.captured(i).count();
+
+	m_treats = ClientRequest::GetClient()->GetTreats();
+	m_recentStopsVisited = ClientRequest::GetClient()->GetRecentStops();
+
+	m_lastSightingRequest = 0;
+
+	m_mapData = new uint8_t[MAP_SIZE * MAP_SIZE];
+	memset(m_mapData, TILE_NOT_LOADED, MAP_SIZE * MAP_SIZE);
+}
+
+
+shared_ptr<Monster> ClientPlayer::GetMonsterByID(uint64_t id)
+{
+	for (auto& i : m_monsters)
+	{
+		if (i->GetID() == id)
+			return i;
+	}
+	return nullptr;
 }
 
 
@@ -77,62 +105,29 @@ void ClientPlayer::ReportLocation(int32_t x, int32_t y)
 
 vector<MonsterSighting> ClientPlayer::GetMonstersInRange()
 {
-	return vector<MonsterSighting>();
+	if ((time(NULL) - m_lastSightingRequest) >= 5)
+	{
+		m_recentSightings = ClientRequest::GetClient()->GetMonstersInRange(m_x, m_y);
+		m_lastSightingRequest = time(NULL);
+	}
+	return m_recentSightings;
 }
 
 
 shared_ptr<Monster> ClientPlayer::StartWildEncounter(int32_t x, int32_t y)
 {
-	return nullptr;
+	m_encounter = ClientRequest::GetClient()->StartEncounter(x, y);
+	return m_encounter;
 }
 
 
 bool ClientPlayer::GiveSeed()
 {
-	if (!m_encounter)
+	if (!ClientRequest::GetClient()->GiveSeed())
 		return false;
-	if (m_seedGiven)
-		return false;
-	if (!UseItem(ITEM_MEGA_SEED))
-		return false;
-	m_seedGiven = true;
+
+	m_inventory = ClientRequest::GetClient()->GetInventory();
 	return true;
-}
-
-
-void ClientPlayer::EndEncounter(bool caught, ItemType ball)
-{
-	if (!m_encounter)
-		return;
-
-	m_encounter->SetCapture(caught, ball);
-	m_recentEncounters[m_encounter->GetSpawnTime()].push_back(m_encounter);
-
-	// Clear out old encounters
-	set<uint32_t> toDelete;
-	for (auto& i : m_recentEncounters)
-	{
-		if (i.first < (m_encounter->GetSpawnTime() - 2))
-			toDelete.insert(i.first);
-	}
-	for (auto i : toDelete)
-	{
-		m_recentEncounters.erase(i);
-	}
-
-	m_encounter.reset();
-}
-
-
-void ClientPlayer::EarnExperience(uint32_t xp)
-{
-	m_xp += xp;
-	while ((m_level < 40) && (m_xp >= GetTotalExperienceNeededForNextLevel()))
-	{
-		for (auto& i : GetItemsOnLevelUp(m_level))
-			m_inventory[i.type] += i.count;
-		m_level++;
-	}
 }
 
 
@@ -140,115 +135,87 @@ BallThrowResult ClientPlayer::ThrowBall(ItemType type)
 {
 	if (!m_encounter)
 		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
-	if ((type != ITEM_STANDARD_BALL) && (type != ITEM_SUPER_BALL) && (type != ITEM_UBER_BALL))
-	{
-		EndEncounter(false);
-		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
-	}
 
-	if (!UseItem(type))
+	BallThrowResult result = ClientRequest::GetClient()->ThrowBall(type, m_encounter);
+	if (result == THROW_RESULT_CATCH)
 	{
-		EndEncounter(false);
-		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
-	}
+		// Caught it, grab new player data
+		GetPlayerDetailsResponse details = ClientRequest::GetClient()->GetPlayerDetails();
+		m_level = details.level();
+		m_xp = details.xp();
+		m_powder = details.powder();
 
-	switch (rand() % 15)
-	{
-	case 0:
-	case 1:
-	case 2:
-	case 3:
-	case 4:
-	case 5:
-		if (GetNumberCaptured(m_encounter->GetSpecies()) == 0)
-			EarnExperience(600);
-		else
-			EarnExperience(100);
-		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
-		m_captured[m_encounter->GetSpecies()->GetIndex()]++;
-		m_treats[m_encounter->GetSpecies()->GetBaseForm()->GetIndex()] += 3;
-		m_powder += 100;
-		m_monsters.push_back(m_encounter);
-		EndEncounter(true, type);
-		return THROW_RESULT_CATCH;
-	case 6:
-	case 7:
-		return THROW_RESULT_BREAK_OUT_AFTER_ONE;
-	case 8:
-	case 9:
-		return THROW_RESULT_BREAK_OUT_AFTER_TWO;
-	case 10:
-	case 11:
-		return THROW_RESULT_BREAK_OUT_AFTER_THREE;
-	case 12:
-		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
-		EndEncounter(false, type);
-		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
-	case 13:
-		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
-		EndEncounter(false, type);
-		return THROW_RESULT_RUN_AWAY_AFTER_TWO;
-	default:
-		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
-		EndEncounter(false, type);
-		return THROW_RESULT_RUN_AWAY_AFTER_THREE;
+		m_monsters = ClientRequest::GetClient()->GetMonsterList();
+		m_inventory = ClientRequest::GetClient()->GetInventory();
+
+		GetMonstersSeenAndCapturedResponse seenAndCaptured = ClientRequest::GetClient()->GetMonstersSeenAndCaptured();
+		for (int i = 0; i < seenAndCaptured.seen_size(); i++)
+			m_seen[seenAndCaptured.seen(i).species()] = seenAndCaptured.seen(i).count();
+		for (int i = 0; i < seenAndCaptured.captured_size(); i++)
+			m_captured[seenAndCaptured.captured(i).species()] = seenAndCaptured.captured(i).count();
+
+		m_treats = ClientRequest::GetClient()->GetTreats();
 	}
+	else
+	{
+		// Did not catch it, grab new inventory counts
+		m_inventory = ClientRequest::GetClient()->GetInventory();
+	}
+	return result;
 }
 
 
 void ClientPlayer::RunFromEncounter()
 {
-	EndEncounter(false);
+	ClientRequest::GetClient()->RunFromEncounter();
+	m_encounter.reset();
 }
 
 
 bool ClientPlayer::PowerUpMonster(std::shared_ptr<Monster> monster)
 {
-	if (monster->GetLevel() >= GetLevel())
-		return false;
-	if (monster->GetLevel() >= 40)
+	if (!ClientRequest::GetClient()->PowerUpMonster(monster))
 		return false;
 
-	if (GetTreatsForSpecies(monster->GetSpecies()) < GetPowerUpCost(monster->GetLevel()).treats)
-		return false;
-	if (GetPowder() < GetPowerUpCost(monster->GetLevel()).powder)
-		return false;
-
-	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= GetPowerUpCost(monster->GetLevel()).treats;
-	m_powder -= GetPowerUpCost(monster->GetLevel()).powder;
-	monster->SetLevel(monster->GetLevel() + 1);
+	GetPlayerDetailsResponse details = ClientRequest::GetClient()->GetPlayerDetails();
+	m_level = details.level();
+	m_xp = details.xp();
+	m_powder = details.powder();
+	m_treats = ClientRequest::GetClient()->GetTreats();
 	return true;
 }
 
 
 bool ClientPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
 {
-	if (monster->GetSpecies()->GetEvolutions().size() == 0)
-		return false;
-	if (GetTreatsForSpecies(monster->GetSpecies()) < monster->GetSpecies()->GetEvolutionCost())
+	if (!ClientRequest::GetClient()->EvolveMonster(monster))
 		return false;
 
-	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= monster->GetSpecies()->GetEvolutionCost();
-	monster->Evolve();
+	GetPlayerDetailsResponse details = ClientRequest::GetClient()->GetPlayerDetails();
+	m_level = details.level();
+	m_xp = details.xp();
+	m_powder = details.powder();
 
-	if (GetNumberCaptured(monster->GetSpecies()) == 0)
-		EarnExperience(1000);
-	else
-		EarnExperience(500);
-	m_seen[monster->GetSpecies()->GetIndex()]++;
-	m_captured[monster->GetSpecies()->GetIndex()]++;
-	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]++;
+	GetMonstersSeenAndCapturedResponse seenAndCaptured = ClientRequest::GetClient()->GetMonstersSeenAndCaptured();
+	for (int i = 0; i < seenAndCaptured.seen_size(); i++)
+		m_seen[seenAndCaptured.seen(i).species()] = seenAndCaptured.seen(i).count();
+	for (int i = 0; i < seenAndCaptured.captured_size(); i++)
+		m_captured[seenAndCaptured.captured(i).species()] = seenAndCaptured.captured(i).count();
+
+	m_treats = ClientRequest::GetClient()->GetTreats();
 	return true;
 }
 
 
 void ClientPlayer::TransferMonster(std::shared_ptr<Monster> monster)
 {
+	ClientRequest::GetClient()->TransferMonster(monster);
+	m_treats = ClientRequest::GetClient()->GetTreats();
+
 	for (auto i = m_monsters.begin(); i != m_monsters.end(); ++i)
 	{
 		if ((*i)->GetID() == monster->GetID())
 		{
-			m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]++;
 			m_monsters.erase(i);
 			break;
 		}
@@ -258,13 +225,36 @@ void ClientPlayer::TransferMonster(std::shared_ptr<Monster> monster)
 
 void ClientPlayer::SetMonsterName(std::shared_ptr<Monster> monster, const string& name)
 {
+	ClientRequest::GetClient()->SetMonsterName(monster, name);
 	monster->SetName(name);
 }
 
 
 uint8_t ClientPlayer::GetMapTile(int32_t x, int32_t y)
 {
-	return TILE_NOT_LOADED;
+	x += MAP_SIZE / 2;
+	y += MAP_SIZE / 2;
+	if (x < 0)
+		return TILE_NOT_LOADED;
+	if (y < 0)
+		return TILE_NOT_LOADED;
+	if (x >= MAP_SIZE)
+		return TILE_NOT_LOADED;
+	if (y >= MAP_SIZE)
+		return TILE_NOT_LOADED;
+
+	if (m_mapData[(y * MAP_SIZE) + x] == TILE_NOT_LOADED)
+	{
+		int32_t baseX = x & ~(GRID_SIZE - 1);
+		int32_t baseY = y & ~(GRID_SIZE - 1);
+		uint8_t data[GRID_SIZE * GRID_SIZE];
+		ClientRequest::GetClient()->GetMapTiles(baseX - (MAP_SIZE / 2), baseY - (MAP_SIZE / 2), data);
+		for (size_t dy = 0; dy < GRID_SIZE; dy++)
+			for (size_t dx = 0; dx < GRID_SIZE; dx++)
+				m_mapData[((baseY + dy) * MAP_SIZE) + (baseX + dx)] = data[(dy * GRID_SIZE) + dx];
+	}
+
+	return m_mapData[(y * MAP_SIZE) + x];
 }
 
 
@@ -300,47 +290,8 @@ map<ItemType, uint32_t> ClientPlayer::GetItemsFromStop(int32_t x, int32_t y)
 	if (m_recentStopsVisited.size() > MAX_STOPS_WITHIN_COOLDOWN)
 		return map<ItemType, uint32_t>();
 
-	map<ItemType, uint32_t> itemWeights;
-	itemWeights[ITEM_STANDARD_BALL] = 20;
-	itemWeights[ITEM_MEGA_SEED] = 3;
-	if (GetLevel() >= 5)
-		itemWeights[ITEM_STANDARD_HEAL] = 8;
-	if (GetLevel() >= 10)
-		itemWeights[ITEM_SUPER_BALL] = 7;
-	if (GetLevel() >= 15)
-		itemWeights[ITEM_SUPER_HEAL] = 3;
-	if (GetLevel() >= 20)
-		itemWeights[ITEM_UBER_BALL] = 3;
-	if (GetLevel() >= 25)
-		itemWeights[ITEM_KEG_OF_HEALTH] = 1;
-	uint32_t totalWeight = 0;
-	for (auto& i : itemWeights)
-		totalWeight += i.second;
-
-	map<ItemType, uint32_t> result;
-	for (size_t count = 0; ; count++)
-	{
-		if (count >= 3)
-		{
-			if ((rand() % 10) > 3)
-				break;
-		}
-
-		uint32_t value = rand() % totalWeight;
-		uint32_t cur = 0;
-		for (auto& i : itemWeights)
-		{
-			if (value < (cur + i.second))
-			{
-				result[i.first]++;
-				break;
-			}
-			cur += i.second;
-		}
-	}
-
-	for (auto& i : result)
-		m_inventory[i.first] += i.second;
+	map<ItemType, uint32_t> result = ClientRequest::GetClient()->GetItemsFromStop(x, y);
+	m_inventory = ClientRequest::GetClient()->GetInventory();
 
 	// Add this visit to the recent list so that it can't be used until the cooldown expires
 	RecentStopVisit visit;

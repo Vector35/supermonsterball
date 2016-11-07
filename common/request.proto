@@ -25,6 +25,9 @@ message Request
 		GetMapTiles = 17;
 		GetRecentStops = 18;
 		GetItemsFromStop = 19;
+		SetTeam = 20;
+		GetPitStatus = 21;
+		AssignPitDefender = 22;
 	}
 
 	RequestType type = 1;
@@ -48,6 +51,7 @@ message LoginResponse
 	}
 
 	AccountStatus status = 1;
+	uint64 id = 2;
 }
 
 message RegisterRequest
@@ -67,6 +71,7 @@ message RegisterResponse
 	}
 
 	RegisterStatus status = 1;
+	uint64 id = 2;
 }
 
 message GetPlayerDetailsResponse
@@ -76,6 +81,7 @@ message GetPlayerDetailsResponse
 	uint32 powder = 3;
 	int32 x = 4;
 	int32 y = 5;
+	uint32 team = 6;
 }
 
 message GetMonsterListResponse
@@ -97,6 +103,7 @@ message GetMonsterListResponse
 		uint32 ball = 13;
 		uint32 quickmove = 14;
 		uint32 chargemove = 15;
+		bool defending = 16;
 	}
 	repeated MonsterDetails monsters = 1;
 }
@@ -268,4 +275,66 @@ message GetItemsFromStopResponse
 		uint32 count = 2;
 	}
 	repeated InventoryItem items = 1;
+}
+
+message SetTeamRequest
+{
+	enum Team
+	{
+		TEAM_UNASSIGNED = 0;
+		TEAM_RED = 1;
+		TEAM_BLUE = 2;
+		TEAM_YELLOW = 3;
+	}
+	Team team = 1;
+}
+
+message GetPitStatusRequest
+{
+	int32 x = 1;
+	int32 y = 2;
+}
+
+message GetPitStatusResponse
+{
+	enum Team
+	{
+		TEAM_UNASSIGNED = 0;
+		TEAM_RED = 1;
+		TEAM_BLUE = 2;
+		TEAM_YELLOW = 3;
+	}
+
+	message MonsterDetails
+	{
+		uint64 owner = 1;
+		string ownername = 2;
+		uint64 id = 3;
+		uint32 species = 4;
+		string name = 5;
+		uint32 hp = 6;
+		uint32 attack = 7;
+		uint32 defense = 8;
+		uint32 stamina = 9;
+		uint32 size = 10;
+		uint32 level = 11;
+		uint32 quickmove = 12;
+		uint32 chargemove = 13;
+	}
+
+	Team team = 1;
+	uint32 reputation = 2;
+	repeated MonsterDetails defenders = 3;
+}
+
+message AssignPitDefenderRequest
+{
+	int32 x = 1;
+	int32 y = 2;
+	uint64 id = 3;
+}
+
+message AssignPitDefenderResponse
+{
+	bool ok = 1;
 }

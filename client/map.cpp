@@ -55,8 +55,24 @@ void MapRenderer::Paint()
 			case TILE_CITY_BUILDING_1:
 			case TILE_CITY_BUILDING_2:
 			case TILE_CITY_BUILDING_3:
-			case TILE_CITY_BUILDING_4:
 				newColor = 242;
+				break;
+			case TILE_PIT:
+				switch (m_player->GetPitTeam(curX, curY))
+				{
+				case TEAM_RED:
+					newColor = 203;
+					break;
+				case TEAM_BLUE:
+					newColor = 63;
+					break;
+				case TEAM_YELLOW:
+					newColor = 227;
+					break;
+				default:
+					newColor = 252;
+					break;
+				}
 				break;
 			case TILE_STOP:
 				if (m_player->IsStopAvailable(curX, curY))
@@ -130,10 +146,10 @@ void MapRenderer::Paint()
 				term->Output("🏨 ");
 				break;
 			case TILE_CITY_BUILDING_3:
-				term->Output("🏦 ");
-				break;
-			case TILE_CITY_BUILDING_4:
 				term->Output("🏬 ");
+				break;
+			case TILE_PIT:
+				term->Output("🏆 ");
 				break;
 			case TILE_STOP:
 				term->Output("🚏 ");
@@ -156,6 +172,21 @@ void MapRenderer::Paint()
 	term->SetColor(255, 16);
 	term->ClearLine();
 
+	switch (m_player->GetTeam())
+	{
+	case TEAM_RED:
+		term->SetColor(203, 16);
+		break;
+	case TEAM_BLUE:
+		term->SetColor(63, 16);
+		break;
+	case TEAM_YELLOW:
+		term->SetColor(227, 16);
+		break;
+	default:
+		term->SetColor(255, 16);
+		break;
+	}
 	term->Output(m_player->GetName());
 
 	term->SetColor(250, 16);
@@ -171,7 +202,21 @@ void MapRenderer::Paint()
 		uint32_t needed = m_player->GetTotalExperienceNeededForNextLevel() -
 			m_player->GetTotalExperienceNeededForCurrentLevel();
 		uint32_t bars = (progress * 10) / needed;
-		term->SetColor(255, 16);
+		switch (m_player->GetTeam())
+		{
+		case TEAM_RED:
+			term->SetColor(203, 16);
+			break;
+		case TEAM_BLUE:
+			term->SetColor(63, 16);
+			break;
+		case TEAM_YELLOW:
+			term->SetColor(227, 16);
+			break;
+		default:
+			term->SetColor(255, 16);
+			break;
+		}
 		for (uint32_t i = 0; i < bars; i++)
 			term->Output("━");
 		term->SetColor(238, 16);

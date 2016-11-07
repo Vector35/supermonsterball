@@ -9,7 +9,7 @@ using namespace std;
 using namespace request;
 
 
-ClientPlayer::ClientPlayer(const string& name): m_name(name)
+ClientPlayer::ClientPlayer(uint64_t id, const string& name): m_id(id), m_name(name)
 {
 	GetPlayerDetailsResponse details = ClientRequest::GetClient()->GetPlayerDetails();
 	m_level = details.level();
@@ -17,6 +17,7 @@ ClientPlayer::ClientPlayer(const string& name): m_name(name)
 	m_powder = details.powder();
 	m_x = details.x();
 	m_y = details.y();
+	m_team = (Team)details.team();
 
 	m_monsters = ClientRequest::GetClient()->GetMonsterList();
 	m_inventory = ClientRequest::GetClient()->GetInventory();
@@ -31,6 +32,7 @@ ClientPlayer::ClientPlayer(const string& name): m_name(name)
 	m_recentStopsVisited = ClientRequest::GetClient()->GetRecentStops();
 
 	m_lastSightingRequest = 0;
+	m_lastPitRequest = 0;
 
 	m_mapData = new uint8_t[MAP_SIZE * MAP_SIZE];
 	memset(m_mapData, TILE_NOT_LOADED, MAP_SIZE * MAP_SIZE);
@@ -300,4 +302,91 @@ map<ItemType, uint32_t> ClientPlayer::GetItemsFromStop(int32_t x, int32_t y)
 	visit.visitTime = time(NULL);
 	m_recentStopsVisited.push_back(visit);
 	return result;
+}
+
+
+void ClientPlayer::SetTeam(Team team)
+{
+	m_team = team;
+	ClientRequest::GetClient()->SetTeam(team);
+}
+
+
+void ClientPlayer::ForcePitRefresh()
+{
+	m_lastPitRequest = 0;
+}
+
+
+PitStatus ClientPlayer::GetPitStatus(int32_t x, int32_t y)
+{
+	if ((time(NULL) - m_lastPitRequest) >= 10)
+		m_cachedPits.clear();
+
+	for (auto& i : m_cachedPits)
+	{
+		if ((i.x == x) && (i.y == y))
+			return i;
+	}
+
+	PitStatus status = ClientRequest::GetClient()->GetPitStatus(x, y);
+	m_cachedPits.push_back(status);
+	return status;
+}
+
+
+Team ClientPlayer::GetPitTeam(int32_t x, int32_t y)
+{
+	PitStatus status = GetPitStatus(x, y);
+	return status.team;
+}
+
+
+uint32_t ClientPlayer::GetPitReputation(int32_t x, int32_t y)
+{
+	PitStatus status = GetPitStatus(x, y);
+	return status.reputation;
+}
+
+
+vector<shared_ptr<Monster>> ClientPlayer::GetPitDefenders(int32_t x, int32_t y)
+{
+	PitStatus status = GetPitStatus(x, y);
+	return status.defenders;
+}
+
+
+bool ClientPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> monster)
+{
+	bool ok = ClientRequest::GetClient()->AssignPitDefender(x, y, monster);
+	if (ok)
+		m_monsters = ClientRequest::GetClient()->GetMonsterList();
+	return ok;
+}
+
+
+bool ClientPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
+{
+	return false;
+}
+
+
+PitBattleStatus ClientPlayer::StepPitBattle()
+{
+	PitBattleStatus status;
+	status.state = PIT_BATTLE_WAITING_FOR_ACTION;
+	status.charge = 0;
+	status.damage = 0;
+	return status;
+}
+
+
+void ClientPlayer::SetPitBattleAction(PitBattleAction action)
+{
+}
+
+
+uint32_t ClientPlayer::RunFromPitBattle()
+{
+	return 0;
 }

@@ -2,6 +2,7 @@
 
 #include <map>
 #include "monster.h"
+#include "player.h"
 
 #define GRID_SIZE 128
 #define MAP_SIZE 4096
@@ -24,10 +25,10 @@ enum MapTile
 	TILE_CITY_BUILDING_1 = 8,
 	TILE_CITY_BUILDING_2 = 9,
 	TILE_CITY_BUILDING_3 = 10,
-	TILE_CITY_BUILDING_4 = 11,
-	TILE_DESERT = 12,
-	TILE_DESERT_CACTUS = 13,
-	TILE_DESERT_HOUSE = 14,
+	TILE_DESERT = 11,
+	TILE_DESERT_CACTUS = 12,
+	TILE_DESERT_HOUSE = 13,
+	TILE_PIT = 14,
 	TILE_STOP = 15,
 	TILE_NOT_LOADED = 255
 };
@@ -39,23 +40,37 @@ struct SpawnPoint
 	Biome* biome;
 };
 
+struct PitStatus
+{
+	int32_t x, y;
+	Team team;
+	uint32_t reputation;
+	std::vector<std::shared_ptr<Monster>> defenders;
+};
+
 struct GridData
 {
 	std::vector<SpawnPoint> spawns;
+	std::vector<PitStatus> pits;
 };
+
+class Database;
 
 class World
 {
 	static World* m_world;
 	std::map<uint32_t, GridData> m_data;
 	uint8_t* m_mapData;
+	Database* m_db;
 
 	void AddSpawnPoint(const SpawnPoint& data);
+	PitStatus LoadPit(int32_t x, int32_t y);
+	PitStatus* GetPit(int32_t x, int32_t y);
 
 public:
-	World();
+	World(Database* db);
 
-	static void Init();
+	static void Init(Database* db);
 	static World* GetWorld();
 
 	std::vector<SpawnPoint> GetSpawnPointsInRange(int32_t x, int32_t y);
@@ -63,4 +78,11 @@ public:
 	std::shared_ptr<Monster> GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLevel);
 
 	uint8_t GetMapTile(int32_t x, int32_t y);
+
+	Team GetPitTeam(int32_t x, int32_t y);
+	uint32_t GetPitReputation(int32_t x, int32_t y);
+	std::vector<std::shared_ptr<Monster>> GetPitDefenders(int32_t x, int32_t y);
+	bool AssignPitDefender(int32_t x, int32_t y, Team team, std::shared_ptr<Monster> monster);
+	void AddPitReputation(int32_t x, int32_t y, uint32_t reputation);
+	void RemovePitReputation(int32_t x, int32_t y, uint32_t reputation);
 };

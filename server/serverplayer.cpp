@@ -14,6 +14,7 @@ ServerPlayer::ServerPlayer(const string& name, uint64_t id): m_name(name)
 	m_powder = 0;
 	m_x = 0;
 	m_y = 0;
+	m_team = TEAM_UNASSIGNED;
 
 	m_inventory[ITEM_STANDARD_BALL] = 20;
 	m_inventory[ITEM_MEGA_SEED] = 5;
@@ -30,6 +31,7 @@ ServerPlayer::ServerPlayer(const string& name, const DatabaseLoginResult& login)
 	m_powder = login.powder;
 	m_x = login.x;
 	m_y = login.y;
+	m_team = login.team;
 
 	map<uint32_t, uint32_t> inventory = Database::GetDatabase()->GetInventory(m_id);
 	for (auto& i : inventory)
@@ -39,7 +41,7 @@ ServerPlayer::ServerPlayer(const string& name, const DatabaseLoginResult& login)
 	m_captured = Database::GetDatabase()->GetMonstersCaptured(m_id);
 	m_treats = Database::GetDatabase()->GetTreats(m_id);
 
-	vector<shared_ptr<Monster>> monsters = Database::GetDatabase()->GetMonsters(m_id);
+	vector<shared_ptr<Monster>> monsters = Database::GetDatabase()->GetMonsters(m_id, m_name);
 	for (auto& i : monsters)
 		m_monsters[i->GetID()] = i;
 }
@@ -310,6 +312,8 @@ bool ServerPlayer::PowerUpMonster(std::shared_ptr<Monster> monster)
 		return false;
 	if (monster->GetLevel() >= 40)
 		return false;
+	if (monster->IsDefending())
+		return false;
 
 	if (GetTreatsForSpecies(monster->GetSpecies()) < GetPowerUpCost(monster->GetLevel()).treats)
 		return false;
@@ -332,6 +336,8 @@ bool ServerPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
 	if (monster->GetSpecies()->GetEvolutions().size() == 0)
 		return false;
 	if (GetTreatsForSpecies(monster->GetSpecies()) < monster->GetSpecies()->GetEvolutionCost())
+		return false;
+	if (monster->IsDefending())
 		return false;
 
 	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= monster->GetSpecies()->GetEvolutionCost();
@@ -357,6 +363,9 @@ bool ServerPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
 
 void ServerPlayer::TransferMonster(std::shared_ptr<Monster> monster)
 {
+	if (monster->IsDefending())
+		return;
+
 	auto i = m_monsters.find(monster->GetID());
 	if (i == m_monsters.end())
 		return;
@@ -371,6 +380,9 @@ void ServerPlayer::TransferMonster(std::shared_ptr<Monster> monster)
 
 void ServerPlayer::SetMonsterName(std::shared_ptr<Monster> monster, const string& name)
 {
+	if (monster->IsDefending())
+		return;
+
 	monster->SetName(name);
 	Database::GetDatabase()->UpdateMonster(m_id, monster);
 }
@@ -466,4 +478,66 @@ map<ItemType, uint32_t> ServerPlayer::GetItemsFromStop(int32_t x, int32_t y)
 	visit.visitTime = time(NULL);
 	m_recentStopsVisited.push_back(visit);
 	return result;
+}
+
+
+void ServerPlayer::SetTeam(Team team)
+{
+	if (m_team != TEAM_UNASSIGNED)
+		return;
+	if (m_level < 5)
+		return;
+	m_team = team;
+	Database::GetDatabase()->SetTeam(m_id, team);
+}
+
+
+Team ServerPlayer::GetPitTeam(int32_t x, int32_t y)
+{
+	return World::GetWorld()->GetPitTeam(x, y);
+}
+
+
+uint32_t ServerPlayer::GetPitReputation(int32_t x, int32_t y)
+{
+	return World::GetWorld()->GetPitReputation(x, y);
+}
+
+
+vector<shared_ptr<Monster>> ServerPlayer::GetPitDefenders(int32_t x, int32_t y)
+{
+	return World::GetWorld()->GetPitDefenders(x, y);
+}
+
+
+bool ServerPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> monster)
+{
+	return World::GetWorld()->AssignPitDefender(x, y, m_team, monster);
+}
+
+
+bool ServerPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
+{
+	return false;
+}
+
+
+PitBattleStatus ServerPlayer::StepPitBattle()
+{
+	PitBattleStatus status;
+	status.state = PIT_BATTLE_WAITING_FOR_ACTION;
+	status.charge = 0;
+	status.damage = 0;
+	return status;
+}
+
+
+void ServerPlayer::SetPitBattleAction(PitBattleAction action)
+{
+}
+
+
+uint32_t ServerPlayer::RunFromPitBattle()
+{
+	return 0;
 }

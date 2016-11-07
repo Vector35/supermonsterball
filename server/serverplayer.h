@@ -7,6 +7,7 @@ class ServerPlayer: public Player
 {
 	uint64_t m_id;
 	std::string m_name;
+	Team m_team;
 	uint32_t m_level, m_xp, m_powder;
 	std::map<uint64_t, std::shared_ptr<Monster>> m_monsters;
 	std::map<ItemType, uint32_t> m_inventory;
@@ -26,7 +27,9 @@ public:
 	ServerPlayer(const std::string& name, const DatabaseLoginResult& login);
 	virtual ~ServerPlayer() {}
 
+	virtual uint64_t GetID() override { return m_id; }
 	virtual std::string GetName() override { return m_name; }
+	virtual Team GetTeam() override { return m_team; }
 	virtual uint32_t GetLevel() override { return m_level; }
 	virtual uint32_t GetTotalExperience() override { return m_xp; }
 	virtual uint32_t GetPowder() override { return m_powder; }
@@ -64,4 +67,16 @@ public:
 	virtual std::vector<RecentStopVisit> GetRecentStops() override { return m_recentStopsVisited; }
 	virtual bool IsStopAvailable(int32_t x, int32_t y) override;
 	virtual std::map<ItemType, uint32_t> GetItemsFromStop(int32_t x, int32_t y) override;
+
+	virtual void SetTeam(Team team) override;
+
+	virtual void ForcePitRefresh() override {}
+	virtual Team GetPitTeam(int32_t x, int32_t y) override;
+	virtual uint32_t GetPitReputation(int32_t x, int32_t y) override;
+	virtual std::vector<std::shared_ptr<Monster>> GetPitDefenders(int32_t x, int32_t y) override;
+	virtual bool AssignPitDefender(int32_t x, int32_t y, std::shared_ptr<Monster> monster) override;
+	virtual bool StartPitBattle(int32_t x, int32_t y, std::vector<std::shared_ptr<Monster>> monsters) override;
+	virtual PitBattleStatus StepPitBattle() override;
+	virtual void SetPitBattleAction(PitBattleAction action) override;
+	virtual uint32_t RunFromPitBattle() override;
 };

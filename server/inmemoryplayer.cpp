@@ -8,8 +8,9 @@ using namespace std;
 
 InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 {
-	m_level = 1;
-	m_xp = 0;
+	m_team = TEAM_UNASSIGNED;
+	m_level = 5;
+	m_xp = GetTotalExperienceNeededForCurrentLevel();
 	m_powder = 0;
 	m_x = 0;
 	m_y = 0;
@@ -400,4 +401,61 @@ map<ItemType, uint32_t> InMemoryPlayer::GetItemsFromStop(int32_t x, int32_t y)
 	visit.visitTime = time(NULL);
 	m_recentStopsVisited.push_back(visit);
 	return result;
+}
+
+
+void InMemoryPlayer::SetTeam(Team team)
+{
+	m_team = team;
+}
+
+
+Team InMemoryPlayer::GetPitTeam(int32_t x, int32_t y)
+{
+	return World::GetWorld()->GetPitTeam(x, y);
+}
+
+
+uint32_t InMemoryPlayer::GetPitReputation(int32_t x, int32_t y)
+{
+	return World::GetWorld()->GetPitReputation(x, y);
+}
+
+
+vector<shared_ptr<Monster>> InMemoryPlayer::GetPitDefenders(int32_t x, int32_t y)
+{
+	return World::GetWorld()->GetPitDefenders(x, y);
+}
+
+
+bool InMemoryPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> monster)
+{
+	return World::GetWorld()->AssignPitDefender(x, y, m_team, monster);
+}
+
+
+bool InMemoryPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
+{
+	return false;
+}
+
+
+PitBattleStatus InMemoryPlayer::StepPitBattle()
+{
+	PitBattleStatus status;
+	status.state = PIT_BATTLE_WAITING_FOR_ACTION;
+	status.charge = 0;
+	status.damage = 0;
+	return status;
+}
+
+
+void InMemoryPlayer::SetPitBattleAction(PitBattleAction action)
+{
+}
+
+
+uint32_t InMemoryPlayer::RunFromPitBattle()
+{
+	return 0;
 }

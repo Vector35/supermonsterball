@@ -143,3 +143,42 @@ bool Player::IsMapTileTraversable(int32_t x, int32_t y)
 		return false;
 	}
 }
+
+
+uint32_t Player::GetReputationRequirementForLevel(uint32_t level)
+{
+	switch (level)
+	{
+	case 1:
+		return 0;
+	case 2:
+		return 2000;
+	case 3:
+		return 5000;
+	case 4:
+		return 10000;
+	case 5:
+		return 15000;
+	case 6:
+		return 20000;
+	case 7:
+		return 25000;
+	case 8:
+		return 30000;
+	case 9:
+		return 40000;
+	default:
+		return 50000;
+	}
+}
+
+
+uint32_t Player::GetPitLevelByReputation(uint32_t reputation)
+{
+	for (uint32_t level = 10; level > 1; level--)
+	{
+		if (reputation >= GetReputationRequirementForLevel(level))
+			return level;
+	}
+	return 1;
+}

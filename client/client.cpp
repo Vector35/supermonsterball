@@ -5,6 +5,7 @@
 #include <chrono>
 #include "client.h"
 #include "map.h"
+#include "world.h"
 
 using namespace std;
 
@@ -340,7 +341,13 @@ void GameLoop(Player* player)
 				int32_t x = player->GetLastLocationX();
 				int32_t y = player->GetLastLocationY() - 1;
 				if (player->IsStopAvailable(x, y))
+				{
 					GetAndShowItemsFromStop(player, x, y);
+				}
+				else if (player->GetMapTile(x, y) == TILE_PIT)
+				{
+					StartPitInteraction(player, &map, x, y);
+				}
 				else if (player->IsMapTileTraversable(x, y))
 				{
 					lastMovement = chrono::steady_clock::now();
@@ -354,7 +361,13 @@ void GameLoop(Player* player)
 				int32_t x = player->GetLastLocationX();
 				int32_t y = player->GetLastLocationY() + 1;
 				if (player->IsStopAvailable(x, y))
+				{
 					GetAndShowItemsFromStop(player, x, y);
+				}
+				else if (player->GetMapTile(x, y) == TILE_PIT)
+				{
+					StartPitInteraction(player, &map, x, y);
+				}
 				else if (player->IsMapTileTraversable(x, y))
 				{
 					lastMovement = chrono::steady_clock::now();
@@ -368,7 +381,13 @@ void GameLoop(Player* player)
 				int32_t x = player->GetLastLocationX() - 1;
 				int32_t y = player->GetLastLocationY();
 				if (player->IsStopAvailable(x, y))
+				{
 					GetAndShowItemsFromStop(player, x, y);
+				}
+				else if (player->GetMapTile(x, y) == TILE_PIT)
+				{
+					StartPitInteraction(player, &map, x, y);
+				}
 				else if (player->IsMapTileTraversable(x, y))
 				{
 					lastMovement = chrono::steady_clock::now();
@@ -382,7 +401,13 @@ void GameLoop(Player* player)
 				int32_t x = player->GetLastLocationX() + 1;
 				int32_t y = player->GetLastLocationY();
 				if (player->IsStopAvailable(x, y))
+				{
 					GetAndShowItemsFromStop(player, x, y);
+				}
+				else if (player->GetMapTile(x, y) == TILE_PIT)
+				{
+					StartPitInteraction(player, &map, x, y);
+				}
 				else if (player->IsMapTileTraversable(x, y))
 				{
 					lastMovement = chrono::steady_clock::now();

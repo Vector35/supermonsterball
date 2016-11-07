@@ -128,6 +128,9 @@ class Monster
 	ItemType m_ball;
 	Move* m_quickMove;
 	Move* m_chargeMove;
+	uint64_t m_owner;
+	std::string m_ownerName;
+	bool m_defending;
 
 public:
 	Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTime);
@@ -149,6 +152,9 @@ public:
 	ItemType GetBallType() const { return m_ball; }
 	Move* GetQuickMove() const { return m_quickMove; }
 	Move* GetChargeMove() const { return m_chargeMove; }
+	uint64_t GetOwnerID() const { return m_owner; }
+	const std::string GetOwnerName() const { return m_ownerName; }
+	bool IsDefending() const { return m_defending; }
 
 	void SetID(uint64_t id);
 	void SetIV(uint32_t attack, uint32_t def, uint32_t stamina);
@@ -158,6 +164,8 @@ public:
 	void SetName(const std::string& name);
 	void SetHP(uint32_t hp);
 	void SetMoves(Move* quick, Move* charge);
+	void SetOwner(uint64_t id, const std::string& name);
+	void SetDefending(bool defending);
 	void ResetHP();
 
 	void Evolve();

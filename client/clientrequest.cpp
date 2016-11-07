@@ -12,6 +12,7 @@ ClientRequest* ClientRequest::m_requests = nullptr;
 ClientRequest::ClientRequest(ClientSocket* ssl): m_ssl(ssl)
 {
 	m_requests = this;
+	m_id = 0;
 }
 
 
@@ -62,6 +63,11 @@ LoginResponse_AccountStatus ClientRequest::Login(const string username, const st
 	LoginResponse response;
 	if (!response.ParseFromString(ReadResponse()))
 		throw NetworkException("Invalid login response");
+	if (response.status() == LoginResponse_AccountStatus_LoginOK)
+	{
+		m_id = response.id();
+		m_name = username;
+	}
 	return response.status();
 }
 
@@ -76,6 +82,11 @@ RegisterResponse_RegisterStatus ClientRequest::Register(const string username, c
 	RegisterResponse response;
 	if (!response.ParseFromString(ReadResponse()))
 		throw NetworkException("Invalid login response");
+	if (response.status() == RegisterResponse_RegisterStatus_RegisterOK)
+	{
+		m_id = response.id();
+		m_name = username;
+	}
 	return response.status();
 }
 
@@ -103,6 +114,7 @@ vector<shared_ptr<Monster>> ClientRequest::GetMonsterList()
 		shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(response.monsters(i).species()),
 			response.monsters(i).x(), response.monsters(i).y(), response.monsters(i).spawntime()));
 		monster->SetID(response.monsters(i).id());
+		monster->SetOwner(m_id, m_name);
 		monster->SetName(response.monsters(i).name());
 		monster->SetHP(response.monsters(i).hp());
 		monster->SetIV(response.monsters(i).attack(), response.monsters(i).defense(), response.monsters(i).stamina());
@@ -111,6 +123,7 @@ vector<shared_ptr<Monster>> ClientRequest::GetMonsterList()
 		monster->SetCapture(true, (ItemType)response.monsters(i).ball());
 		monster->SetMoves(Move::GetByIndex(response.monsters(i).quickmove()),
 			Move::GetByIndex(response.monsters(i).chargemove()));
+		monster->SetDefending(response.monsters(i).defending());
 		result.push_back(monster);
 	}
 	return result;
@@ -194,6 +207,7 @@ shared_ptr<Monster> ClientRequest::StartEncounter(int32_t x, int32_t y)
 
 	shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(response.species()), x, y,
 		response.spawntime()));
+	monster->SetOwner(m_id, m_name);
 	monster->SetIV(response.attack(), response.defense(), response.stamina());
 	monster->SetSize(response.size());
 	monster->SetLevel(response.level());
@@ -228,6 +242,7 @@ BallThrowResult ClientRequest::ThrowBall(ItemType ball, std::shared_ptr<Monster>
 	{
 	case ThrowBallResponse_BallThrowResult_THROW_RESULT_CATCH:
 		monster->SetID(response.catchid());
+		monster->SetCapture(true, ball);
 		return THROW_RESULT_CATCH;
 	case ThrowBallResponse_BallThrowResult_THROW_RESULT_BREAK_OUT_AFTER_ONE:
 		return THROW_RESULT_BREAK_OUT_AFTER_ONE;
@@ -368,4 +383,92 @@ map<ItemType, uint32_t> ClientRequest::GetItemsFromStop(int32_t x, int32_t y)
 	for (int i = 0; i < response.items_size(); i++)
 		result[(ItemType)response.items(i).item()] = response.items(i).count();
 	return result;
+}
+
+
+void ClientRequest::SetTeam(Team team)
+{
+	SetTeamRequest request;
+	switch (team)
+	{
+	case TEAM_RED:
+		request.set_team(SetTeamRequest_Team_TEAM_RED);
+		break;
+	case TEAM_BLUE:
+		request.set_team(SetTeamRequest_Team_TEAM_BLUE);
+		break;
+	case TEAM_YELLOW:
+		request.set_team(SetTeamRequest_Team_TEAM_YELLOW);
+		break;
+	default:
+		return;
+	}
+	WriteRequest(Request_RequestType_SetTeam, request.SerializeAsString());
+	ReadResponse();
+}
+
+
+PitStatus ClientRequest::GetPitStatus(int32_t x, int32_t y)
+{
+	GetPitStatusRequest request;
+	request.set_x(x);
+	request.set_y(y);
+	WriteRequest(Request_RequestType_GetPitStatus, request.SerializeAsString());
+
+	GetPitStatusResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid pit status response");
+
+	PitStatus status;
+	switch (response.team())
+	{
+	case GetPitStatusResponse_Team_TEAM_RED:
+		status.team = TEAM_RED;
+		break;
+	case GetPitStatusResponse_Team_TEAM_BLUE:
+		status.team = TEAM_BLUE;
+		break;
+	case GetPitStatusResponse_Team_TEAM_YELLOW:
+		status.team = TEAM_YELLOW;
+		break;
+	default:
+		status.team = TEAM_UNASSIGNED;
+		break;
+	}
+
+	status.reputation = response.reputation();
+
+	for (int i = 0; i < response.defenders_size(); i++)
+	{
+		shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(response.defenders(i).species()),
+			0, 0, 0));
+		monster->SetID(response.defenders(i).id());
+		monster->SetIV(response.defenders(i).attack(), response.defenders(i).defense(),
+			response.defenders(i).stamina());
+		monster->SetSize(response.defenders(i).size());
+		monster->SetLevel(response.defenders(i).level());
+		monster->SetName(response.defenders(i).name());
+		monster->SetHP(response.defenders(i).hp());
+		monster->SetMoves(Move::GetByIndex(response.defenders(i).quickmove()),
+			Move::GetByIndex(response.defenders(i).chargemove()));
+		monster->SetOwner(response.defenders(i).owner(), response.defenders(i).ownername());
+		monster->SetDefending(true);
+		status.defenders.push_back(monster);
+	}
+	return status;
+}
+
+
+bool ClientRequest::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> monster)
+{
+	AssignPitDefenderRequest request;
+	request.set_x(x);
+	request.set_y(y);
+	request.set_id(monster->GetID());
+	WriteRequest(Request_RequestType_AssignPitDefender, request.SerializeAsString());
+
+	AssignPitDefenderResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid pit assign response");
+	return response.ok();
 }

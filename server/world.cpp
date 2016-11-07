@@ -4,6 +4,7 @@
 #include <math.h>
 #include "world.h"
 #include "perlin2d.h"
+#include "database.h"
 
 using namespace std;
 
@@ -30,8 +31,9 @@ static uint32_t CoordToGridNumber(int32_t x, int32_t y)
 }
 
 
-World::World()
+World::World(Database* db)
 {
+	m_db = db;
 	m_mapData = new uint8_t[MAP_SIZE * MAP_SIZE];
 	memset(m_mapData, TILE_GRASS, MAP_SIZE * MAP_SIZE);
 
@@ -86,12 +88,10 @@ World::World()
 					seed = (seed * 25214903917LL) + 11LL;
 					if (decorationValue < 0x4000)
 						tile = TILE_CITY_BUILDING_1;
-					else if (decorationValue < 0x4800)
-						tile = TILE_CITY_BUILDING_2;
 					else if (decorationValue < 0x4a00)
-						tile = TILE_CITY_BUILDING_3;
+						tile = TILE_CITY_BUILDING_2;
 					else if (decorationValue < 0x4c00)
-						tile = TILE_CITY_BUILDING_4;
+						tile = TILE_CITY_BUILDING_3;
 				}
 			}
 			else if (wet < -0.3f)
@@ -146,7 +146,10 @@ World::World()
 					requiredStopValue = 0x6000;
 				if (stopValue < requiredStopValue)
 				{
-					tile = TILE_STOP;
+					if (stopValue < (requiredStopValue / 4))
+						tile = TILE_PIT;
+					else
+						tile = TILE_STOP;
 					spawnHere = false;
 				}
 			}
@@ -175,9 +178,9 @@ World::World()
 }
 
 
-void World::Init()
+void World::Init(Database* db)
 {
-	m_world = new World();
+	m_world = new World(db);
 }
 
 
@@ -191,6 +194,49 @@ void World::AddSpawnPoint(const SpawnPoint& spawn)
 {
 	uint32_t grid = CoordToGridNumber(spawn.x, spawn.y);
 	m_data[grid].spawns.push_back(spawn);
+}
+
+
+PitStatus World::LoadPit(int32_t x, int32_t y)
+{
+	if (!m_db)
+	{
+		PitStatus status;
+		status.x = x;
+		status.y = y;
+		status.team = TEAM_UNASSIGNED;
+		status.reputation = 0;
+		return status;
+	}
+
+	return m_db->GetPitStatus(x, y);
+}
+
+
+PitStatus* World::GetPit(int32_t x, int32_t y)
+{
+	if (GetMapTile(x, y) != TILE_PIT)
+		return nullptr;
+
+	uint32_t grid = CoordToGridNumber(x, y);
+	auto i = m_data.find(grid);
+	if (i == m_data.end())
+	{
+		PitStatus status = LoadPit(x, y);
+		m_data[grid].pits.push_back(status);
+		return &(*(m_data[grid].pits.end() - 1));
+	}
+
+	for (auto& j : i->second.pits)
+	{
+		if ((j.x != x) || (j.y != y))
+			continue;
+		return &j;
+	}
+
+	PitStatus status = LoadPit(x, y);
+	i->second.pits.push_back(status);
+	return &(*(m_data[grid].pits.end() - 1));
 }
 
 
@@ -338,4 +384,154 @@ uint8_t World::GetMapTile(int32_t x, int32_t y)
 	if (y >= MAP_SIZE)
 		return TILE_NOT_LOADED;
 	return m_mapData[(y * MAP_SIZE) + x];
+}
+
+
+Team World::GetPitTeam(int32_t x, int32_t y)
+{
+	PitStatus* pit = GetPit(x, y);
+	if (!pit)
+		return TEAM_UNASSIGNED;
+	return pit->team;
+}
+
+
+uint32_t World::GetPitReputation(int32_t x, int32_t y)
+{
+	PitStatus* pit = GetPit(x, y);
+	if (!pit)
+		return 0;
+	return pit->reputation;
+}
+
+
+vector<shared_ptr<Monster>> World::GetPitDefenders(int32_t x, int32_t y)
+{
+	PitStatus* pit = GetPit(x, y);
+	if (!pit)
+		return vector<shared_ptr<Monster>>();
+	return pit->defenders;
+}
+
+
+bool World::AssignPitDefender(int32_t x, int32_t y, Team team, shared_ptr<Monster> monster)
+{
+	PitStatus* pit = GetPit(x, y);
+	if (!pit)
+		return false;
+	if (team == TEAM_UNASSIGNED)
+		return false;
+	if (monster->IsDefending())
+		return false;
+
+	if (pit->team == TEAM_UNASSIGNED)
+	{
+		pit->team = team;
+		pit->reputation = DEFAULT_PIT_REPUTATION;
+		pit->defenders.clear();
+		pit->defenders.push_back(monster);
+
+		if (m_db)
+			m_db->SetPitStatus(*pit);
+
+		monster->SetDefending(true);
+		if (m_db)
+			m_db->UpdateMonster(monster->GetOwnerID(), monster);
+		return true;
+	}
+
+	if (pit->team != team)
+		return false;
+
+	if (Player::GetPitLevelByReputation(pit->reputation) >= 10)
+		return false;
+	if (pit->defenders.size() >= Player::GetPitLevelByReputation(pit->reputation))
+		return false;
+
+	for (auto i = pit->defenders.begin(); i != pit->defenders.end(); ++i)
+	{
+		if ((*i)->GetOwnerID() == monster->GetOwnerID())
+		{
+			// Already has a defender
+			return false;
+		}
+	}
+
+	for (auto i = pit->defenders.begin(); i != pit->defenders.end(); ++i)
+	{
+		if ((*i)->GetCP() > monster->GetCP())
+		{
+			pit->defenders.insert(i, monster);
+			if (m_db)
+				m_db->SetPitStatus(*pit);
+
+			monster->SetDefending(true);
+			if (m_db)
+				m_db->UpdateMonster(monster->GetOwnerID(), monster);
+			return true;
+		}
+	}
+
+	pit->defenders.push_back(monster);
+	if (m_db)
+		m_db->SetPitStatus(*pit);
+
+	monster->SetDefending(true);
+	if (m_db)
+		m_db->UpdateMonster(monster->GetOwnerID(), monster);
+	return true;
+}
+
+
+void World::AddPitReputation(int32_t x, int32_t y, uint32_t reputation)
+{
+	PitStatus* pit = GetPit(x, y);
+	if (!pit)
+		return;
+	if (pit->team == TEAM_UNASSIGNED)
+		return;
+
+	pit->reputation += reputation;
+	if (pit->reputation > MAX_PIT_REPUTATION)
+		pit->reputation = MAX_PIT_REPUTATION;
+	if (m_db)
+		m_db->SetPitStatus(*pit);
+}
+
+
+void World::RemovePitReputation(int32_t x, int32_t y, uint32_t reputation)
+{
+	PitStatus* pit = GetPit(x, y);
+	if (!pit)
+		return;
+	if (pit->team == TEAM_UNASSIGNED)
+		return;
+
+	if (reputation >= pit->reputation)
+	{
+		pit->team = TEAM_UNASSIGNED;
+		pit->reputation = 0;
+		for (auto& i : pit->defenders)
+		{
+			i->SetDefending(false);
+			i->SetHP(0);
+			if (m_db)
+				m_db->UpdateMonster(i->GetOwnerID(), i);
+		}
+		if (m_db)
+			m_db->SetPitStatus(*pit);
+		return;
+	}
+
+	pit->reputation -= reputation;
+	while ((pit->defenders.size() > 0) && (pit->defenders.size() > Player::GetPitLevelByReputation(pit->reputation)))
+	{
+		pit->defenders[0]->SetDefending(false);
+		pit->defenders[0]->SetHP(0);
+		if (m_db)
+			m_db->UpdateMonster(pit->defenders[0]->GetOwnerID(), pit->defenders[0]);
+		pit->defenders.erase(pit->defenders.begin());
+	}
+	if (m_db)
+		m_db->SetPitStatus(*pit);
 }

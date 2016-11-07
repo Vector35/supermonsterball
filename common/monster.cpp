@@ -682,6 +682,8 @@ Monster::Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTi
 	m_ball = ITEM_STANDARD_BALL;
 	m_quickMove = Move::GetByIndex(0);
 	m_chargeMove = Move::GetByIndex(0);
+	m_owner = 0;
+	m_defending = false;
 }
 
 
@@ -774,6 +776,19 @@ void Monster::Evolve()
 void Monster::SetSpecies(MonsterSpecies* species)
 {
 	m_species = species;
+}
+
+
+void Monster::SetOwner(uint64_t id, const string& name)
+{
+	m_owner = id;
+	m_ownerName = name;
+}
+
+
+void Monster::SetDefending(bool defending)
+{
+	m_defending = defending;
 }
 
 

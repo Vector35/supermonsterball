@@ -82,7 +82,10 @@ void ClientHandler::Login(const std::string& msg)
 	else if (result.banned)
 		response.set_status(LoginResponse_AccountStatus_AccountBanned);
 	else
+	{
 		response.set_status(LoginResponse_AccountStatus_LoginOK);
+		response.set_id(result.id);
+	}
 	WriteResponse(response.SerializeAsString());
 }
 
@@ -136,7 +139,10 @@ void ClientHandler::Register(const std::string& msg)
 	if (!result.valid)
 		response.set_status(RegisterResponse_RegisterStatus_InvalidOrDuplicateUsername);
 	else
+	{
 		response.set_status(RegisterResponse_RegisterStatus_RegisterOK);
+		response.set_id(result.id);
+	}
 	WriteResponse(response.SerializeAsString());
 }
 
@@ -153,6 +159,7 @@ void ClientHandler::GetPlayerDetails()
 		response.set_powder(m_player->GetPowder());
 		response.set_x(m_player->GetLastLocationX());
 		response.set_y(m_player->GetLastLocationY());
+		response.set_team((uint32_t)m_player->GetTeam());
 	});
 	WriteResponse(response.SerializeAsString());
 }
@@ -184,6 +191,7 @@ void ClientHandler::GetMonsterList()
 			monster->set_ball((uint32_t)i->GetBallType());
 			monster->set_quickmove(i->GetQuickMove()->GetIndex());
 			monster->set_chargemove(i->GetChargeMove()->GetIndex());
+			monster->set_defending(i->IsDefending());
 		}
 	});
 	WriteResponse(response.SerializeAsString());
@@ -562,6 +570,107 @@ void ClientHandler::GetItemsFromStop(const string& msg)
 }
 
 
+void ClientHandler::SetTeam(const string& msg)
+{
+	SetTeamRequest request;
+	if (!request.ParseFromString(msg))
+		throw SocketException("Bad set team request format");
+
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		switch (request.team())
+		{
+		case SetTeamRequest_Team_TEAM_RED:
+			m_player->SetTeam(TEAM_RED);
+			break;
+		case SetTeamRequest_Team_TEAM_BLUE:
+			m_player->SetTeam(TEAM_BLUE);
+			break;
+		case SetTeamRequest_Team_TEAM_YELLOW:
+			m_player->SetTeam(TEAM_YELLOW);
+			break;
+		default:
+			break;
+		}
+	});
+	WriteResponse("");
+}
+
+
+void ClientHandler::GetPitStatus(const string& msg)
+{
+	GetPitStatusRequest request;
+	if (!request.ParseFromString(msg))
+		throw SocketException("Bad pit status request format");
+
+	GetPitStatusResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		switch (m_player->GetPitTeam(request.x(), request.y()))
+		{
+		case TEAM_RED:
+			response.set_team(GetPitStatusResponse_Team_TEAM_RED);
+			break;
+		case TEAM_BLUE:
+			response.set_team(GetPitStatusResponse_Team_TEAM_BLUE);
+			break;
+		case TEAM_YELLOW:
+			response.set_team(GetPitStatusResponse_Team_TEAM_YELLOW);
+			break;
+		default:
+			response.set_team(GetPitStatusResponse_Team_TEAM_UNASSIGNED);
+			break;
+		}
+
+		response.set_reputation(m_player->GetPitReputation(request.x(), request.y()));
+
+		for (auto& i : m_player->GetPitDefenders(request.x(), request.y()))
+		{
+			GetPitStatusResponse_MonsterDetails* monster = response.add_defenders();
+			monster->set_owner(i->GetOwnerID());
+			monster->set_ownername(i->GetOwnerName());
+			monster->set_id(i->GetID());
+			monster->set_species(i->GetSpecies()->GetIndex());
+			monster->set_name(i->GetName());
+			monster->set_hp(i->GetCurrentHP());
+			monster->set_attack(i->GetAttackIV());
+			monster->set_defense(i->GetDefenseIV());
+			monster->set_stamina(i->GetStaminaIV());
+			monster->set_size(i->GetSize());
+			monster->set_level(i->GetLevel());
+			monster->set_quickmove(i->GetQuickMove()->GetIndex());
+			monster->set_chargemove(i->GetChargeMove()->GetIndex());
+		}
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
+void ClientHandler::AssignPitDefender(const string& msg)
+{
+	AssignPitDefenderRequest request;
+	if (!request.ParseFromString(msg))
+		throw SocketException("Bad pit status request format");
+
+	AssignPitDefenderResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		shared_ptr<Monster> monster = m_player->GetMonsterByID(request.id());
+		if (monster)
+			response.set_ok(m_player->AssignPitDefender(request.x(), request.y(), monster));
+		else
+			response.set_ok(false);
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
 void ClientHandler::ProcessRequests()
 {
 	try
@@ -632,6 +741,15 @@ void ClientHandler::ProcessRequests()
 			case Request_RequestType_GetItemsFromStop:
 				GetItemsFromStop(request.data());
 				break;
+			case Request_RequestType_SetTeam:
+				SetTeam(request.data());
+				break;
+			case Request_RequestType_GetPitStatus:
+				GetPitStatus(request.data());
+				break;
+			case Request_RequestType_AssignPitDefender:
+				AssignPitDefender(request.data());
+				break;
 			default:
 				throw SocketException("Bad request type");
 			}
@@ -644,4 +762,21 @@ void ClientHandler::ProcessRequests()
 	{
 		printf("ERROR: %s\n", e.what());
 	}
+}
+
+
+shared_ptr<ServerPlayer> ClientHandler::GetPlayerByID(uint64_t id)
+{
+	unique_lock<mutex> lock(m_playerCacheMutex);
+	auto i = m_playerCache.find(id);
+	if (i != m_playerCache.end())
+		return i->second;
+
+	string name;
+	DatabaseLoginResult result = Database::GetDatabase()->GetUserByID(id, name);
+	if (!result.valid)
+		return nullptr;
+	shared_ptr<ServerPlayer> player(new ServerPlayer(name, result));
+	m_playerCache[result.id] = player;
+	return player;
 }

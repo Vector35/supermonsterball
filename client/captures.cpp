@@ -4,7 +4,8 @@
 using namespace std;
 
 
-void ShowMonsterList(Player* player, MapRenderer* map)
+shared_ptr<Monster> ShowMonsterList(Player* player, MapRenderer* map, bool selecting, bool showDefenders,
+	bool showFainted)
 {
 	Terminal* term = Terminal::GetTerminal();
 
@@ -23,7 +24,17 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 	size_t selected = 0;
 	while (!term->HasQuit())
 	{
-		vector<shared_ptr<Monster>> list = player->GetMonsters();
+		vector<shared_ptr<Monster>> rawList = player->GetMonsters();
+		vector<shared_ptr<Monster>> list;
+		for (auto& i : rawList)
+		{
+			if (i->IsDefending() && (!showDefenders))
+				continue;
+			if ((i->GetCurrentHP() == 0) && (!showFainted))
+				continue;
+			list.push_back(i);
+		}
+
 		switch (sortOrder)
 		{
 		case 1:
@@ -85,8 +96,13 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 			term->Output(" ");
 			term->Output(list[scroll + i]->GetName());
 
-			for (size_t dx = 12 + list[scroll + i]->GetName().size(); dx < (width - 1); dx++)
+			for (size_t dx = 15 + list[scroll + i]->GetName().size(); dx < (width - 1); dx++)
 				term->Output(" ");
+
+			if (list[scroll + i]->IsDefending())
+				term->Output("🏆  ");
+			else
+				term->Output("   ");
 
 			char cpStr[32];
 			sprintf(cpStr, "CP %d", list[scroll + i]->GetCP());
@@ -114,9 +130,17 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 
 		if ((input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == " "))
 		{
-			// Show details of selected monster
 			if (selected >= list.size())
 				continue;
+
+			// If selecting, return monster
+			if (selecting)
+			{
+				map->Paint();
+				return list[selected];
+			}
+
+			// Show details of selected monster
 			map->Paint();
 			ShowMonsterDetails(player, list[selected]);
 			map->Paint();
@@ -204,4 +228,6 @@ void ShowMonsterList(Player* player, MapRenderer* map)
 				sortOrder = 0;
 		}
 	}
+
+	return nullptr;
 }

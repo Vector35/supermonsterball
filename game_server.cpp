@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
 	srand(time(NULL));
 
 	MonsterSpecies::Init();
-	World::Init();
 	Database::Init();
+	World::Init(Database::GetDatabase());
 
 	// Initialize OpenSSL
 	SSL_library_init();

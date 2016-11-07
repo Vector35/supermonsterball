@@ -10,7 +10,7 @@
 int main(int argc, char* argv[])
 {
 	MonsterSpecies::Init();
-	World::Init();
+	World::Init(nullptr);
 	Terminal::Init();
 
 	Player* player = new InMemoryPlayer("Trainer");

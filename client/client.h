@@ -8,12 +8,14 @@
 void GameLoop(Player* player);
 std::shared_ptr<Monster> Encounter(Player* player, int32_t x, int32_t y);
 void ShowMonsterDetails(Player* player, std::shared_ptr<Monster> monster);
-void ShowMonsterList(Player* player, MapRenderer* map);
+std::shared_ptr<Monster> ShowMonsterList(Player* player, MapRenderer* map, bool selecting = false,
+	bool showDefenders = true, bool showFainted = true);
 void ShowInventory(Player* player, MapRenderer* map);
 void ShowMonsterIndex(Player* player, MapRenderer* map);
 void ShowMonsterInfo(Player* player, MonsterSpecies* species);
 bool ShowMainMenu(Player* player, MapRenderer* map);
 void GetAndShowItemsFromStop(Player* player, int32_t x, int32_t y);
+void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y);
 
 void InterruptableWait(uint32_t ms);
 

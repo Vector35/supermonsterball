@@ -35,10 +35,15 @@ class ClientHandler
 	void GetMapTiles(const std::string& msg);
 	void GetRecentStops();
 	void GetItemsFromStop(const std::string& msg);
+	void SetTeam(const std::string& msg);
+	void GetPitStatus(const std::string& msg);
+	void AssignPitDefender(const std::string& msg);
 
 public:
 	ClientHandler(SSLSocket* s);
 	~ClientHandler();
 
 	void ProcessRequests();
+
+	static std::shared_ptr<ServerPlayer> GetPlayerByID(uint64_t id);
 };

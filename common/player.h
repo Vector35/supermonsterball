@@ -9,6 +9,9 @@
 #define MIN_MOVEMENT_INTERVAL 100
 #define MAX_STOPS_WITHIN_COOLDOWN 100
 
+#define DEFAULT_PIT_REPUTATION 5000
+#define MAX_PIT_REPUTATION 52000
+
 enum BallThrowResult
 {
 	THROW_RESULT_CATCH = 0,
@@ -18,6 +21,44 @@ enum BallThrowResult
 	THROW_RESULT_RUN_AWAY_AFTER_ONE = 4,
 	THROW_RESULT_RUN_AWAY_AFTER_TWO = 5,
 	THROW_RESULT_RUN_AWAY_AFTER_THREE = 6
+};
+
+enum Team
+{
+	TEAM_UNASSIGNED = 0,
+	TEAM_RED = 1,
+	TEAM_BLUE = 2,
+	TEAM_YELLOW = 3
+};
+
+enum PitBattleState
+{
+	PIT_BATTLE_WAITING_FOR_ACTION = 0,
+	PIT_BATTLE_ATTACK_QUICK_MOVE_NOT_EFFECTIVE = 1,
+	PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE = 2,
+	PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE = 3,
+	PIT_BATTLE_ATTACK_CHARGE_MOVE_NOT_EFFECTIVE = 4,
+	PIT_BATTLE_ATTACK_CHARGE_MOVE_EFFECTIVE = 5,
+	PIT_BATTLE_ATTACK_CHARGE_MOVE_SUPER_EFFECTIVE = 6,
+	PIT_BATTLE_DEFEND_QUICK_MOVE_NOT_EFFECTIVE = 7,
+	PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE = 8,
+	PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE = 9,
+	PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE = 10,
+	PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE = 11,
+	PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE = 12,
+	PIT_BATTLE_DEFEND_DODGE = 13,
+	PIT_BATTLE_ATTACK_FAINT = 14,
+	PIT_BATTLE_DEFEND_FAINT = 15,
+	PIT_BATTLE_NEW_OPPONENT = 16,
+	PIT_BATTLE_WIN = 17,
+	PIT_BATTLE_LOSE = 18
+};
+
+enum PitBattleAction
+{
+	PIT_ACTION_ATTACK_QUICK_MOVE = 0,
+	PIT_ACTION_ATTACK_CHARGE_MOVE = 1,
+	PIT_ACTION_DODGE = 2
 };
 
 struct LevelUpItem
@@ -40,12 +81,22 @@ struct RecentStopVisit
 	time_t visitTime;
 };
 
+struct PitBattleStatus
+{
+	PitBattleState state;
+	uint32_t charge;
+	uint32_t damage;
+	std::shared_ptr<Monster> opponent;
+};
+
 class Player
 {
 public:
 	virtual ~Player() {}
 
+	virtual uint64_t GetID() = 0;
 	virtual std::string GetName() = 0;
+	virtual Team GetTeam() = 0;
 	virtual uint32_t GetLevel() = 0;
 	virtual uint32_t GetTotalExperience() = 0;
 	uint32_t GetTotalExperienceNeededForCurrentLevel();
@@ -89,4 +140,19 @@ public:
 	virtual std::vector<RecentStopVisit> GetRecentStops() = 0;
 	virtual bool IsStopAvailable(int32_t x, int32_t y) = 0;
 	virtual std::map<ItemType, uint32_t> GetItemsFromStop(int32_t x, int32_t y) = 0;
+
+	virtual void SetTeam(Team team) = 0;
+
+	virtual void ForcePitRefresh() = 0;
+	virtual Team GetPitTeam(int32_t x, int32_t y) = 0;
+	virtual uint32_t GetPitReputation(int32_t x, int32_t y) = 0;
+	virtual std::vector<std::shared_ptr<Monster>> GetPitDefenders(int32_t x, int32_t y) = 0;
+	virtual bool AssignPitDefender(int32_t x, int32_t y, std::shared_ptr<Monster> monster) = 0;
+	virtual bool StartPitBattle(int32_t x, int32_t y, std::vector<std::shared_ptr<Monster>> monsters) = 0;
+	virtual PitBattleStatus StepPitBattle() = 0;
+	virtual void SetPitBattleAction(PitBattleAction action) = 0;
+	virtual uint32_t RunFromPitBattle() = 0;
+
+	static uint32_t GetReputationRequirementForLevel(uint32_t level);
+	static uint32_t GetPitLevelByReputation(uint32_t reputation);
 };

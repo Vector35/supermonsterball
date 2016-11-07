@@ -3,6 +3,7 @@
 #include "player.h"
 #include "monster.h"
 #include "sqlite3.h"
+#include "world.h"
 
 class DatabaseException: public std::exception
 {
@@ -20,6 +21,7 @@ struct DatabaseLoginResult
 	bool flagged, banned;
 	uint32_t level, xp, powder;
 	int32_t x, y;
+	Team team;
 };
 
 struct DatabaseRegisterResult
@@ -40,6 +42,7 @@ class Database
 	sqlite3_stmt* m_rollbackQuery;
 
 	sqlite3_stmt* m_loginQuery;
+	sqlite3_stmt* m_readUserQuery;
 	sqlite3_stmt* m_registerQuery;
 	sqlite3_stmt* m_checkUsernameQuery;
 
@@ -71,6 +74,14 @@ class Database
 	sqlite3_stmt* m_setLocationQuery;
 	sqlite3_stmt* m_setExperienceQuery;
 	sqlite3_stmt* m_setPowderQuery;
+	sqlite3_stmt* m_setTeamQuery;
+
+	sqlite3_stmt* m_readPitQuery;
+	sqlite3_stmt* m_writePitQuery;
+	sqlite3_stmt* m_insertPitQuery;
+	sqlite3_stmt* m_readPitMonstersQuery;
+	sqlite3_stmt* m_resetPitMonstersQuery;
+	sqlite3_stmt* m_insertPitMonsterQuery;
 
 	bool InitStatements();
 	void FinishStatement(sqlite3_stmt* stmt);
@@ -85,6 +96,7 @@ public:
 	void PerformTransaction(const std::function<void()>& func);
 
 	DatabaseLoginResult Login(const std::string& name, const std::string& password);
+	DatabaseLoginResult GetUserByID(uint64_t id, std::string& name);
 	DatabaseRegisterResult Register(const std::string& name, const std::string& password);
 
 	std::map<uint32_t, uint32_t> GetInventory(uint64_t user);
@@ -98,7 +110,7 @@ public:
 	std::map<uint32_t, uint32_t> GetTreats(uint64_t user);
 	void SetTreats(uint64_t user, uint32_t species, uint32_t count);
 
-	std::vector<std::shared_ptr<Monster>> GetMonsters(uint64_t user);
+	std::vector<std::shared_ptr<Monster>> GetMonsters(uint64_t user, const std::string& userName);
 	uint64_t AddMonster(uint64_t user, std::shared_ptr<Monster> monster);
 	void UpdateMonster(uint64_t user, std::shared_ptr<Monster> monster);
 	void RemoveMonster(uint64_t user, std::shared_ptr<Monster> monster);
@@ -106,4 +118,8 @@ public:
 	void SetLocation(uint64_t user, int32_t x, int32_t y);
 	void SetExperience(uint64_t user, uint32_t level, uint32_t xp);
 	void SetPowder(uint64_t user, uint32_t powder);
+	void SetTeam(uint64_t user, Team team);
+
+	PitStatus GetPitStatus(int32_t x, int32_t y);
+	void SetPitStatus(const PitStatus& pit);
 };

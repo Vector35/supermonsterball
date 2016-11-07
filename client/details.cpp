@@ -19,7 +19,11 @@ void DrawMonsterDetails(size_t x, size_t y, size_t width, size_t height, Player*
 
 	char cpStr[32];
 	sprintf(cpStr, "CP %d", monster->GetCP());
-	term->SetCursorPosition(x + width - (strlen(cpStr) + 1), y);
+	term->SetCursorPosition(x + width - (strlen(cpStr) + 4), y);
+	if (monster->IsDefending())
+		term->Output("🏆  ");
+	else
+		term->Output("   ");
 	term->SetColor(81, 234);
 	term->Output(cpStr);
 	term->SetColor(255, 234);
@@ -145,9 +149,16 @@ static bool ShowMonsterOptions(Player* player, shared_ptr<Monster> monster, size
 	Terminal* term = Terminal::GetTerminal();
 	while (!term->HasQuit())
 	{
-		int32_t option = ShowBoxOptions(x, y, width, height,
-			vector<string>{"Appraise", "Rename", "Transfer", "Cancel"});
-		if ((option == -1) || (option == 3))
+		vector<string> options;
+		options.push_back("Appraise");
+		if (!monster->IsDefending())
+		{
+			options.push_back("Rename");
+			options.push_back("Transfer");
+		}
+		options.push_back("Cancel");
+		int32_t option = ShowBoxOptions(x, y, width, height, options);
+		if ((option == -1) || (option == (int32_t)(options.size() - 1)))
 			break;
 
 		if (option == 0)
@@ -307,7 +318,7 @@ void ShowMonsterDetails(Player* player, shared_ptr<Monster> monster)
 		optionText.push_back("Done");
 		optionText.push_back("Options");
 
-		if ((monster->GetLevel() < player->GetLevel()) &&
+		if ((!monster->IsDefending()) && (monster->GetLevel() < player->GetLevel()) &&
 			(player->GetTreatsForSpecies(monster->GetSpecies()) >= player->GetPowerUpCost(monster->GetLevel()).treats) &&
 			(player->GetPowder() >= player->GetPowerUpCost(monster->GetLevel()).powder))
 		{
@@ -315,7 +326,7 @@ void ShowMonsterDetails(Player* player, shared_ptr<Monster> monster)
 			optionText.push_back("Power Up");
 		}
 
-		if ((monster->GetSpecies()->GetEvolutions().size() > 0) &&
+		if ((!monster->IsDefending()) && (monster->GetSpecies()->GetEvolutions().size() > 0) &&
 			(player->GetTreatsForSpecies(monster->GetSpecies()) >= monster->GetSpecies()->GetEvolutionCost()))
 		{
 			evolveOption = (int32_t)optionText.size();

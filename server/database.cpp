@@ -1,5 +1,6 @@
 #include <openssl/ssl.h>
 #include "database.h"
+#include "clienthandler.h"
 
 using namespace std;
 
@@ -23,12 +24,12 @@ Database::Database()
 		if (sqlite3_exec(m_db,
 			"CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT NOT NULL, password BLOB NOT NULL,\n"
 			"                    flagged BOOLEAN NOT NULL, banned BOOLEAN NOT NULL, level INTEGER NOT NULL,\n"
-			"                    xp INTEGER NOT NULL, powder INTEGER NOT NULL, x INTEGER, y INTEGER);\n"
+			"                    xp INTEGER NOT NULL, powder INTEGER NOT NULL, x INTEGER, y INTEGER, team INTEGER);\n"
 			"CREATE TABLE monsters (id INTEGER PRIMARY KEY, user INTEGER NOT NULL, species INTEGER NOT NULL,\n"
 			"                       name TEXT, hp INTEGER, attack INTEGER, defense INTEGER, stamina INTEGER,\n"
 			"                       size INTEGER, level INTEGER NOT NULL, x INTEGER, y INTEGER, spawn_time INTEGER,\n"
 			"                       ball INTEGER, quick_move INTEGER NOT NULL, charge_move INTEGER NOT NULL,\n"
-			"                       FOREIGN KEY (user) REFERENCES users(id));\n"
+			"                       defending BOOLEAN NOT NULL, FOREIGN KEY (user) REFERENCES users(id));\n"
 			"CREATE TABLE inventory (user INTEGER NOT NULL, item INTEGER NOT NULL, count INTEGER NOT NULL,\n"
 			"                        FOREIGN KEY (user) REFERENCES users(id));\n"
 			"CREATE TABLE seen (user INTEGER NOT NULL, species INTEGER NOT NULL, count INTEGER NOT NULL,\n"
@@ -37,12 +38,18 @@ Database::Database()
 			"                       FOREIGN KEY (user) REFERENCES users(id));\n"
 			"CREATE TABLE treats (user INTEGER NOT NULL, species INTEGER NOT NULL, count INTEGER NOT NULL,\n"
 			"                     FOREIGN KEY (user) REFERENCES users(id));\n"
+			"CREATE TABLE pits (id INTEGER PRIMARY KEY, x INTEGER, y INTEGER, team INTEGER, reputation INTEGER);\n"
+			"CREATE TABLE pit_monsters (pit INTEGER NOT NULL, monster INTEGER NOT NULL, ordering INTEGER,\n"
+			"                           FOREIGN KEY (pit) REFERENCES pits(id),\n"
+			"                           FOREIGN KEY (monster) REFERENCES monsters(id));\n"
 			"CREATE UNIQUE INDEX idx_users_by_name ON users (name);\n"
 			"CREATE INDEX idx_monsters_by_user ON monsters (user);\n"
 			"CREATE INDEX idx_inventory_by_user ON inventory (user);\n"
 			"CREATE INDEX idx_seen_by_user ON seen (user);\n"
 			"CREATE INDEX idx_captured_by_user ON captured (user);\n"
-			"CREATE INDEX idx_treats_by_user ON treats (user);\n",
+			"CREATE INDEX idx_treats_by_user ON treats (user);\n"
+			"CREATE UNIQUE INDEX idx_pit_pos ON pits (x, y);\n"
+			"CREATE INDEX idx_pit_monsters ON pit_monsters (pit);\n",
 			NULL, NULL, &err))
 			throw DatabaseException(err);
 	}
@@ -67,6 +74,7 @@ Database::~Database()
 	sqlite3_finalize(m_rollbackQuery);
 
 	sqlite3_finalize(m_loginQuery);
+	sqlite3_finalize(m_readUserQuery);
 	sqlite3_finalize(m_registerQuery);
 	sqlite3_finalize(m_checkUsernameQuery);
 
@@ -98,6 +106,14 @@ Database::~Database()
 	sqlite3_finalize(m_setLocationQuery);
 	sqlite3_finalize(m_setExperienceQuery);
 	sqlite3_finalize(m_setPowderQuery);
+	sqlite3_finalize(m_setTeamQuery);
+
+	sqlite3_finalize(m_readPitQuery);
+	sqlite3_finalize(m_writePitQuery);
+	sqlite3_finalize(m_insertPitQuery);
+	sqlite3_finalize(m_readPitMonstersQuery);
+	sqlite3_finalize(m_resetPitMonstersQuery);
+	sqlite3_finalize(m_insertPitMonsterQuery);
 
 	sqlite3_close(m_db);
 }
@@ -119,11 +135,14 @@ bool Database::InitStatements()
 	if (sqlite3_prepare_v2(m_db, "ROLLBACK TRANSACTION", -1, &m_rollbackQuery, NULL) != SQLITE_OK)
 		return false;
 
-	if (sqlite3_prepare_v2(m_db, "SELECT id, flagged, banned, level, xp, powder, x, y FROM users WHERE name=? "
+	if (sqlite3_prepare_v2(m_db, "SELECT id, flagged, banned, level, xp, powder, x, y, team FROM users WHERE name=? "
 		"AND password=?", -1, &m_loginQuery, NULL) != SQLITE_OK)
 		return false;
-	if (sqlite3_prepare_v2(m_db, "INSERT INTO users (name, password, flagged, banned, level, xp, powder, x, y) "
-		"VALUES (?, ?, 0, 0, 1, 0, 0, 0, 0)", -1, &m_registerQuery, NULL) != SQLITE_OK)
+	if (sqlite3_prepare_v2(m_db, "SELECT name, flagged, banned, level, xp, powder, x, y, team FROM users WHERE id=?",
+		-1, &m_readUserQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "INSERT INTO users (name, password, flagged, banned, level, xp, powder, x, y, team) "
+		"VALUES (?, ?, 0, 0, 1, 0, 0, 0, 0, 0)", -1, &m_registerQuery, NULL) != SQLITE_OK)
 		return false;
 	if (sqlite3_prepare_v2(m_db, "SELECT id FROM users WHERE name=?", -1, &m_checkUsernameQuery, NULL) != SQLITE_OK)
 		return false;
@@ -181,14 +200,15 @@ bool Database::InitStatements()
 		return false;
 
 	if (sqlite3_prepare_v2(m_db, "SELECT id, species, name, hp, attack, defense, stamina, size, level, x, y, "
-		"spawn_time, ball, quick_move, charge_move FROM monsters WHERE user=?",
+		"spawn_time, ball, quick_move, charge_move, defending FROM monsters WHERE user=?",
 		-1, &m_readMonstersQuery, NULL) != SQLITE_OK)
 		return false;
-	if (sqlite3_prepare_v2(m_db, "UPDATE monsters SET species=?, name=?, hp=?, level=?, quick_move=?, charge_move=? "
-		"WHERE user=? AND id=?", -1, &m_writeMonsterQuery, NULL) != SQLITE_OK)
+	if (sqlite3_prepare_v2(m_db, "UPDATE monsters SET species=?, name=?, hp=?, level=?, quick_move=?, charge_move=?, "
+		"defending=? WHERE user=? AND id=?", -1, &m_writeMonsterQuery, NULL) != SQLITE_OK)
 		return false;
 	if (sqlite3_prepare_v2(m_db, "INSERT INTO monsters (user, species, name, hp, attack, defense, stamina, size, "
-		"level, x, y, spawn_time, ball, quick_move, charge_move) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		"level, x, y, spawn_time, ball, quick_move, charge_move, defending) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+		"?, ?, ?, ?, ?)",
 		-1, &m_insertMonsterQuery, NULL) != SQLITE_OK)
 		return false;
 	if (sqlite3_prepare_v2(m_db, "DELETE FROM monsters WHERE user=? AND id=?",
@@ -201,6 +221,28 @@ bool Database::InitStatements()
 		-1, &m_setExperienceQuery, NULL) != SQLITE_OK)
 		return false;
 	if (sqlite3_prepare_v2(m_db, "UPDATE users SET powder=? WHERE id=?", -1, &m_setPowderQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "UPDATE users SET team=? WHERE id=?", -1, &m_setTeamQuery, NULL) != SQLITE_OK)
+		return false;
+
+	if (sqlite3_prepare_v2(m_db, "SELECT id, team, reputation FROM pits WHERE x=? AND y=?",
+		-1, &m_readPitQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "UPDATE pits SET team=?, reputation=? WHERE x=? AND y=?",
+		-1, &m_writePitQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "INSERT INTO pits (x, y, team, reputation) VALUES (?, ?, ?, ?)",
+		-1, &m_insertPitQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "SELECT monsters.id, monsters.user FROM pit_monsters INNER JOIN "
+		"monsters ON monsters.id = pit_monsters.monster WHERE pit=? ORDER BY ordering ASC",
+		-1, &m_readPitMonstersQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "DELETE FROM pit_monsters WHERE pit=?",
+		-1, &m_resetPitMonstersQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "INSERT INTO pit_monsters (pit, monster, ordering) VALUES (?, ?, ?)",
+		-1, &m_insertPitMonsterQuery, NULL) != SQLITE_OK)
 		return false;
 
 	return true;
@@ -300,7 +342,38 @@ DatabaseLoginResult Database::Login(const string& name, const string& password)
 		result.powder = sqlite3_column_int(m_loginQuery, 5);
 		result.x = sqlite3_column_int(m_loginQuery, 6);
 		result.y = sqlite3_column_int(m_loginQuery, 7);
+		result.team = (Team)sqlite3_column_int(m_loginQuery, 8);
 		FinishStatement(m_loginQuery);
+		result.valid = true;
+	}
+
+	return result;
+}
+
+
+DatabaseLoginResult Database::GetUserByID(uint64_t id, string& name)
+{
+	DatabaseLoginResult result;
+	result.valid = false;
+
+	if (sqlite3_reset(m_readUserQuery) != SQLITE_OK)
+		throw DatabaseException(sqlite3_errmsg(m_db));
+	if (sqlite3_bind_int64(m_readUserQuery, 1, id) != SQLITE_OK)
+		throw DatabaseException(sqlite3_errmsg(m_db));
+
+	if (sqlite3_step(m_loginQuery) == SQLITE_ROW)
+	{
+		name = string((const char*)sqlite3_column_text(m_readUserQuery, 0),
+			(size_t)sqlite3_column_bytes(m_readUserQuery, 0));
+		result.flagged = sqlite3_column_int(m_readUserQuery, 1) != 0;
+		result.banned = sqlite3_column_int(m_readUserQuery, 2) != 0;
+		result.level = sqlite3_column_int(m_readUserQuery, 3);
+		result.xp = sqlite3_column_int(m_readUserQuery, 4);
+		result.powder = sqlite3_column_int(m_readUserQuery, 5);
+		result.x = sqlite3_column_int(m_readUserQuery, 6);
+		result.y = sqlite3_column_int(m_readUserQuery, 7);
+		result.team = (Team)sqlite3_column_int(m_readUserQuery, 8);
+		FinishStatement(m_readUserQuery);
 		result.valid = true;
 	}
 
@@ -666,7 +739,7 @@ void Database::SetTreats(uint64_t user, uint32_t species, uint32_t count)
 }
 
 
-vector<shared_ptr<Monster>> Database::GetMonsters(uint64_t user)
+vector<shared_ptr<Monster>> Database::GetMonsters(uint64_t user, const string& userName)
 {
 	if (sqlite3_reset(m_readMonstersQuery) != SQLITE_OK)
 		throw DatabaseException(sqlite3_errmsg(m_db));
@@ -696,6 +769,7 @@ vector<shared_ptr<Monster>> Database::GetMonsters(uint64_t user)
 		uint32_t ball = sqlite3_column_int(m_readMonstersQuery, 12);
 		uint32_t quickMove = sqlite3_column_int(m_readMonstersQuery, 13);
 		uint32_t chargeMove = sqlite3_column_int(m_readMonstersQuery, 14);
+		bool defending = sqlite3_column_int(m_readMonstersQuery, 15) != 0;
 
 		shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(species), x, y, spawnTime));
 		monster->SetID(id);
@@ -706,6 +780,8 @@ vector<shared_ptr<Monster>> Database::GetMonsters(uint64_t user)
 		monster->SetCapture(true, (ItemType)ball);
 		monster->SetName(name);
 		monster->SetMoves(Move::GetByIndex(quickMove), Move::GetByIndex(chargeMove));
+		monster->SetDefending(defending);
+		monster->SetOwner(user, userName);
 		monsters.push_back(monster);
 
 		result = sqlite3_step(m_readMonstersQuery);
@@ -751,6 +827,8 @@ uint64_t Database::AddMonster(uint64_t user, shared_ptr<Monster> monster)
 		throw DatabaseException(sqlite3_errmsg(m_db));
 	if (sqlite3_bind_int(m_insertMonsterQuery, 15, monster->GetChargeMove()->GetIndex()))
 		throw DatabaseException(sqlite3_errmsg(m_db));
+	if (sqlite3_bind_int(m_insertMonsterQuery, 16, monster->IsDefending() ? 1 : 0))
+		throw DatabaseException(sqlite3_errmsg(m_db));
 	if (sqlite3_step(m_insertMonsterQuery) != SQLITE_DONE)
 		throw DatabaseException(sqlite3_errmsg(m_db));
 	if (sqlite3_clear_bindings(m_insertMonsterQuery) != SQLITE_OK)
@@ -777,9 +855,11 @@ void Database::UpdateMonster(uint64_t user, shared_ptr<Monster> monster)
 			throw DatabaseException(sqlite3_errmsg(m_db));
 		if (sqlite3_bind_int(m_writeMonsterQuery, 6, monster->GetChargeMove()->GetIndex()))
 			throw DatabaseException(sqlite3_errmsg(m_db));
-		if (sqlite3_bind_int64(m_writeMonsterQuery, 7, user))
+		if (sqlite3_bind_int(m_writeMonsterQuery, 7, monster->IsDefending() ? 1 : 0))
 			throw DatabaseException(sqlite3_errmsg(m_db));
-		if (sqlite3_bind_int64(m_writeMonsterQuery, 8, monster->GetID()))
+		if (sqlite3_bind_int64(m_writeMonsterQuery, 8, user))
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_bind_int64(m_writeMonsterQuery, 9, monster->GetID()))
 			throw DatabaseException(sqlite3_errmsg(m_db));
 		if (sqlite3_step(m_writeMonsterQuery) != SQLITE_DONE)
 			throw DatabaseException(sqlite3_errmsg(m_db));
@@ -857,5 +937,173 @@ void Database::SetPowder(uint64_t user, uint32_t powder)
 			throw DatabaseException(sqlite3_errmsg(m_db));
 		if (sqlite3_clear_bindings(m_setPowderQuery) != SQLITE_OK)
 			throw DatabaseException(sqlite3_errmsg(m_db));
+	});
+}
+
+
+void Database::SetTeam(uint64_t user, Team team)
+{
+	PerformTransaction([&]() {
+		if (sqlite3_reset(m_setTeamQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_bind_int(m_setTeamQuery, 1, (uint32_t)team))
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_bind_int64(m_setTeamQuery, 2, user))
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_step(m_setTeamQuery) != SQLITE_DONE)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_clear_bindings(m_setTeamQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+	});
+}
+
+
+PitStatus Database::GetPitStatus(int32_t x, int32_t y)
+{
+	if (sqlite3_reset(m_readPitQuery) != SQLITE_OK)
+		throw DatabaseException(sqlite3_errmsg(m_db));
+	if (sqlite3_bind_int(m_readPitQuery, 1, x))
+		throw DatabaseException(sqlite3_errmsg(m_db));
+	if (sqlite3_bind_int(m_readPitQuery, 2, y))
+		throw DatabaseException(sqlite3_errmsg(m_db));
+
+	int result = sqlite3_step(m_readPitQuery);
+	if ((result != SQLITE_ROW) && (result != SQLITE_DONE))
+		throw DatabaseException(sqlite3_errmsg(m_db));
+
+	PitStatus status;
+	status.x = x;
+	status.y = y;
+
+	if (result == SQLITE_DONE)
+	{
+		status.team = TEAM_UNASSIGNED;
+		status.reputation = 0;
+		return status;
+	}
+
+	uint64_t id = sqlite3_column_int64(m_readPitQuery, 0);
+	status.team = (Team)sqlite3_column_int(m_readPitQuery, 1);
+	status.reputation = sqlite3_column_int(m_readPitQuery, 2);
+
+	FinishStatement(m_readPitQuery);
+
+	if (sqlite3_reset(m_readPitMonstersQuery) != SQLITE_OK)
+		throw DatabaseException(sqlite3_errmsg(m_db));
+	if (sqlite3_bind_int64(m_readPitMonstersQuery, 1, id))
+		throw DatabaseException(sqlite3_errmsg(m_db));
+	result = sqlite3_step(m_readPitMonstersQuery);
+	if ((result != SQLITE_ROW) && (result != SQLITE_DONE))
+		throw DatabaseException(sqlite3_errmsg(m_db));
+
+	while (result == SQLITE_ROW)
+	{
+		uint64_t monster = sqlite3_column_int64(m_readPitMonstersQuery, 0);
+		uint64_t user = sqlite3_column_int64(m_readPitMonstersQuery, 1);
+
+		shared_ptr<ServerPlayer> player = ClientHandler::GetPlayerByID(user);
+		if (player)
+		{
+			vector<shared_ptr<Monster>> monsters = player->GetMonsters();
+			shared_ptr<Monster> foundMonster;
+			for (auto& i : monsters)
+			{
+				if (i->GetID() == monster)
+				{
+					foundMonster = i;
+					break;
+				}
+			}
+
+			if (foundMonster)
+				status.defenders.push_back(foundMonster);
+		}
+
+		result = sqlite3_step(m_readPitMonstersQuery);
+	}
+
+	FinishStatement(m_readPitMonstersQuery);
+	return status;
+}
+
+
+void Database::SetPitStatus(const PitStatus& pit)
+{
+	PerformTransaction([&]() {
+		if (sqlite3_reset(m_readPitQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_bind_int(m_readPitQuery, 1, pit.x))
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_bind_int(m_readPitQuery, 2, pit.y))
+			throw DatabaseException(sqlite3_errmsg(m_db));
+
+		int result = sqlite3_step(m_readPitQuery);
+		if ((result != SQLITE_ROW) && (result != SQLITE_DONE))
+			throw DatabaseException(sqlite3_errmsg(m_db));
+
+		uint64_t id;
+		if (result == SQLITE_DONE)
+		{
+			if (sqlite3_reset(m_insertPitQuery) != SQLITE_OK)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_insertPitQuery, 1, pit.x))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_insertPitQuery, 2, pit.y))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_insertPitQuery, 3, (uint32_t)pit.team))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_insertPitQuery, 4, pit.reputation))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_step(m_insertPitQuery) != SQLITE_DONE)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_clear_bindings(m_insertPitQuery) != SQLITE_OK)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			id = sqlite3_last_insert_rowid(m_db);
+		}
+		else
+		{
+			id = sqlite3_column_int64(m_readPitQuery, 0);
+			FinishStatement(m_readPitQuery);
+
+			if (sqlite3_reset(m_writePitQuery) != SQLITE_OK)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_writePitQuery, 1, (uint32_t)pit.team))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_writePitQuery, 2, pit.reputation))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_writePitQuery, 3, pit.x))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_writePitQuery, 4, pit.y))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_step(m_writePitQuery) != SQLITE_DONE)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_clear_bindings(m_writePitQuery) != SQLITE_OK)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+		}
+
+		if (sqlite3_reset(m_resetPitMonstersQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_bind_int64(m_resetPitMonstersQuery, 1, id))
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_step(m_resetPitMonstersQuery) != SQLITE_DONE)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_clear_bindings(m_resetPitMonstersQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+
+		for (size_t i = 0; i < pit.defenders.size(); i++)
+		{
+			if (sqlite3_reset(m_insertPitMonsterQuery) != SQLITE_OK)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int64(m_insertPitMonsterQuery, 1, id))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int64(m_insertPitMonsterQuery, 2, pit.defenders[i]->GetID()))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_bind_int(m_insertPitMonsterQuery, 3, (uint32_t)i))
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_step(m_insertPitMonsterQuery) != SQLITE_DONE)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+			if (sqlite3_clear_bindings(m_insertPitMonsterQuery) != SQLITE_OK)
+				throw DatabaseException(sqlite3_errmsg(m_db));
+		}
 	});
 }

@@ -286,10 +286,14 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 	uint64_t ivBase = ((uint64_t)n * 25214903917LL) + 11LL;
 	uint64_t levelBase = ((uint64_t)(ivBase + ((uint64_t)trainerLevel * 277LL)) * 25214903917LL) + 11LL;
 	uint64_t sizeBase = ((uint64_t)levelBase * 25214903917LL) + 11LL;
+	uint64_t quickMoveBase = ((uint64_t)sizeBase * 25214903917LL) + 11LL;
+	uint64_t chargeMoveBase = ((uint64_t)chargeMoveBase * 25214903917LL) + 11LL;
 	uint32_t pick = (uint32_t)((n >> 16) % (uint64_t)total);
 	uint32_t iv = (uint32_t)(ivBase >> 16) & 0xfff;
 	uint32_t level = (uint32_t)((levelBase >> 16) % trainerLevel) + 1;
 	uint32_t size = sizeBase % 32;
+	uint32_t quickMoveChoice = (uint32_t)(quickMoveBase >> 16);
+	uint32_t chargeMoveChoice = (uint32_t)(chargeMoveBase >> 16);
 	if (level > 30)
 		level = 30;
 
@@ -303,6 +307,15 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 			monster->SetIV((iv >> 8) & 0xf, (iv >> 4) & 0xf, iv & 0xf);
 			monster->SetSize(size);
 			monster->SetLevel(level);
+
+			Move* quickMove = monster->GetQuickMove();
+			Move* chargeMove = monster->GetChargeMove();
+			if (i.species->GetQuickMoves().size() > 0)
+				quickMove = i.species->GetQuickMoves()[quickMoveChoice % i.species->GetQuickMoves().size()];
+			if (i.species->GetChargeMoves().size() > 0)
+				chargeMove = i.species->GetChargeMoves()[chargeMoveChoice % i.species->GetChargeMoves().size()];
+			monster->SetMoves(quickMove, chargeMove);
+
 			monster->ResetHP();
 			return monster;
 		}

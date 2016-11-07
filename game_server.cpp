@@ -48,6 +48,7 @@ static void LockingCallback(int mode, int n, const char* file, int line)
 int main(int argc, char* argv[])
 {
 	signal(SIGPIPE, SIG_IGN);
+	srand(time(NULL));
 
 	MonsterSpecies::Init();
 	World::Init();

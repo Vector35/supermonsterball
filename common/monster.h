@@ -35,19 +35,25 @@ enum MoveType
 
 class Move
 {
+	uint32_t m_index;
 	std::string m_name;
 	Element m_element;
 	MoveType m_type;
 	uint32_t m_power, m_dps;
 
+	static std::vector<Move*> m_list;
+
 public:
 	Move(const std::string& name, Element element, MoveType type, uint32_t power, uint32_t dps);
 
+	uint32_t GetIndex() const { return m_index; }
 	const std::string& GetName() const { return m_name; }
 	Element GetElement() const { return m_element; }
 	MoveType GetType() const { return m_type; }
 	uint32_t GetPower() const { return m_power; }
 	uint32_t GetDamagePerSecond() const { return m_dps; }
+
+	static Move* GetByIndex(uint32_t i);
 };
 
 struct Biome;
@@ -63,7 +69,7 @@ class MonsterSpecies
 	std::vector<MonsterSpecies*> m_evolutions;
 	MonsterSpecies* m_baseForm;
 	uint32_t m_evolutionCost;
-	std::vector<Move*> m_quickMoves, m_powerMoves;
+	std::vector<Move*> m_quickMoves, m_chargeMoves;
 
 	static std::vector<MonsterSpecies*> m_list;
 
@@ -76,7 +82,7 @@ public:
 	MonsterSpecies(const std::string& image, const std::string& name, const std::string& description,
 		Element type1, Element type2, uint32_t attack, uint32_t defense, uint32_t stamina,
 		const std::vector<MonsterSpecies*>& evolutions, uint32_t evolutionCost,
-		const std::vector<Move*>& quickMoves, const std::vector<Move*>& powerMoves,
+		const std::vector<Move*>& quickMoves, const std::vector<Move*>& chargeMoves,
 		Biome* commonBiome, uint32_t commonWeight, uint32_t uncommonWeight);
 
 	static void Init();
@@ -100,7 +106,7 @@ public:
 	uint32_t GetEvolutionCost() const { return m_evolutionCost; }
 
 	const std::vector<Move*>& GetQuickMoves() const { return m_quickMoves; }
-	const std::vector<Move*>& GetPowerMoves() const { return m_powerMoves; }
+	const std::vector<Move*>& GetChargeMoves() const { return m_chargeMoves; }
 
 	Biome* GetCommonBiome() const { return m_commonBiome; }
 	uint32_t GetCommonWeight() const { return m_commonWeight; }
@@ -120,6 +126,8 @@ class Monster
 	uint32_t m_spawnTime;
 	bool m_captured;
 	ItemType m_ball;
+	Move* m_quickMove;
+	Move* m_chargeMove;
 
 public:
 	Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTime);
@@ -139,6 +147,8 @@ public:
 	uint32_t GetSpawnTime() const { return m_spawnTime; }
 	bool WasCaptured() const { return m_captured; }
 	ItemType GetBallType() const { return m_ball; }
+	Move* GetQuickMove() const { return m_quickMove; }
+	Move* GetChargeMove() const { return m_chargeMove; }
 
 	void SetID(uint64_t id);
 	void SetIV(uint32_t attack, uint32_t def, uint32_t stamina);
@@ -147,6 +157,7 @@ public:
 	void SetCapture(bool captured, ItemType ball);
 	void SetName(const std::string& name);
 	void SetHP(uint32_t hp);
+	void SetMoves(Move* quick, Move* charge);
 	void ResetHP();
 
 	void Evolve();

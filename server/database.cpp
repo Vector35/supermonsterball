@@ -705,6 +705,7 @@ vector<shared_ptr<Monster>> Database::GetMonsters(uint64_t user)
 		monster->SetLevel(level);
 		monster->SetCapture(true, (ItemType)ball);
 		monster->SetName(name);
+		monster->SetMoves(Move::GetByIndex(quickMove), Move::GetByIndex(chargeMove));
 		monsters.push_back(monster);
 
 		result = sqlite3_step(m_readMonstersQuery);
@@ -746,9 +747,9 @@ uint64_t Database::AddMonster(uint64_t user, shared_ptr<Monster> monster)
 		throw DatabaseException(sqlite3_errmsg(m_db));
 	if (sqlite3_bind_int(m_insertMonsterQuery, 13, (int)monster->GetBallType()))
 		throw DatabaseException(sqlite3_errmsg(m_db));
-	if (sqlite3_bind_int(m_insertMonsterQuery, 14, 0))
+	if (sqlite3_bind_int(m_insertMonsterQuery, 14, monster->GetQuickMove()->GetIndex()))
 		throw DatabaseException(sqlite3_errmsg(m_db));
-	if (sqlite3_bind_int(m_insertMonsterQuery, 15, 0))
+	if (sqlite3_bind_int(m_insertMonsterQuery, 15, monster->GetChargeMove()->GetIndex()))
 		throw DatabaseException(sqlite3_errmsg(m_db));
 	if (sqlite3_step(m_insertMonsterQuery) != SQLITE_DONE)
 		throw DatabaseException(sqlite3_errmsg(m_db));
@@ -772,9 +773,9 @@ void Database::UpdateMonster(uint64_t user, shared_ptr<Monster> monster)
 			throw DatabaseException(sqlite3_errmsg(m_db));
 		if (sqlite3_bind_int(m_writeMonsterQuery, 4, monster->GetLevel()))
 			throw DatabaseException(sqlite3_errmsg(m_db));
-		if (sqlite3_bind_int(m_writeMonsterQuery, 5, 0))
+		if (sqlite3_bind_int(m_writeMonsterQuery, 5, monster->GetQuickMove()->GetIndex()))
 			throw DatabaseException(sqlite3_errmsg(m_db));
-		if (sqlite3_bind_int(m_writeMonsterQuery, 6, 0))
+		if (sqlite3_bind_int(m_writeMonsterQuery, 6, monster->GetChargeMove()->GetIndex()))
 			throw DatabaseException(sqlite3_errmsg(m_db));
 		if (sqlite3_bind_int64(m_writeMonsterQuery, 7, user))
 			throw DatabaseException(sqlite3_errmsg(m_db));

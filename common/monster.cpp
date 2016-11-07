@@ -5,6 +5,7 @@
 using namespace std;
 
 
+vector<Move*> Move::m_list;
 vector<MonsterSpecies*> MonsterSpecies::m_list;
 static map<string, Biome*> g_biomes;
 
@@ -12,18 +13,28 @@ static map<string, Biome*> g_biomes;
 Move::Move(const string& name, Element element, MoveType type, uint32_t power, uint32_t dps):
 	m_name(name), m_element(element), m_type(type), m_power(power), m_dps(dps)
 {
+	m_index = (uint32_t)m_list.size();
+	m_list.push_back(this);
+}
+
+
+Move* Move::GetByIndex(uint32_t i)
+{
+	if (i >= m_list.size())
+		return nullptr;
+	return m_list[i];
 }
 
 
 MonsterSpecies::MonsterSpecies(const string& image, const string& name, const string& description,
 	Element type1, Element type2, uint32_t attack, uint32_t defense, uint32_t stamina,
 	const vector<MonsterSpecies*>& evolutions, uint32_t evolutionCost,
-	const vector<Move*>& quickMoves, const vector<Move*>& powerMoves,
+	const vector<Move*>& quickMoves, const vector<Move*>& chargeMoves,
 	Biome* commonBiome, uint32_t commonWeight, uint32_t uncommonWeight):
 	m_image(image), m_name(name), m_description(description),
 	m_baseAttack(attack), m_baseDefense(defense), m_baseStamina(stamina),
 	m_evolutions(evolutions), m_evolutionCost(evolutionCost),
-	m_quickMoves(quickMoves), m_powerMoves(powerMoves),
+	m_quickMoves(quickMoves), m_chargeMoves(chargeMoves),
 	m_commonBiome(commonBiome), m_commonWeight(commonWeight), m_uncommonWeight(uncommonWeight)
 {
 	m_type[0] = type1;
@@ -45,6 +56,9 @@ void MonsterSpecies::SetBaseForm(MonsterSpecies* baseForm)
 
 void MonsterSpecies::Init()
 {
+	// Placeholder for missing moves
+	new Move("MissingNo", Normal, QuickMove, 1, 1);
+
 	Move* slice = new Move("Slice", Normal, QuickMove, 40, 12);
 	Move* cut = new Move("Cut", Normal, QuickMove, 60, 15);
 	Move* tackle = new Move("Tackle", Normal, QuickMove, 30, 10);
@@ -213,11 +227,11 @@ void MonsterSpecies::Init()
 		grassBiome, 20, 10);
 	MonsterSpecies* motherclucker = new MonsterSpecies(" 🐔 ", "Motherclucker", "The hen of all cluckers, this large "
 		" bird jealously guards her brood.", Normal, Normal, 0, 0, 0,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 20, 10);
-	MonsterSpecies* clucker = new MonsterSpecies(" 🐥 ", "Clucker", "The small chicken's most potent attacks don't do"
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{wingAttack, diveBomb}, vector<Move*>{}, grassBiome, 20, 10);
+	MonsterSpecies* clucker = new MonsterSpecies(" 🐥 ", "Clucker", "The small chicken's most potent attacks don't do "
 		"much more damage than that inflicted by the obnoxious noises they make.", Normal, Normal, 0, 0, 0,
 		vector<MonsterSpecies*>{cock, motherclucker}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 60, 40);
-	MonsterSpecies* chickling = new MonsterSpecies(" 🐣 ", "Chickling", "A tiny chicken barely hatched that is nearly"
+	MonsterSpecies* chickling = new MonsterSpecies(" 🐣 ", "Chickling", "A tiny chicken barely hatched that is nearly "
 		"defenseless.", Normal, Normal, 0, 0, 0,
 		vector<MonsterSpecies*>{clucker}, 12, vector<Move*>{}, vector<Move*>{}, grassBiome, 500, 350);
 	m_list.push_back(chickling);
@@ -666,6 +680,8 @@ Monster::Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTi
 	m_level = 1;
 	m_captured = false;
 	m_ball = ITEM_STANDARD_BALL;
+	m_quickMove = Move::GetByIndex(0);
+	m_chargeMove = Move::GetByIndex(0);
 }
 
 
@@ -721,6 +737,13 @@ void Monster::SetHP(uint32_t hp)
 }
 
 
+void Monster::SetMoves(Move* quick, Move* charge)
+{
+	m_quickMove = quick;
+	m_chargeMove = charge;
+}
+
+
 void Monster::ResetHP()
 {
 }
@@ -735,6 +758,13 @@ void Monster::Evolve()
 
 	size_t choice = rand() % m_species->GetEvolutions().size();
 	m_species = m_species->GetEvolutions()[choice];
+
+	vector<Move*> quickMoves = m_species->GetQuickMoves();
+	vector<Move*> chargeMoves = m_species->GetChargeMoves();
+	if (quickMoves.size() > 0)
+		m_quickMove = quickMoves[rand() % quickMoves.size()];
+	if (chargeMoves.size() > 0)
+		m_chargeMove = chargeMoves[rand() % chargeMoves.size()];
 
 	if (!renamed)
 		m_name = m_species->GetName();

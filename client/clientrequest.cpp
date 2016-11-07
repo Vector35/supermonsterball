@@ -109,6 +109,8 @@ vector<shared_ptr<Monster>> ClientRequest::GetMonsterList()
 		monster->SetSize(response.monsters(i).size());
 		monster->SetLevel(response.monsters(i).level());
 		monster->SetCapture(true, (ItemType)response.monsters(i).ball());
+		monster->SetMoves(Move::GetByIndex(response.monsters(i).quickmove()),
+			Move::GetByIndex(response.monsters(i).chargemove()));
 		result.push_back(monster);
 	}
 	return result;
@@ -195,6 +197,7 @@ shared_ptr<Monster> ClientRequest::StartEncounter(int32_t x, int32_t y)
 	monster->SetIV(response.attack(), response.defense(), response.stamina());
 	monster->SetSize(response.size());
 	monster->SetLevel(response.level());
+	monster->SetMoves(Move::GetByIndex(response.quickmove()), Move::GetByIndex(response.chargemove()));
 	monster->ResetHP();
 	return monster;
 }
@@ -285,6 +288,7 @@ bool ClientRequest::EvolveMonster(shared_ptr<Monster> monster)
 	monster->SetSpecies(MonsterSpecies::GetByIndex(response.species()));
 	monster->SetName(response.name());
 	monster->SetHP(response.hp());
+	monster->SetMoves(Move::GetByIndex(response.quickmove()), Move::GetByIndex(response.chargemove()));
 	return true;
 }
 

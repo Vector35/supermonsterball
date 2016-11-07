@@ -59,14 +59,14 @@ void DrawMonsterDetails(size_t x, size_t y, size_t width, size_t height, Player*
 
 	term->SetCursorPosition(x + 1, y + 3);
 	term->SetColor(255, 234);
-	term->Output("Quick Move");
+	term->Output(monster->GetQuickMove()->GetName());
 	term->SetCursorPosition(x + width - 4, y + 3);
 	char powerStr[32];
-	sprintf(powerStr, "%3d", 20);
+	sprintf(powerStr, "%3d", monster->GetQuickMove()->GetPower());
 	term->Output(powerStr);
 
 	term->SetCursorPosition(x + 1, y + 4);
-	Element moveType = Normal;
+	Element moveType = monster->GetQuickMove()->GetElement();
 	term->SetColor(GetElementTextColor(moveType), GetElementColor(moveType));
 	term->Output(" ");
 	term->Output(GetElementName(moveType));
@@ -74,12 +74,13 @@ void DrawMonsterDetails(size_t x, size_t y, size_t width, size_t height, Player*
 
 	term->SetCursorPosition(x + 1, y + 6);
 	term->SetColor(255, 234);
-	term->Output("Charge Move");
+	term->Output(monster->GetChargeMove()->GetName());
 	term->SetCursorPosition(x + width - 4, y + 6);
-	sprintf(powerStr, "%3d", 20);
+	sprintf(powerStr, "%3d", monster->GetChargeMove()->GetPower());
 	term->Output(powerStr);
 
 	term->SetCursorPosition(x + 1, y + 7);
+	moveType = monster->GetChargeMove()->GetElement();
 	term->SetColor(GetElementTextColor(moveType), GetElementColor(moveType));
 	term->Output(" ");
 	term->Output(GetElementName(moveType));

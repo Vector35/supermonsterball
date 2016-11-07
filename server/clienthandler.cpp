@@ -182,8 +182,8 @@ void ClientHandler::GetMonsterList()
 			monster->set_y(i->GetSpawnY());
 			monster->set_spawntime(i->GetSpawnTime());
 			monster->set_ball((uint32_t)i->GetBallType());
-			monster->set_quickmove(0);
-			monster->set_chargemove(0);
+			monster->set_quickmove(i->GetQuickMove()->GetIndex());
+			monster->set_chargemove(i->GetChargeMove()->GetIndex());
 		}
 	});
 	WriteResponse(response.SerializeAsString());
@@ -305,8 +305,8 @@ void ClientHandler::StartEncounter(const string& msg)
 			response.set_size(monster->GetSize());
 			response.set_level(monster->GetLevel());
 			response.set_spawntime(monster->GetSpawnTime());
-			response.set_quickmove(0);
-			response.set_chargemove(0);
+			response.set_quickmove(monster->GetQuickMove()->GetIndex());
+			response.set_chargemove(monster->GetChargeMove()->GetIndex());
 		}
 		else
 		{
@@ -433,8 +433,8 @@ void ClientHandler::EvolveMonster(const string& msg)
 			response.set_species(monster->GetSpecies()->GetIndex());
 			response.set_name(monster->GetName());
 			response.set_hp(monster->GetCurrentHP());
-			response.set_quickmove(0);
-			response.set_chargemove(0);
+			response.set_quickmove(monster->GetQuickMove()->GetIndex());
+			response.set_chargemove(monster->GetChargeMove()->GetIndex());
 		}
 		else
 		{

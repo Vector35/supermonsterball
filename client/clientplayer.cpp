@@ -315,6 +315,7 @@ void ClientPlayer::SetTeam(Team team)
 void ClientPlayer::ForcePitRefresh()
 {
 	m_lastPitRequest = 0;
+	m_monsters = ClientRequest::GetClient()->GetMonsterList();
 }
 
 
@@ -359,15 +360,14 @@ vector<shared_ptr<Monster>> ClientPlayer::GetPitDefenders(int32_t x, int32_t y)
 bool ClientPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> monster)
 {
 	bool ok = ClientRequest::GetClient()->AssignPitDefender(x, y, monster);
-	if (ok)
-		m_monsters = ClientRequest::GetClient()->GetMonsterList();
+	m_monsters = ClientRequest::GetClient()->GetMonsterList();
 	return ok;
 }
 
 
 bool ClientPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
 {
-	return false;
+	return ClientRequest::GetClient()->StartPitBattle(x, y, monsters);
 }
 
 

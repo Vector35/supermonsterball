@@ -153,13 +153,15 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 			break;
 		if (i->GetCurrentHP() == 0)
 			continue;
+		if (i->IsDefending())
+			continue;
 		battleTeam.push_back(i);
 	}
 
 	Terminal* term = Terminal::GetTerminal();
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
-	size_t width = 70;
+	size_t width = 76;
 	size_t height = 15;
 	size_t baseX = (centerX - (width / 2)) | 1;
 	size_t baseY = centerY - (height / 2);
@@ -187,7 +189,10 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 			sprintf(repStr, "Level %d Team Fury pit", level);
 			term->Output(repStr);
 			sprintf(repStr, "%d", reputation);
-			sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(nextLevel));
+			if (owner == player->GetTeam())
+				sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(nextLevel));
+			else
+				sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(level));
 			term->SetCursorPosition(baseX + width - (strlen(repStr) + strlen(maxRepStr) + 1), baseY);
 			term->Output(repStr);
 			term->SetColor(240, 234);
@@ -198,7 +203,10 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 			sprintf(repStr, "Level %d Team Sage pit", level);
 			term->Output(repStr);
 			sprintf(repStr, "%d", reputation);
-			sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(nextLevel));
+			if (owner == player->GetTeam())
+				sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(nextLevel));
+			else
+				sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(level));
 			term->SetCursorPosition(baseX + width - (strlen(repStr) + strlen(maxRepStr) + 1), baseY);
 			term->Output(repStr);
 			term->SetColor(240, 234);
@@ -209,7 +217,10 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 			sprintf(repStr, "Level %d Team Impulse pit", level);
 			term->Output(repStr);
 			sprintf(repStr, "%d", reputation);
-			sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(nextLevel));
+			if (owner == player->GetTeam())
+				sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(nextLevel));
+			else
+				sprintf(maxRepStr, "/%d", Player::GetReputationRequirementForLevel(level));
 			term->SetCursorPosition(baseX + width - (strlen(repStr) + strlen(maxRepStr) + 1), baseY);
 			term->Output(repStr);
 			term->SetColor(240, 234);
@@ -316,10 +327,127 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 		}
 		if (selection == changeBattleTeam)
 		{
+			term->BeginOutputQueue();
+			term->SetCursorPosition(baseX, baseY + height - 1);
+			term->SetColor(255, 234);
+			for (size_t dx = 0; dx < width; dx++)
+				term->Output(" ");
+			term->EndOutputQueue();
+
+			int32_t selected = 0;
+			while (true)
+			{
+				if (term->HasQuit())
+					return;
+
+				term->BeginOutputQueue();
+				for (size_t i = 0; i < 6; i++)
+				{
+					if (i == (size_t)selected)
+						term->SetColor(16, 255);
+					else
+						term->SetColor(240, 234);
+					term->SetCursorPosition(baseX, baseY + 3 + i);
+					for (size_t dx = 0; dx < ((width / 2) - 1); dx++)
+						term->Output(" ");
+
+					term->SetCursorPosition(baseX + 1, baseY + 3 + i);
+					sprintf(repStr, "%d. ", (int)i + 1);
+					term->Output(repStr);
+					if (i < battleTeam.size())
+					{
+						if (i == (size_t)selected)
+							term->SetColor(16, 255);
+						else
+							term->SetColor(255, 234);
+						term->Output(battleTeam[i]->GetSpecies()->GetImage());
+						term->Output(" ");
+						term->Output(battleTeam[i]->GetName());
+						term->SetCursorPosition(baseX + (width / 2) - 9, baseY + 3 + i);
+						sprintf(repStr, "CP %d", battleTeam[i]->GetCP());
+						term->Output(repStr);
+					}
+					else
+					{
+						term->Output("Unassigned");
+					}
+				}
+				term->EndOutputQueue();
+
+				string input = term->GetInput();
+				if (term->IsInputUpMovement(input))
+				{
+					selected--;
+					if (selected < 0)
+						selected = 5;
+				}
+				else if (term->IsInputDownMovement(input))
+				{
+					selected++;
+					if (selected >= 6)
+						selected = 0;
+				}
+				else if ((input == "q") || (input == "Q") || (input == "\033"))
+				{
+					selected = -1;
+					break;
+				}
+				else if ((input == "\n") || (input == "\r") || (input == " ") || (input == "e") || (input == "E"))
+				{
+					break;
+				}
+			}
+
+			if (selected == -1)
+				continue;
+
+			shared_ptr<Monster> toAssign = ShowMonsterList(player, map, true, false, false);
+			if (toAssign)
+			{
+				shared_ptr<Monster> old;
+				if ((size_t)selected < battleTeam.size())
+					old = battleTeam[selected];
+
+				bool alreadyThere = false;
+				for (size_t i = 0; i < battleTeam.size(); i++)
+				{
+					if (battleTeam[i]->GetID() == toAssign->GetID())
+					{
+						battleTeam[i] = old;
+						while (battleTeam.size() < (size_t)selected)
+							battleTeam.push_back(shared_ptr<Monster>());
+						battleTeam[selected] = toAssign;
+						alreadyThere = true;
+						break;
+					}
+				}
+
+				if (!alreadyThere)
+				{
+					while (battleTeam.size() < (size_t)selected)
+						battleTeam.push_back(shared_ptr<Monster>());
+					battleTeam[selected] = toAssign;
+				}
+			}
+			map->Paint();
 			continue;
 		}
 		if (selection == battle)
 		{
+			// Get rid of any blank entries in the battle team
+			vector<shared_ptr<Monster>> finalBattleTeam;
+			for (auto& i : battleTeam)
+			{
+				if (i)
+					finalBattleTeam.push_back(i);
+			}
+
+			if (!player->StartPitBattle(x, y, finalBattleTeam))
+			{
+				player->ForcePitRefresh();
+				continue;
+			}
+
 			break;
 		}
 		break;

@@ -748,6 +748,7 @@ void Monster::SetMoves(Move* quick, Move* charge)
 
 void Monster::ResetHP()
 {
+	m_currentHP = 50;
 }
 
 

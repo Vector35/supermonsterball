@@ -28,6 +28,7 @@ message Request
 		SetTeam = 20;
 		GetPitStatus = 21;
 		AssignPitDefender = 22;
+		StartPitBattle = 23;
 	}
 
 	RequestType type = 1;
@@ -335,6 +336,18 @@ message AssignPitDefenderRequest
 }
 
 message AssignPitDefenderResponse
+{
+	bool ok = 1;
+}
+
+message StartPitBattleRequest
+{
+	int32 x = 1;
+	int32 y = 2;
+	repeated uint64 monsters = 3;
+}
+
+message StartPitBattleResponse
 {
 	bool ok = 1;
 }

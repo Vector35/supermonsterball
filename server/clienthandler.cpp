@@ -671,6 +671,39 @@ void ClientHandler::AssignPitDefender(const string& msg)
 }
 
 
+void ClientHandler::StartPitBattle(const string& msg)
+{
+	StartPitBattleRequest request;
+	if (!request.ParseFromString(msg))
+		throw SocketException("Bad pit battle request format");
+
+	StartPitBattleResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		vector<shared_ptr<Monster>> monsters;
+		bool ok = true;
+		for (int i = 0; i < request.monsters_size(); i++)
+		{
+			shared_ptr<Monster> monster = m_player->GetMonsterByID(request.monsters(i));
+			if (!monster)
+			{
+				ok = false;
+				break;
+			}
+			monsters.push_back(monster);
+		}
+
+		if (ok)
+			response.set_ok(m_player->StartPitBattle(request.x(), request.y(), monsters));
+		else
+			response.set_ok(false);
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
 void ClientHandler::ProcessRequests()
 {
 	try
@@ -749,6 +782,9 @@ void ClientHandler::ProcessRequests()
 				break;
 			case Request_RequestType_AssignPitDefender:
 				AssignPitDefender(request.data());
+				break;
+			case Request_RequestType_StartPitBattle:
+				StartPitBattle(request.data());
 				break;
 			default:
 				throw SocketException("Bad request type");

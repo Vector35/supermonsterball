@@ -609,6 +609,7 @@ bool ShowMainMenu(Player* player, MapRenderer* map)
 
 	if (option == 1)
 	{
+		player->ForcePitRefresh();
 		ShowMonsterList(player, map);
 		return false;
 	}

@@ -472,3 +472,19 @@ bool ClientRequest::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> 
 		throw NetworkException("Invalid pit assign response");
 	return response.ok();
 }
+
+
+bool ClientRequest::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
+{
+	StartPitBattleRequest request;
+	request.set_x(x);
+	request.set_y(y);
+	for (auto& i : monsters)
+		request.add_monsters(i->GetID());
+	WriteRequest(Request_RequestType_StartPitBattle, request.SerializeAsString());
+
+	StartPitBattleResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid pit battle response");
+	return response.ok();
+}

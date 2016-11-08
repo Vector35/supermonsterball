@@ -268,7 +268,7 @@ bool InMemoryPlayer::PowerUpMonster(std::shared_ptr<Monster> monster)
 
 	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= GetPowerUpCost(monster->GetLevel()).treats;
 	m_powder -= GetPowerUpCost(monster->GetLevel()).powder;
-	monster->SetLevel(monster->GetLevel() + 1);
+	monster->PowerUp();
 	return true;
 }
 

@@ -123,6 +123,7 @@ PitBattleStatus PitBattle::Step()
 		}
 		m_defenderCharge = 0;
 		m_defenderCooldown = 1;
+		m_action = PIT_ACTION_NOT_CHOSEN;
 		return status;
 	}
 
@@ -148,6 +149,7 @@ PitBattleStatus PitBattle::Step()
 		m_attackerCharge = 0;
 		m_attackerCooldown = 0;
 		m_defenderCooldown = 1;
+		m_action = PIT_ACTION_NOT_CHOSEN;
 		status.charge = 0;
 		return status;
 	}

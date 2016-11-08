@@ -324,7 +324,7 @@ bool ServerPlayer::PowerUpMonster(std::shared_ptr<Monster> monster)
 	Database::GetDatabase()->SetTreats(m_id, monster->GetSpecies()->GetBaseForm()->GetIndex(),
 		m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]);
 	m_powder -= GetPowerUpCost(monster->GetLevel()).powder;
-	monster->SetLevel(monster->GetLevel() + 1);
+	monster->PowerUp();
 	Database::GetDatabase()->SetPowder(m_id, m_powder);
 	Database::GetDatabase()->UpdateMonster(m_id, monster);
 	return true;

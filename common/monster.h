@@ -174,6 +174,7 @@ public:
 	uint32_t GetMaxHP();
 	void ResetHP();
 
+	void PowerUp();
 	void Evolve();
 	void SetSpecies(MonsterSpecies* species);
 

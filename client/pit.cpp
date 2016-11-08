@@ -87,15 +87,17 @@ static void DrawBattleStatus(shared_ptr<Monster> attacker, shared_ptr<Monster> d
 			term->Output("━");
 		term->SetCursorPosition(x + 1, y + height - 3);
 		term->SetColor(255, 23);
-		term->Output("Charge ");
-		size_t chargeBar = (charge * 11) / 100;
+		term->Output("Power ");
+		size_t chargeBar = (charge * 12) / 100;
 		term->SetColor(255, 23);
 		for (size_t i = 0; i < chargeBar; i++)
 			term->Output("━");
 		term->SetColor(246, 23);
-		for (size_t i = chargeBar; i < 11; i++)
+		for (size_t i = chargeBar; i < 12; i++)
 			term->Output("━");
 	}
+
+	term->EndOutputQueue();
 }
 
 
@@ -222,16 +224,87 @@ static void ShowBattleDefenderFaint(size_t x, size_t y, size_t width)
 }
 
 
+static shared_ptr<Monster> ChangeAttacker(vector<shared_ptr<Monster>> battleTeam)
+{
+	if (battleTeam.size() == 0)
+		return nullptr;
+
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t width = 40;
+	size_t height = 6;
+	size_t x = (centerX - (width / 2)) | 1;
+	size_t y = centerY - (height / 2);
+
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+	size_t selected = 0;
+	while (!term->HasQuit())
+	{
+		term->BeginOutputQueue();
+		for (size_t i = 0; i < battleTeam.size(); i++)
+		{
+			term->SetCursorPosition(x + 1, y + i);
+
+			if (i == selected)
+				term->SetColor(234, 255);
+			else
+				term->SetColor(255, 234);
+
+			term->Output(battleTeam[i]->GetSpecies()->GetImage());
+			term->Output(" ");
+			term->Output(battleTeam[i]->GetName());
+
+			for (size_t dx = 15 + battleTeam[i]->GetName().size(); dx < (width - 1); dx++)
+				term->Output(" ");
+			term->Output("   ");
+
+			char cpStr[32];
+			sprintf(cpStr, "CP %d", battleTeam[i]->GetCP());
+			for (size_t dx = strlen(cpStr); dx < 7; dx++)
+				term->Output(" ");
+			term->Output(cpStr);
+			term->Output(" ");
+		}
+		term->EndOutputQueue();
+
+		string input = term->GetInput();
+		if ((input == "\033") || (input == "q") || (input == "Q"))
+			break;
+
+		if ((input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == " "))
+			return battleTeam[selected];
+
+		if (term->IsInputUpMovement(input))
+		{
+			if (selected == 0)
+				selected = battleTeam.size() - 1;
+			else
+				selected--;
+		}
+		if (term->IsInputDownMovement(input))
+		{
+			selected++;
+			if (selected >= battleTeam.size())
+				selected = 0;
+		}
+	}
+	return nullptr;
+}
+
+
 static bool SelectBattleAction(Player* player, MapRenderer* map, size_t x, size_t y, size_t width, size_t height,
-	vector<shared_ptr<Monster>> battleTeam, shared_ptr<Monster>& attacker, const PitBattleStatus& status)
+	vector<shared_ptr<Monster>> battleTeam, shared_ptr<Monster>& attacker, shared_ptr<Monster> defender,
+	const PitBattleStatus& status)
 {
 	Terminal* term = Terminal::GetTerminal();
 	while (!term->HasQuit())
 	{
 		int32_t quickMove = -1;
 		int32_t chargeMove = -1;
-		int32_t change = -1;
-		int32_t run = -1;
+		int32_t dodge = -1;
+		int32_t menu = -1;
 
 		vector<string> options;
 		quickMove = (int32_t)options.size();
@@ -250,13 +323,13 @@ static bool SelectBattleAction(Player* player, MapRenderer* map, size_t x, size_
 			options.push_back(attacker->GetChargeMove()->GetName());
 		}
 
-		change = (int32_t)options.size();
-		options.push_back("Switch");
-		run = (int32_t)options.size();
-		options.push_back("Run");
+		dodge = (int32_t)options.size();
+		options.push_back("Dodge");
+		menu = (int32_t)options.size();
+		options.push_back("Options");
 
 		int32_t selection = ShowBoxOptions(x, y, width, height, options);
-		if ((selection == -1) || (selection == run))
+		if (selection == -1)
 			return false;
 
 		if (selection == quickMove)
@@ -269,9 +342,36 @@ static bool SelectBattleAction(Player* player, MapRenderer* map, size_t x, size_
 			player->SetPitBattleAction(PIT_ACTION_ATTACK_CHARGE_MOVE);
 			break;
 		}
-		else if (selection == change)
+		else if (selection == dodge)
 		{
-			return false;
+			player->SetPitBattleAction(PIT_ACTION_DODGE);
+			break;
+		}
+		else if (selection == menu)
+		{
+			selection = ShowBoxOptions(x, y, width, height, vector<string>{"Switch Monster", "Run Away", "Back"});
+			if ((selection == -1) || (selection == 2))
+				continue;
+			if (selection == 1)
+				return false;
+
+			map->Paint();
+			shared_ptr<Monster> monster = ChangeAttacker(battleTeam);
+			map->Paint();
+			DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+			DrawBattle(attacker, defender, x, y, width, height);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+
+			if (!monster)
+				return true;
+			if (monster->GetID() == attacker->GetID())
+				return true;
+
+			usleep(500000);
+
+			attacker = monster;
+			player->SetAttacker(attacker);
+			return true;
 		}
 	}
 
@@ -311,11 +411,13 @@ static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monste
 		{
 		case PIT_BATTLE_WAITING_FOR_ACTION:
 			oldAttacker = attacker;
-			if (!SelectBattleAction(player, map, x, y, width, height, remainingAttackers, attacker, status))
+			if (!SelectBattleAction(player, map, x, y, width, height, remainingAttackers, attacker, defender, status))
 				done = true;
 			if (attacker->GetID() != oldAttacker->GetID())
 			{
+				status.charge = 0;
 				ShowBattleAttackerChange(x, y, width, attacker);
+				DrawBattleStatus(attacker, defender, x, y, width, height, 0);
 				ShowBattleText(x, y, width, height, "Go " + attacker->GetName() + "!");
 			}
 			break;
@@ -433,6 +535,7 @@ static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monste
 			attacker = remainingAttackers[0];
 			player->SetAttacker(attacker);
 			ShowBattleAttackerChange(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
 			ShowBattleText(x, y, width, height, "Go " + attacker->GetName() + "!");
 			break;
 		case PIT_BATTLE_DEFEND_FAINT:

@@ -852,10 +852,24 @@ void Monster::Heal(uint32_t amount)
 }
 
 
+void Monster::PowerUp()
+{
+	uint32_t oldMaxHP = GetMaxHP();
+
+	m_level++;
+
+	uint32_t newMaxHP = GetMaxHP();
+	if ((newMaxHP > oldMaxHP) && (m_currentHP != 0))
+		m_currentHP += newMaxHP - oldMaxHP;
+}
+
+
 void Monster::Evolve()
 {
 	if (m_species->GetEvolutions().size() == 0)
 		return;
+
+	uint32_t oldMaxHP = GetMaxHP();
 
 	bool renamed = (m_name != m_species->GetName());
 
@@ -871,6 +885,10 @@ void Monster::Evolve()
 
 	if (!renamed)
 		m_name = m_species->GetName();
+
+	uint32_t newMaxHP = GetMaxHP();
+	if ((newMaxHP > oldMaxHP) && (m_currentHP != 0))
+		m_currentHP += newMaxHP - oldMaxHP;
 }
 
 

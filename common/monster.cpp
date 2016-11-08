@@ -146,38 +146,41 @@ void MonsterSpecies::Init()
 	// Placeholder for missing moves
 	new Move("MissingNo", Normal, QuickMove, 1, 1);
 
-	Move* slice = new Move("Slice", Normal, QuickMove, 40, 12);
-	Move* cut = new Move("Cut", Normal, QuickMove, 60, 15);
-	Move* tackle = new Move("Tackle", Normal, QuickMove, 30, 10);
+	Move* slice = new Move("Slice", Normal, QuickMove, 10, 12);
+	Move* cut = new Move("Cut", Normal, QuickMove, 5, 15);
+	Move* tackle = new Move("Tackle", Normal, QuickMove, 20, 10);
 	Move* charge = new Move("Charge", Normal, FourChargeMove, 80, 24);
 	Move* flop = new Move("Flop", Normal, QuickMove, 1, 1);
 	Move* struggle = new Move("Struggle", Normal, FourChargeMove, 10, 5);
-	Move* palindrome = new Move("Palindrome", Normal, QuickMove, 40, 18);
+	Move* palindrome = new Move("Palindrome", Normal, QuickMove, 20, 18);
 	Move* chomp = new Move("Chomp", Normal, ThreeChargeMove, 80, 23);
+	Move* batteringRam = new Move("Battering Ram", Normal, SingleChargeMove, 100, 25);
+	Move* smash = new Move("Smash", Normal, QuickMove, 5, 16);
 
-	Move* leafCutter = new Move("Leaf Cutter", Grass, QuickMove, 0, 0);
-	Move* twigTwirl = new Move("Twig Twirl", Grass, QuickMove, 0, 0);
+	Move* leafCutter = new Move("Leaf Cutter", Grass, QuickMove, 10, 13);
+	Move* twigTwirl = new Move("Twig Twirl", Grass, QuickMove, 15, 11);
+	Move* overgrowth = new Move("Overgrowth", Grass, TwoChargeMove, 80, 20);
 
-	Move* flare = new Move("Flare", Fire, QuickMove, 60, 15);
-	Move* fireball = new Move("Fireball", Fire, QuickMove, 80, 20);
+	Move* flare = new Move("Flare", Fire, QuickMove, 5, 15);
+	Move* fireball = new Move("Fireball", Fire, QuickMove, 10, 20);
 	Move* heatWave = new Move("Heat Wave", Fire, FourChargeMove, 70, 23);
 	Move* flamethrower = new Move("Flamethrower", Fire, TwoChargeMove, 100, 28);
 	Move* magmaBeam = new Move("Magma Beam", Fire, SingleChargeMove, 110, 29);
 	Move* greatBallsOfFire = new Move("Great Balls of Fire", Fire, SingleChargeMove, 120, 32);
 	Move* batteryFire = new Move("Battery Fire", Fire, TwoChargeMove, 90, 27);
 	Move* handGrenade = new Move("Hand Grenade", Fire, SingleChargeMove, 120, 29);
-	Move* glassCannon = new Move("Glass Cannon", Fire, QuickMove, 40, 16);
-	Move* burstFire = new Move("Burst Fire", Fire, QuickMove, 80, 20);
-	Move* fullAuto = new Move("Full Auto", Fire, QuickMove, 20, 19);
+	Move* glassCannon = new Move("Glass Cannon", Fire, QuickMove, 10, 16);
+	Move* burstFire = new Move("Burst Fire", Fire, QuickMove, 20, 20);
+	Move* fullAuto = new Move("Full Auto", Fire, QuickMove, 5, 19);
 	Move* aimedShot = new Move("Aimed Shot", Fire, SingleChargeMove, 150, 31);
 	Move* burninate = new Move("Burninate", Fire, SingleChargeMove, 150, 33);
 	Move* hotSauce = new Move("Hot Sauce", Fire, FourChargeMove, 80, 25);
 	Move* charStar = new Move("Char Star", Fire, SingleChargeMove, 150, 33);
 
-	Move* waterBlast = new Move("Water Blast", Water, QuickMove, 60, 18);
+	Move* waterBlast = new Move("Water Blast", Water, QuickMove, 10, 18);
 	Move* splash = new Move("Splash", Water, QuickMove, 5, 4);
-	Move* pressureWash = new Move("Pressure Wash", Water, QuickMove, 40, 12);
-	Move* steamJet = new Move("Steam Jet", Water, QuickMove, 80, 19);
+	Move* pressureWash = new Move("Pressure Wash", Water, QuickMove, 20, 12);
+	Move* steamJet = new Move("Steam Jet", Water, QuickMove, 30, 19);
 	Move* heavyRain = new Move("Heavy Rain", Water, FourChargeMove, 80, 23);
 	Move* flood = new Move("Flood", Water, ThreeChargeMove, 100, 24);
 	Move* gusher = new Move("Gusher", Water, SingleChargeMove, 100, 28);
@@ -191,61 +194,62 @@ void MonsterSpecies::Init()
 	Move* jumpStart = new Move("Jump Start", Electric, FourChargeMove, 70, 22);
 	Move* shortCircuit = new Move("Short Circuit", Electric, QuickMove, 20, 18);
 
-	Move* bugBite = new Move("Bug Bite", Bug, QuickMove, 0, 0);
-	Move* mandibleMunch = new Move("Mandible Munch", Bug, QuickMove, 0, 0);
-	Move* infestation = new Move("Infestation", Bug, QuickMove, 0, 0);
-	Move* swarm = new Move("Swarm", Bug, QuickMove, 0, 0);
-	Move* fleshEater = new Move("Flesh Eater", Bug, QuickMove, 0, 0);
+	Move* bugBite = new Move("Bug Bite", Bug, QuickMove, 5, 19);
+	Move* mandibleMunch = new Move("Mandible Munch", Bug, QuickMove, 10, 16);
+	Move* infestation = new Move("Infestation", Bug, TwoChargeMove, 80, 29);
+	Move* swarm = new Move("Swarm", Bug, SingleChargeMove, 100, 23);
+	Move* fleshEater = new Move("Flesh Eater", Bug, QuickMove, 20, 11);
 
-	Move* infect = new Move("Infect", Poison, TwoChargeMove, 0, 0);
-	Move* sting = new Move("Sting", Poison, QuickMove, 0, 0);
-	Move* poisonFang = new Move("Poison Fang", Poison, ThreeChargeMove, 0, 0);
-	Move* hemlockRain = new Move("Hemlock Spit", Poison, QuickMove, 0, 0);
-	Move* botulismBite = new Move("Botulism Bite", Poison, QuickMove, 0, 0);
+	Move* infect = new Move("Infect", Poison, TwoChargeMove, 60, 21);
+	Move* sting = new Move("Sting", Poison, QuickMove, 15, 15);
+	Move* poisonFang = new Move("Poison Fang", Poison, ThreeChargeMove, 60, 23);
+	Move* hemlockRain = new Move("Hemlock Spit", Poison, QuickMove, 20, 17);
+	Move* botulismBite = new Move("Botulism Bite", Poison, QuickMove, 20, 14);
 
-	Move* typeConfusion = new Move("Type Confusion", Psychic, QuickMove, 0, 0);
-	Move* magicMissile = new Move("Magic Missile", Psychic, SingleChargeMove, 0, 0);
-	Move* mindMelt = new Move("Mind Melt", Psychic, TwoChargeMove, 0, 0);
-	Move* memoryCorruption = new Move("Memory Corruption", Psychic, SingleChargeMove, 0, 0);
+	Move* typeConfusion = new Move("Type Confusion", Psychic, QuickMove, 10, 16);
+	Move* magicMissile = new Move("Magic Missile", Psychic, SingleChargeMove, 80, 24);
+	Move* mindMelt = new Move("Mind Melt", Psychic, TwoChargeMove, 80, 23);
+	Move* memoryCorruption = new Move("Memory Corruption", Psychic, SingleChargeMove, 100, 32);
 
-	Move* wingAttack = new Move("Wing Attack", Flying, QuickMove, 0, 0);
-	Move* diveBomb = new Move("Dive Bomb", Flying, QuickMove, 0, 0);
-	Move* peck = new Move("Peck", Flying, QuickMove, 0, 0);
-	Move* bigPecks = new Move("Big Pecks", Flying, ThreeChargeMove, 0, 0);
-	Move* hurricane = new Move("Hurricane", Flying, SingleChargeMove, 0, 0);
-	Move* cyclone = new Move("Cyclone", Flying, TwoChargeMove, 0, 0);
+	Move* wingAttack = new Move("Wing Attack", Flying, QuickMove, 5, 17);
+	Move* diveBomb = new Move("Dive Bomb", Flying, QuickMove, 40, 18);
+	Move* peck = new Move("Peck", Flying, QuickMove, 5, 13);
+	Move* bigPecks = new Move("Big Pecks", Flying, ThreeChargeMove, 80, 25);
+	Move* hurricane = new Move("Hurricane", Flying, SingleChargeMove, 120, 31);
+	Move* cyclone = new Move("Cyclone", Flying, TwoChargeMove, 80, 19);
 
-	Move* wub = new Move("Wub", Sound, QuickMove, 0, 0);
-	Move* sonicBoom = new Move("Sonic Boom", Sound, SingleChargeMove, 0, 0);
+	Move* wub = new Move("Wub", Sound, QuickMove, 5, 14);
+	Move* sonicBoom = new Move("Sonic Boom", Sound, SingleChargeMove, 80, 27);
 
-	Move* dig = new Move("Dig", Ground, QuickMove, 0, 0);
-	Move* trap = new Move("Trap", Ground, QuickMove, 0, 0);
-	Move* quicksand = new Move("Quicksand", Ground, TwoChargeMove, 0, 0);
-	Move* earthquake = new Move("Earthquake", Ground, SingleChargeMove, 0, 0);
+	Move* dig = new Move("Dig", Ground, QuickMove, 15, 13);
+	Move* trap = new Move("Trap", Ground, QuickMove, 20, 11);
+	Move* quicksand = new Move("Quicksand", Ground, TwoChargeMove, 60, 24);
+	Move* earthquake = new Move("Earthquake", Ground, SingleChargeMove, 100, 29);
 
-	Move* punch = new Move("Punch", Fighting, QuickMove, 0, 0);
-	Move* quickKick = new Move("Quick Kick", Fighting, QuickMove, 0, 0);
-	Move* pound = new Move("Pound", Fighting, QuickMove, 0, 0);
-	Move* boneBreak = new Move("Bone Break", Fighting, TwoChargeMove, 0, 0);
-	Move* juggernaut = new Move("Juggernaut", Fighting, SingleChargeMove, 0, 0);
+	Move* punch = new Move("Punch", Fighting, QuickMove, 10, 14);
+	Move* quickKick = new Move("Quick Kick", Fighting, QuickMove, 4, 12);
+	Move* pound = new Move("Pound", Fighting, QuickMove, 5, 18);
+	Move* boneBreak = new Move("Bone Break", Fighting, TwoChargeMove, 80, 22);
+	Move* juggernaut = new Move("Juggernaut", Fighting, SingleChargeMove, 150, 27);
 
-	Move* freeze = new Move("Freeze", Ice, QuickMove, 0, 0);
-	Move* frostbite = new Move("Frostbite", Ice, QuickMove, 0, 0);
-	Move* icePick = new Move("Ice Pick", Ice, QuickMove, 0, 0);
-	Move* snowstorm = new Move("Snowstorm", Ice, TwoChargeMove, 0, 0);
-	Move* blizzard = new Move("Blizzard", Ice, SingleChargeMove, 0, 0);
-	Move* snowmageddon = new Move("Snowmageddon", Ice, SingleChargeMove, 0, 0);
+	Move* freeze = new Move("Freeze", Ice, QuickMove, 30, 18);
+	Move* frostbite = new Move("Frostbite", Ice, QuickMove, 15, 19);
+	Move* icePick = new Move("Ice Pick", Ice, QuickMove, 10, 9);
+	Move* snowstorm = new Move("Snowstorm", Ice, TwoChargeMove, 80, 26);
+	Move* blizzard = new Move("Blizzard", Ice, SingleChargeMove, 100, 29);
+	Move* snowmageddon = new Move("Snowmageddon", Ice, SingleChargeMove, 120, 32);
+	Move* coldSnap = new Move("Cold Snap", Ice, FourChargeMove, 60, 17);
 
-	Move* sunBeam = new Move("Sun Beam", Light, QuickMove, 0, 0);
-	Move* starlight = new Move("Starlight", Light, QuickMove, 0, 0);
-	Move* laser = new Move("Frickin' Laser Beam", Light, TwoChargeMove, 0, 0);
-	Move* nova = new Move("Nova", Light, SingleChargeMove, 0, 0);
+	Move* sunBeam = new Move("Sun Beam", Light, QuickMove, 10, 13);
+	Move* starlight = new Move("Starlight", Light, QuickMove, 10, 11);
+	Move* laser = new Move("Frickin' Laser Beam", Light, TwoChargeMove, 100, 28);
+	Move* nova = new Move("Nova", Light, SingleChargeMove, 120, 30);
 
-	Move* sneakAttack = new Move("Sneak Attack", Dark, QuickMove, 0, 0);
-	Move* backstab = new Move("Backstab", Dark, ThreeChargeMove, 0, 0);
-	Move* bite = new Move("Bite", Dark, QuickMove, 60, 15);
-	Move* ghostBlade = new Move("Ghost Blade", Dark, QuickMove, 0, 0);
-	Move* hiddenDagger = new Move("Hidden Dagger", Dark, FourChargeMove, 0, 0);
+	Move* sneakAttack = new Move("Sneak Attack", Dark, QuickMove, 40, 14);
+	Move* backstab = new Move("Backstab", Dark, ThreeChargeMove, 60, 21);
+	Move* bite = new Move("Bite", Dark, QuickMove, 10, 15);
+	Move* ghostBlade = new Move("Ghost Blade", Dark, QuickMove, 8, 16);
+	Move* hiddenDagger = new Move("Hidden Dagger", Dark, FourChargeMove, 90, 22);
 
 	Biome* grassBiome = new Biome;
 	Biome* waterBiome = new Biome;
@@ -260,52 +264,63 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* roppy = new MonsterSpecies("💥🐸 ", "Roppy", "This animatronic frog is assembled from a mishmash "
 		"of other frog parts.", Grass, Grass, 230, 175, 215,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 5, 2);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{slice, smash}, vector<Move*>{memoryCorruption, overgrowth},
+		grassBiome, 5, 2);
 	MonsterSpecies* poppy = new MonsterSpecies("✨🐸 ", "Poppy", "This frog prefers to be stacked up "
 		"and the top frog always jumps first.", Grass, Grass, 170, 135, 155,
-		vector<MonsterSpecies*>{roppy}, 100, vector<Move*>{}, vector<Move*>{}, grassBiome, 20, 8);
+		vector<MonsterSpecies*>{roppy}, 100, vector<Move*>{cut, smash}, vector<Move*>{charge, overgrowth},
+		grassBiome, 20, 8);
 	MonsterSpecies* hoppy = new MonsterSpecies(" 🐸 ", "Hoppy", "A small frog that jumps right where it wants to go.",
-		Grass, Grass, 140, 95, 130, vector<MonsterSpecies*>{poppy}, 25, vector<Move*>{}, vector<Move*>{},
-		grassBiome, 100, 15);
+		Grass, Grass, 140, 95, 130, vector<MonsterSpecies*>{poppy}, 25, vector<Move*>{tackle, bite},
+		vector<Move*>{charge}, grassBiome, 100, 15);
 	m_list.push_back(hoppy);
 	m_list.push_back(poppy);
 	m_list.push_back(roppy);
 
 	MonsterSpecies* kablion = new MonsterSpecies("💥🦁 ", "Kablion", "The very ground seems to shake with each step"
 		" of this massive lion as tiny explosions appear all around it.", Fire, Fire, 220, 210, 190,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 5, 2);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{fireball, bite}, vector<Move*>{magmaBeam, flamethrower},
+		desertBiome, 5, 2);
 	MonsterSpecies* pyrion = new MonsterSpecies("🔥🦁 ", "Pyrion", "A shifty-eyed lion that seems to set everything "
 		"it looks at on fire when no one is looking.", Fire, Fire, 160, 155, 145,
-		vector<MonsterSpecies*>{kablion}, 100, vector<Move*>{}, vector<Move*>{}, desertBiome, 20, 8);
+		vector<MonsterSpecies*>{kablion}, 100, vector<Move*>{flare, bite}, vector<Move*>{heatWave, chomp},
+		desertBiome, 20, 8);
 	MonsterSpecies* frion = new MonsterSpecies(" 🦁 ", "Frion", "A cuddly lion that seems to blaze with an inner "
 		"warmth.", Fire, Fire, 130, 120, 115,
-		vector<MonsterSpecies*>{pyrion}, 25, vector<Move*>{}, vector<Move*>{}, desertBiome, 100, 15);
+		vector<MonsterSpecies*>{pyrion}, 25, vector<Move*>{tackle, cut}, vector<Move*>{charge, heatWave},
+		desertBiome, 100, 15);
 	m_list.push_back(frion);
 	m_list.push_back(pyrion);
 	m_list.push_back(kablion);
 
 	MonsterSpecies* whalegun = new MonsterSpecies("🌊🐋 ", "Whalegun", "A giant harpoon sticks out of this whale, but"
 		"strangely it appears to be facing outward, rather than being stuck in the whale.", Water, Water, 190, 210, 220,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 5, 2);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{waterBlast, steamJet}, vector<Move*>{tsunami, flood},
+		waterBiome, 5, 2);
 	MonsterSpecies* whaletail = new MonsterSpecies(" 🐋 ", "Whaletail", "Only a small portion of the back of this "
 		"whale sticks out above the water, but it appears to be wrapped in fishing line.", Water, Water, 135, 160, 165,
-		vector<MonsterSpecies*>{whalegun}, 100, vector<Move*>{}, vector<Move*>{}, waterBiome, 20, 8);
+		vector<MonsterSpecies*>{whalegun}, 100, vector<Move*>{waterBlast, pressureWash}, vector<Move*>{flood, heavyRain},
+		waterBiome, 20, 8);
 	MonsterSpecies* wailer = new MonsterSpecies(" 🐳 ", "Wailer", "This small whale looks extremely relaxed as it "
 		"swims, whispering to itself 'Every little thing is gonna be all right.'", Water, Water, 105, 125, 135,
-		vector<MonsterSpecies*>{whaletail}, 25, vector<Move*>{}, vector<Move*>{}, waterBiome, 100, 15);
+		vector<MonsterSpecies*>{whaletail}, 25, vector<Move*>{trickle, bite}, vector<Move*>{charge, heavyRain},
+		waterBiome, 100, 15);
 	m_list.push_back(wailer);
 	m_list.push_back(whaletail);
 	m_list.push_back(whalegun);
 
 	MonsterSpecies* beezer = new MonsterSpecies(" 🐝 ", "Beezer", "This elderly bee still packs quite a punch when it"
 		" stings.", Bug, Bug, 220, 160, 140,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{sting}, vector<Move*>{poisonFang}, grassBiome, 20, 10);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{sting, bugBite}, vector<Move*>{poisonFang, infestation},
+		grassBiome, 20, 10);
 	MonsterSpecies* nutter = new MonsterSpecies(" 🌰 ", "Nutter", "Disguised as a small nut, this insect will go "
 		"absolutely crazy on you if you don't watch yourself.", Bug, Bug, 100, 180, 140,
-		vector<MonsterSpecies*>{beezer}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 40, 20);
+		vector<MonsterSpecies*>{beezer}, 50, vector<Move*>{fleshEater, bugBite}, vector<Move*>{swarm, infestation},
+		grassBiome, 40, 20);
 	MonsterSpecies* crawler = new MonsterSpecies(" 🐛 ", "Crawler", "A segmented insect that appears to be searching "
 		"webs for morsels to eat.", Bug, Bug, 70, 80, 80,
-		vector<MonsterSpecies*>{nutter}, 12, vector<Move*>{}, vector<Move*>{}, grassBiome, 500, 300);
+		vector<MonsterSpecies*>{nutter}, 12, vector<Move*>{bugBite, mandibleMunch}, vector<Move*>{swarm, chomp},
+		grassBiome, 500, 300);
 	m_list.push_back(crawler);
 	m_list.push_back(nutter);
 	m_list.push_back(beezer);
@@ -316,13 +331,15 @@ void MonsterSpecies::Init()
 		grassBiome, 20, 10);
 	MonsterSpecies* motherclucker = new MonsterSpecies(" 🐔 ", "Motherclucker", "The hen of all cluckers, this large "
 		"bird jealously guards her brood.", Normal, Normal, 190, 225, 225,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{wingAttack, diveBomb}, vector<Move*>{}, grassBiome, 20, 10);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{wingAttack, diveBomb}, vector<Move*>{hurricane, cyclone},
+		grassBiome, 20, 10);
 	MonsterSpecies* clucker = new MonsterSpecies(" 🐥 ", "Clucker", "The small chicken's most potent attacks don't do "
 		"much more damage than that inflicted by the obnoxious noises they make.", Normal, Normal, 145, 145, 145,
-		vector<MonsterSpecies*>{cock, motherclucker}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 60, 40);
+		vector<MonsterSpecies*>{cock, motherclucker}, 50, vector<Move*>{peck, wingAttack},
+		vector<Move*>{cyclone, charge}, grassBiome, 60, 40);
 	MonsterSpecies* chickling = new MonsterSpecies(" 🐣 ", "Chickling", "A tiny chicken barely hatched that is nearly "
 		"defenseless.", Normal, Normal, 115, 35, 45,
-		vector<MonsterSpecies*>{clucker}, 12, vector<Move*>{}, vector<Move*>{}, grassBiome, 500, 350);
+		vector<MonsterSpecies*>{clucker}, 12, vector<Move*>{peck, wingAttack}, vector<Move*>{charge}, grassBiome, 500, 350);
 	m_list.push_back(chickling);
 	m_list.push_back(clucker);
 	m_list.push_back(cock);
@@ -333,20 +350,21 @@ void MonsterSpecies::Init()
 		vector<Move*>{diveBomb, wingAttack}, vector<Move*>{hurricane, cyclone}, cityBiome, 25, 15);
 	MonsterSpecies* birdove = new MonsterSpecies(" 🕊 ", "Birdove", "Is it a bird? Is is a dove? Why not both--they "
 		"are the same thing after all.", Flying, Flying, 150, 125, 120,
-		vector<MonsterSpecies*>{windove}, 50, vector<Move*>{}, vector<Move*>{}, cityBiome, 100, 75);
+		vector<MonsterSpecies*>{windove}, 50, vector<Move*>{diveBomb, wingAttack}, vector<Move*>{bigPecks, cyclone},
+		cityBiome, 100, 75);
 	MonsterSpecies* dovelett = new MonsterSpecies(" 🐦 ", "Dovelett", "A diminutive bird that looks fantastically "
 		"clean.", Flying, Flying, 95, 60, 70,
-		vector<MonsterSpecies*>{birdove}, 12, vector<Move*>{}, vector<Move*>{}, cityBiome, 1000, 750);
+		vector<MonsterSpecies*>{birdove}, 12, vector<Move*>{peck, wingAttack}, vector<Move*>{charge}, cityBiome, 1000, 750);
 	m_list.push_back(dovelett);
 	m_list.push_back(birdove);
 	m_list.push_back(windove);
 
 	MonsterSpecies* rattichewy = new MonsterSpecies("🧀🐀 ", "Rattichewy", "No matter where you hide or move the "
 		"cheese, this rat will certainly chew its way in to it.", Normal, Normal, 170, 160, 160,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, cityBiome, 40, 35);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{bite, cut}, vector<Move*>{chomp}, cityBiome, 40, 35);
 	MonsterSpecies* rattitat = new MonsterSpecies(" 🐀 ", "Rattitat", "This annoying rodent's tell-tale noise reminds"
 		" reminds you of nothing so much as machine gun firing blanks.", Normal, Normal, 80, 80, 80,
-		vector<MonsterSpecies*>{rattichewy}, 50, vector<Move*>{}, vector<Move*>{}, cityBiome, 1000, 900);
+		vector<MonsterSpecies*>{rattichewy}, 50, vector<Move*>{bite, tackle}, vector<Move*>{charge}, cityBiome, 1000, 900);
 	m_list.push_back(rattitat);
 	m_list.push_back(rattichewy);
 
@@ -355,16 +373,17 @@ void MonsterSpecies::Init()
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{wub}, vector<Move*>{sonicBoom}, cityBiome, 20, 10);
 	MonsterSpecies* subhound = new MonsterSpecies(" 🐶 ", "Subhound", "This bloodhound sniffs back and forth "
 		"searching for something, but it does so at a very low frequency.", Sound, Sound, 115, 110, 100,
-		vector<MonsterSpecies*>{woofer}, 50, vector<Move*>{}, vector<Move*>{}, cityBiome, 150, 75);
+		vector<MonsterSpecies*>{woofer}, 50, vector<Move*>{wub, bite}, vector<Move*>{charge}, cityBiome, 150, 75);
 	m_list.push_back(subhound);
 	m_list.push_back(woofer);
 
 	MonsterSpecies* webadeth = new MonsterSpecies("🕸🕷 ", "Webadeth", "Don't end up in this spider's web. Seriously,"
 		" just don't.", Bug, Poison, 240, 165, 155,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{poisonFang}, grassBiome, 20, 15);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{bite, mandibleMunch}, vector<Move*>{poisonFang, infestation},
+		grassBiome, 20, 15);
 	MonsterSpecies* spidra = new MonsterSpecies(" 🕷 ", "Spidra", "You might not see the small spider, but you'll "
 		"definitely know if it bites you.", Bug, Poison, 140, 70, 60,
-		vector<MonsterSpecies*>{webadeth}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 200, 150);
+		vector<MonsterSpecies*>{webadeth}, 50, vector<Move*>{bite}, vector<Move*>{infect}, grassBiome, 200, 150);
 	m_list.push_back(spidra);
 	m_list.push_back(webadeth);
 
@@ -383,10 +402,12 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* ramstine = new MonsterSpecies(" 🐏 ", "Ramstine", "You're not quite sure what the noises coming "
 		"out of this large sheep are, but they're quite gutteral and scary.", Normal, Grass, 220, 190, 190,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 15, 3);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{cut, tackle}, vector<Move*>{batteringRam, juggernaut},
+		grassBiome, 15, 3);
 	MonsterSpecies* sheepler = new MonsterSpecies(" 🐑 ", "Sheepler", "This docile sheep seems to do whatever "
 		"everyone around it is doing.", Normal, Grass, 60, 110, 110,
-		vector<MonsterSpecies*>{ramstine}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 150, 30);
+		vector<MonsterSpecies*>{ramstine}, 50, vector<Move*>{leafCutter, bite}, vector<Move*>{chomp, charge},
+		grassBiome, 150, 30);
 	m_list.push_back(sheepler);
 	m_list.push_back(ramstine);
 
@@ -401,19 +422,22 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* harerazer = new MonsterSpecies(" 🐇 ", "Harerazer", "Something about this rabbit gives you the "
 		"creeps. Maybe it's the spikes, or the grooves that cross its skin.", Electric, Electric, 255, 200, 150,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{lightningBolt}, desertBiome, 15, 3);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{zap, staticDischarge}, vector<Move*>{lightningBolt, jumpStart},
+		desertBiome, 15, 3);
 	MonsterSpecies* bunnybolt = new MonsterSpecies(" 🐰 ", "Bunnybolt", "This cuddly rabbit can give you quite a "
 		"shock!", Electric, Electric, 170, 80, 70,
-		vector<MonsterSpecies*>{harerazer}, 50, vector<Move*>{}, vector<Move*>{}, desertBiome, 150, 30);
+		vector<MonsterSpecies*>{harerazer}, 50, vector<Move*>{bite, zap}, vector<Move*>{charge, jumpStart},
+		desertBiome, 150, 30);
 	m_list.push_back(bunnybolt);
 	m_list.push_back(harerazer);
 
 	MonsterSpecies* wabbitwap = new MonsterSpecies("🕳🐇 ", "Wabbitwap", "I knew I shoulda taken that left turn at "
 		"Albuquerque!", Normal, Ground, 195, 215, 215,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{trap}, vector<Move*>{earthquake}, grassBiome, 10, 4);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{trap, dig}, vector<Move*>{earthquake, quicksand}, grassBiome, 10, 4);
 	MonsterSpecies* wascaly = new MonsterSpecies("🕳🐰 ", "Wascaly", "Do you happen to know what the penalty is for "
 		"shooting a fricaseeing rabbit without a fricaseeing rabbit license?", Normal, Ground, 90, 120, 120,
-		vector<MonsterSpecies*>{wabbitwap}, 50, vector<Move*>{dig}, vector<Move*>{}, grassBiome, 100, 40);
+		vector<MonsterSpecies*>{wabbitwap}, 50, vector<Move*>{dig, sneakAttack}, vector<Move*>{charge},
+		grassBiome, 100, 40);
 	m_list.push_back(wascaly);
 	m_list.push_back(wabbitwap);
 
@@ -440,26 +464,29 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* stormikloud = new MonsterSpecies(" ⛈ ", "Stormikloud", "A massive storm capable of vast "
 		"destruction.", Water, Electric, 270, 125, 210,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 10, 7);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{waterBlast, zap}, vector<Move*>{lightningBolt, heavyRain, hurricane},
+		waterBiome, 10, 7);
 	MonsterSpecies* electrikloud = new MonsterSpecies(" 🌩 ", "Electrikloud", "A dangerous cloud capable of both "
 		"water and electric attacks.", Water, Electric, 180, 105, 135,
-		vector<MonsterSpecies*>{stormikloud}, 100, vector<Move*>{}, vector<Move*>{}, waterBiome, 40, 25);
+		vector<MonsterSpecies*>{stormikloud}, 100, vector<Move*>{waterBlast, staticDischarge},
+		vector<Move*>{flood, heavyRain}, waterBiome, 40, 25);
 	MonsterSpecies* hoverkloud = new MonsterSpecies(" 🌥 ", "Hoverkloud", "A small cloud that seems to have trouble "
 		"getting very high.", Water, Water, 100, 60, 80,
-		vector<MonsterSpecies*>{electrikloud}, 25, vector<Move*>{}, vector<Move*>{}, waterBiome, 125, 80);
+		vector<MonsterSpecies*>{electrikloud}, 25, vector<Move*>{diveBomb, trickle}, vector<Move*>{flood},
+		waterBiome, 125, 80);
 	m_list.push_back(hoverkloud);
 	m_list.push_back(electrikloud);
 	m_list.push_back(stormikloud);
 
 	MonsterSpecies* snowmo = new MonsterSpecies("❄⛄ ", "Snowmo", "If you ask him for mercy, he'll just tell you "
-		"there is no 'mo.", Ice, Ice, 215, 205, 200,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{blizzard, snowmageddon}, mountainBiome, 5, 1);
+		"there is no 'mo.", Ice, Ice, 215, 205, 200, vector<MonsterSpecies*>{}, 0,
+		vector<Move*>{freeze, frostbite}, vector<Move*>{blizzard, snowmageddon}, mountainBiome, 5, 1);
 	MonsterSpecies* snowblo = new MonsterSpecies("🌪⛄ ", "Snowblo", "The air that swirls around this snowman is "
-		"bitter cold.", Ice, Ice, 155, 145, 140,
-		vector<MonsterSpecies*>{snowmo}, 100, vector<Move*>{}, vector<Move*>{snowstorm, blizzard}, mountainBiome, 30, 3);
+		"bitter cold.", Ice, Ice, 155, 145, 140, vector<MonsterSpecies*>{snowmo}, 100,
+		vector<Move*>{freeze, frostbite}, vector<Move*>{snowstorm, blizzard}, mountainBiome, 30, 3);
 	MonsterSpecies* snowbro = new MonsterSpecies(" ⛄ ", "Snowbro", "A very chill snowman who seems to like just "
 		"hanging out.", Ice, Ice, 95, 90, 85,
-		vector<MonsterSpecies*>{snowblo}, 25, vector<Move*>{}, vector<Move*>{}, mountainBiome, 200, 10);
+		vector<MonsterSpecies*>{snowblo}, 25, vector<Move*>{icePick}, vector<Move*>{coldSnap}, mountainBiome, 200, 10);
 	m_list.push_back(snowbro);
 	m_list.push_back(snowblo);
 	m_list.push_back(snowmo);
@@ -501,7 +528,7 @@ void MonsterSpecies::Init()
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 10, 2);
 	MonsterSpecies* gatorate = new MonsterSpecies(" 🐊 ", "Gatorate", "If you stop to ask what the gatorate, the "
 		"answer is probably YOU.", Water, Water, 160, 110, 70,
-		vector<MonsterSpecies*>{gatorath}, 50, vector<Move*>{}, vector<Move*>{}, waterBiome, 60, 20);
+		vector<MonsterSpecies*>{gatorath}, 50, vector<Move*>{bite}, vector<Move*>{chomp}, waterBiome, 60, 20);
 	m_list.push_back(gatorate);
 	m_list.push_back(gatorath);
 
@@ -648,45 +675,49 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* ohdaze = new MonsterSpecies(" 🌞 ", "Ohdaze", "This powerful monster is misunderstood, especially"
 	 	" by journalists.", Light, Psychic, 260, 165, 190,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{memoryCorruption}, desertBiome, 15, 5);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{typeConfusion}, vector<Move*>{memoryCorruption, charStar, nova},
+		desertBiome, 15, 5);
 	MonsterSpecies* sundaze = new MonsterSpecies(" ☀ ", "Sundaze", "The glare from this glowing orb is hard to see "
 		"through.", Light, Light, 155, 120, 135,
-		vector<MonsterSpecies*>{ohdaze}, 100, vector<Move*>{}, vector<Move*>{}, desertBiome, 120, 40);
+		vector<MonsterSpecies*>{ohdaze}, 100, vector<Move*>{sunBeam}, vector<Move*>{nova}, desertBiome, 120, 40);
 	m_list.push_back(sundaze);
 	m_list.push_back(ohdaze);
 
 	MonsterSpecies* doomboom = new MonsterSpecies("💥💣 ", "Doomboom", "The label on the side says 'BFB'. Wonder what"
 	 	" that stands for?", Fire, Dark, 360, 80, 165,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 15, 10);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{fireball}, vector<Move*>{greatBallsOfFire, charStar},
+		desertBiome, 15, 10);
 	MonsterSpecies* kabomb = new MonsterSpecies(" 💣 ", "Kabomb", "If you were wondering where the earth-shattering "
 	 	"kaboom is? Right here.", Fire, Fire, 230, 60, 115,
-		vector<MonsterSpecies*>{doomboom}, 50, vector<Move*>{}, vector<Move*>{}, desertBiome, 90, 60);
+		vector<MonsterSpecies*>{doomboom}, 50, vector<Move*>{flare}, vector<Move*>{greatBallsOfFire},
+		desertBiome, 90, 60);
 	m_list.push_back(kabomb);
 	m_list.push_back(doomboom);
 
 	MonsterSpecies* liarkake = new MonsterSpecies(" 🎂 ", "Lyarkake", "Fills the mind of anything around it with "
 		"lies and broken promises.", Psychic, Psychic, 235, 155, 225, vector<MonsterSpecies*>{}, 0,
-		vector<Move*>{}, vector<Move*>{}, cityBiome, 40, 10);
+		vector<Move*>{typeConfusion}, vector<Move*>{mindMelt, memoryCorruption}, cityBiome, 40, 10);
 	m_list.push_back(liarkake);
 
 	MonsterSpecies* tacocat = new MonsterSpecies(" 🌮 ", "Tacocat", "Looks like a delicious taco to draw its prey near.",
-		Normal, Normal, 202, 191, 202, vector<MonsterSpecies*>{}, 0, vector<Move*>{palindrome}, vector<Move*>{hotSauce},
-		cityBiome, 40, 10);
+		Normal, Normal, 202, 191, 202, vector<MonsterSpecies*>{}, 0, vector<Move*>{palindrome, bite},
+		vector<Move*>{hotSauce, heatWave}, cityBiome, 40, 10);
 	m_list.push_back(tacocat);
 
 	MonsterSpecies* tuxacool = new MonsterSpecies(" 🐧 ", "Tuxacool", "Not always easy to work with, but you can't "
 		"beat the price.", Water, Ice, 230, 145, 245,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 90, 25);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{icePick, peck}, vector<Move*>{coldSnap, blizzard}, waterBiome, 90, 25);
 	m_list.push_back(tuxacool);
 
 	MonsterSpecies* panfoo = new MonsterSpecies(" 🐼 ", "Panfoo", "Noodles? Don't noodles? That is the question.",
 		Fighting, Fighting, 225, 220, 165,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 90, 25);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{punch, pound, quickKick}, vector<Move*>{boneBreak, charge},
+		desertBiome, 90, 25);
 	m_list.push_back(panfoo);
 
 	MonsterSpecies* crystrike = new MonsterSpecies(" 💎 ", "Crystrike", "A multifaceted and deadly shimmering gem.",
 		Light, Psychic, 170, 225, 250,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{laser}, mountainBiome, 90, 25);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{typeConfusion}, vector<Move*>{laser, magicMissile}, mountainBiome, 90, 25);
 	m_list.push_back(crystrike);
 
 	MonsterSpecies* galaxseven = new MonsterSpecies(" 📱 ", "Galaxseven", "A product release gone horribly wrong "
@@ -696,13 +727,13 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* burninator = new MonsterSpecies("🔥🐲 ", "Burninator", "It likes to burninate the peasants "
 		"wherever it can find them.", Fire, Flying, 235, 190, 220, vector<MonsterSpecies*>{}, 0,
-		vector<Move*>{}, vector<Move*>{}, grassBiome, 1, 1);
+		vector<Move*>{fireball, wingAttack}, vector<Move*>{burninate, flamethrower, greatBallsOfFire}, grassBiome, 1, 1);
 	MonsterSpecies* slithaburn = new MonsterSpecies("🔥🐍 ", "Slithaburn", "This forked tongue spits fire with its "
-	 	"lies.", Fire, Poison, 175, 135, 155,
-		vector<MonsterSpecies*>{burninator}, 100, vector<Move*>{}, vector<Move*>{}, grassBiome, 8, 3);
+	 	"lies.", Fire, Poison, 175, 135, 155, vector<MonsterSpecies*>{burninator}, 100,
+		vector<Move*>{flare, bite}, vector<Move*>{heatWave, poisonFang}, grassBiome, 8, 3);
 	MonsterSpecies* slither = new MonsterSpecies(" 🐍 ", "Slither", "Easily mistaken for a garden hose, but don't "
 		"step on it!", Poison, Poison, 135, 115, 110,
-		vector<MonsterSpecies*>{slithaburn}, 25, vector<Move*>{}, vector<Move*>{}, grassBiome, 30, 5);
+		vector<MonsterSpecies*>{slithaburn}, 25, vector<Move*>{bite}, vector<Move*>{poisonFang, chomp}, grassBiome, 30, 5);
 	m_list.push_back(slither);
 	m_list.push_back(slithaburn);
 	m_list.push_back(burninator);
@@ -713,7 +744,7 @@ void MonsterSpecies::Init()
 		grassBiome, 5, 3);
 	MonsterSpecies* bearly = new MonsterSpecies(" 🐻 ", "Bearly", "An obtuse bear, ignorant of puns, that when asked "
 		"to carry a chest will instead shave his fur off.", Normal, Normal, 145, 100, 150,
-		vector<MonsterSpecies*>{ehkaybear}, 100, vector<Move*>{bite}, vector<Move*>{chomp}, grassBiome, 75, 15);
+		vector<MonsterSpecies*>{ehkaybear}, 100, vector<Move*>{bite}, vector<Move*>{chomp, charge}, grassBiome, 75, 15);
 	m_list.push_back(bearly);
 	m_list.push_back(ehkaybear);
 

@@ -55,7 +55,7 @@ static void DrawBattleStatus(shared_ptr<Monster> attacker, shared_ptr<Monster> d
 
 	if (defender)
 	{
-		term->SetCursorPosition(x + width - (defender->GetName().size() + 1), y);
+		term->SetCursorPosition(x + width - 17, y);
 		term->SetColor(255, 17);
 		term->Output("                ");
 		term->SetCursorPosition(x + width - (defender->GetName().size() + 1), y);

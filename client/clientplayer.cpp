@@ -316,6 +316,13 @@ void ClientPlayer::ForcePitRefresh()
 {
 	m_lastPitRequest = 0;
 	m_monsters = ClientRequest::GetClient()->GetMonsterList();
+
+	GetPlayerDetailsResponse details = ClientRequest::GetClient()->GetPlayerDetails();
+	m_level = details.level();
+	m_xp = details.xp();
+	m_powder = details.powder();
+
+	m_inventory = ClientRequest::GetClient()->GetInventory();
 }
 
 

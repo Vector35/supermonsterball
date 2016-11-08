@@ -608,6 +608,8 @@ uint32_t ServerPlayer::EndPitBattle()
 		reputationChange = World::GetWorld()->RemovePitReputation(m_battle->GetPitX(), m_battle->GetPitY(),
 			reputationChange);
 	}
+
+	EarnExperience(reputationChange / 10);
 	return reputationChange;
 }
 

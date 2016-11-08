@@ -92,11 +92,11 @@ PitBattleStatus PitBattle::Step()
 		if (m_training)
 		{
 			if (m_largestAttackerCP <= (m_curDefender->GetCP() / 2))
+				m_reputationChange += 1000;
+			else if (m_largestAttackerCP <= m_curDefender->GetCP())
 				m_reputationChange += 500;
-			else if (m_largestAttackerCP < m_curDefender->GetCP())
-				m_reputationChange += 250;
 			else
-				m_reputationChange += 100;
+				m_reputationChange += 250;
 		}
 
 		if (m_db)
@@ -105,11 +105,11 @@ PitBattleStatus PitBattle::Step()
 		m_defenders.erase(m_defenders.begin());
 		if (m_defenders.size() == 0)
 		{
-			status.state = PIT_BATTLE_WIN;
+			status.state = PIT_BATTLE_DEFEND_FAINT;
 			m_curDefender.reset();
 
 			if (!m_training)
-				m_reputationChange += 500;
+				m_reputationChange += 1000;
 		}
 		else
 		{
@@ -119,7 +119,7 @@ PitBattleStatus PitBattle::Step()
 			m_newDefender = true;
 
 			if (!m_training)
-				m_reputationChange += 250;
+				m_reputationChange += 500;
 		}
 		m_defenderCharge = 0;
 		m_defenderCooldown = 1;

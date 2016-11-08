@@ -22,6 +22,7 @@ class ClientPlayer: public Player
 	uint8_t* m_mapData;
 	time_t m_lastPitRequest;
 	std::vector<PitStatus> m_cachedPits;
+	std::vector<std::shared_ptr<Monster>> m_battleDefenders;
 
 	PitStatus GetPitStatus(int32_t x, int32_t y);
 
@@ -77,7 +78,9 @@ public:
 	virtual std::vector<std::shared_ptr<Monster>> GetPitDefenders(int32_t x, int32_t y) override;
 	virtual bool AssignPitDefender(int32_t x, int32_t y, std::shared_ptr<Monster> monster) override;
 	virtual bool StartPitBattle(int32_t x, int32_t y, std::vector<std::shared_ptr<Monster>> monsters) override;
+	virtual std::vector<std::shared_ptr<Monster>> GetPitBattleDefenders() override { return m_battleDefenders; }
+	virtual void SetAttacker(std::shared_ptr<Monster> monster) override;
 	virtual PitBattleStatus StepPitBattle() override;
 	virtual void SetPitBattleAction(PitBattleAction action) override;
-	virtual uint32_t RunFromPitBattle() override;
+	virtual uint32_t EndPitBattle() override;
 };

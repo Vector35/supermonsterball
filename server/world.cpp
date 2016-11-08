@@ -483,32 +483,38 @@ bool World::AssignPitDefender(int32_t x, int32_t y, Team team, shared_ptr<Monste
 }
 
 
-void World::AddPitReputation(int32_t x, int32_t y, uint32_t reputation)
+uint32_t World::AddPitReputation(int32_t x, int32_t y, uint32_t reputation)
 {
 	PitStatus* pit = GetPit(x, y);
 	if (!pit)
-		return;
+		return 0;
 	if (pit->team == TEAM_UNASSIGNED)
-		return;
+		return 0;
 
 	pit->reputation += reputation;
 	if (pit->reputation > MAX_PIT_REPUTATION)
+	{
+		reputation -= pit->reputation - MAX_PIT_REPUTATION;
 		pit->reputation = MAX_PIT_REPUTATION;
+	}
 	if (m_db)
 		m_db->SetPitStatus(*pit);
+
+	return reputation;
 }
 
 
-void World::RemovePitReputation(int32_t x, int32_t y, uint32_t reputation)
+uint32_t World::RemovePitReputation(int32_t x, int32_t y, uint32_t reputation)
 {
 	PitStatus* pit = GetPit(x, y);
 	if (!pit)
-		return;
+		return 0;
 	if (pit->team == TEAM_UNASSIGNED)
-		return;
+		return 0;
 
 	if (reputation >= pit->reputation)
 	{
+		reputation = pit->reputation;
 		pit->team = TEAM_UNASSIGNED;
 		pit->reputation = 0;
 		for (auto& i : pit->defenders)
@@ -520,7 +526,7 @@ void World::RemovePitReputation(int32_t x, int32_t y, uint32_t reputation)
 		}
 		if (m_db)
 			m_db->SetPitStatus(*pit);
-		return;
+		return reputation;
 	}
 
 	pit->reputation -= reputation;
@@ -534,4 +540,5 @@ void World::RemovePitReputation(int32_t x, int32_t y, uint32_t reputation)
 	}
 	if (m_db)
 		m_db->SetPitStatus(*pit);
+	return reputation;
 }

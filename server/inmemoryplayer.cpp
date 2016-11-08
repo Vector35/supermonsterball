@@ -436,26 +436,93 @@ bool InMemoryPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster>
 
 bool InMemoryPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
 {
-	return false;
+	Team pitTeam = GetPitTeam(x, y);
+	if (pitTeam == TEAM_UNASSIGNED)
+		return false;
+	if (m_team == TEAM_UNASSIGNED)
+		return false;
+	if (monsters.size() == 0)
+		return false;
+
+	if ((pitTeam == m_team) && (GetPitReputation(x, y) >= MAX_PIT_REPUTATION))
+		return false;
+
+	set<uint64_t> seen;
+	for (auto& i : monsters)
+	{
+		if (seen.count(i->GetID()) > 0)
+			return false;
+		if (i->GetCurrentHP() == 0)
+			return false;
+		if (i->IsDefending())
+			return false;
+		seen.insert(i->GetID());
+	}
+
+	vector<shared_ptr<Monster>> defenders = GetPitDefenders(x, y);
+	if (defenders.size() == 0)
+		return false;
+
+	shared_ptr<PitBattle> battle(new PitBattle(monsters, defenders, pitTeam == m_team, x, y));
+	m_battle = battle;
+	return true;
+}
+
+
+vector<shared_ptr<Monster>> InMemoryPlayer::GetPitBattleDefenders()
+{
+	if (m_battle)
+		return m_battle->GetDefenders();
+	return vector<shared_ptr<Monster>>();
+}
+
+
+void InMemoryPlayer::SetAttacker(shared_ptr<Monster> monster)
+{
+	if (m_battle)
+		m_battle->SetAttacker(monster);
 }
 
 
 PitBattleStatus InMemoryPlayer::StepPitBattle()
 {
+	if (m_battle)
+		return m_battle->Step();
+
 	PitBattleStatus status;
 	status.state = PIT_BATTLE_WAITING_FOR_ACTION;
 	status.charge = 0;
-	status.damage = 0;
+	status.attackerHP = 0;
+	status.defenderHP = 0;
 	return status;
 }
 
 
 void InMemoryPlayer::SetPitBattleAction(PitBattleAction action)
 {
+	if (m_battle)
+		m_battle->SetAction(action);
 }
 
 
-uint32_t InMemoryPlayer::RunFromPitBattle()
+uint32_t InMemoryPlayer::EndPitBattle()
 {
-	return 0;
+	if (!m_battle)
+		return 0;
+
+	uint32_t reputationChange = m_battle->GetReputationChange();
+	if (reputationChange == 0)
+		return 0;
+
+	if (m_battle->IsTraining())
+	{
+		reputationChange = World::GetWorld()->AddPitReputation(m_battle->GetPitX(), m_battle->GetPitY(),
+			reputationChange);
+	}
+	else
+	{
+		reputationChange = World::GetWorld()->RemovePitReputation(m_battle->GetPitX(), m_battle->GetPitY(),
+			reputationChange);
+	}
+	return reputationChange;
 }

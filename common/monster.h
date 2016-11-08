@@ -54,6 +54,10 @@ public:
 	uint32_t GetDamagePerSecond() const { return m_dps; }
 
 	static Move* GetByIndex(uint32_t i);
+
+	static bool IsSuperEffective(Element attack, Element defense);
+	static bool IsNotEffective(Element attack, Element defense);
+	static uint32_t GetDamageFromAttack(uint32_t power, uint32_t attack, uint32_t defense);
 };
 
 struct Biome;
@@ -170,6 +174,12 @@ public:
 
 	void Evolve();
 	void SetSpecies(MonsterSpecies* species);
+
+	uint32_t GetTotalAttack();
+	uint32_t GetTotalDefense();
+	uint32_t GetTotalStamina();
+
+	void Damage(uint32_t damage);
 };
 
 struct MonsterSighting

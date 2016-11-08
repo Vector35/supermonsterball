@@ -2,6 +2,7 @@
 
 #include "player.h"
 #include "database.h"
+#include "battle.h"
 
 class ServerPlayer: public Player
 {
@@ -18,6 +19,7 @@ class ServerPlayer: public Player
 	int32_t m_x, m_y;
 	std::shared_ptr<Monster> m_encounter;
 	bool m_seedGiven;
+	std::shared_ptr<PitBattle> m_battle;
 
 	void EndEncounter(bool caught, ItemType ball = ITEM_STANDARD_BALL);
 	void EarnExperience(uint32_t xp);
@@ -76,7 +78,9 @@ public:
 	virtual std::vector<std::shared_ptr<Monster>> GetPitDefenders(int32_t x, int32_t y) override;
 	virtual bool AssignPitDefender(int32_t x, int32_t y, std::shared_ptr<Monster> monster) override;
 	virtual bool StartPitBattle(int32_t x, int32_t y, std::vector<std::shared_ptr<Monster>> monsters) override;
+	virtual std::vector<std::shared_ptr<Monster>> GetPitBattleDefenders() override;
+	virtual void SetAttacker(std::shared_ptr<Monster> monster) override;
 	virtual PitBattleStatus StepPitBattle() override;
 	virtual void SetPitBattleAction(PitBattleAction action) override;
-	virtual uint32_t RunFromPitBattle() override;
+	virtual uint32_t EndPitBattle() override;
 };

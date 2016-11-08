@@ -26,6 +26,92 @@ Move* Move::GetByIndex(uint32_t i)
 }
 
 
+bool Move::IsSuperEffective(Element attack, Element defense)
+{
+	switch (attack)
+	{
+	case Normal:
+		return false;
+	case Grass:
+		return (defense == Water) || (defense == Ground) || (defense == Light);
+	case Fire:
+		return (defense == Grass) || (defense == Bug) || (defense == Ice);
+	case Water:
+		return (defense == Fire) || (defense == Ground);
+	case Electric:
+		return (defense == Water) || (defense == Flying);
+	case Bug:
+		return (defense == Grass) || (defense == Psychic);
+	case Poison:
+		return (defense == Grass);
+	case Psychic:
+		return (defense == Psychic);
+	case Flying:
+		return (defense == Grass) || (defense == Bug) || (defense == Ground) || (defense == Bug);
+	case Sound:
+		return (defense == Psychic) || (defense == Fighting);
+	case Ground:
+		return (defense == Electric) || (defense == Fire) || (defense == Sound);
+	case Fighting:
+		return (defense == Normal) || (defense == Ice) || (defense == Psychic);
+	case Ice:
+		return (defense == Grass) || (defense == Water) || (defense == Flying);
+	case Light:
+		return (defense == Dark) || (defense == Ice);
+	case Dark:
+		return (defense == Psychic) || (defense == Poison);
+	default:
+		return false;
+	}
+}
+
+
+bool Move::IsNotEffective(Element attack, Element defense)
+{
+	switch (attack)
+	{
+	case Normal:
+		return (defense == Fighting) || (defense == Dark);
+	case Grass:
+		return (defense == Fire) || (defense == Bug) || (defense == Poison) || (defense == Flying) || (defense == Ice);
+	case Fire:
+		return (defense == Water) || (defense == Ground);
+	case Water:
+		return (defense == Grass) || (defense == Electric) || (defense == Ice);
+	case Electric:
+		return (defense == Ground);
+	case Bug:
+		return (defense == Fire) || (defense == Flying);
+	case Poison:
+		return (defense == Dark);
+	case Psychic:
+		return (defense == Bug) || (defense == Sound) || (defense == Fighting) || (defense == Dark);
+	case Flying:
+		return (defense == Electric) || (defense == Ice);
+	case Sound:
+		return (defense == Ground);
+	case Ground:
+		return (defense == Water) || (defense == Grass) || (defense == Flying);
+	case Fighting:
+		return (defense == Sound);
+	case Ice:
+		return (defense == Fire) || (defense == Fighting) || (defense == Light);
+	case Light:
+		return (defense == Grass);
+	case Dark:
+		return (defense == Light);
+	default:
+		return false;
+	}
+}
+
+
+uint32_t Move::GetDamageFromAttack(uint32_t power, uint32_t attack, uint32_t defense)
+{
+	return power;
+}
+
+
 MonsterSpecies::MonsterSpecies(const string& image, const string& name, const string& description,
 	Element type1, Element type2, uint32_t attack, uint32_t defense, uint32_t stamina,
 	const vector<MonsterSpecies*>& evolutions, uint32_t evolutionCost,
@@ -790,6 +876,33 @@ void Monster::SetOwner(uint64_t id, const string& name)
 void Monster::SetDefending(bool defending)
 {
 	m_defending = defending;
+}
+
+
+uint32_t Monster::GetTotalAttack()
+{
+	return m_species->GetBaseAttack() + m_attackIV;
+}
+
+
+uint32_t Monster::GetTotalDefense()
+{
+	return m_species->GetBaseDefense() + m_defenseIV;
+}
+
+
+uint32_t Monster::GetTotalStamina()
+{
+	return m_species->GetBaseStamina() + m_staminaIV;
+}
+
+
+void Monster::Damage(uint32_t damage)
+{
+	if (damage > m_currentHP)
+		m_currentHP = 0;
+	else
+		m_currentHP -= damage;
 }
 
 

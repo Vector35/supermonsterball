@@ -367,26 +367,29 @@ bool ClientPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> m
 
 bool ClientPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
 {
-	return ClientRequest::GetClient()->StartPitBattle(x, y, monsters);
+	return ClientRequest::GetClient()->StartPitBattle(x, y, monsters, m_battleDefenders);
+}
+
+
+void ClientPlayer::SetAttacker(shared_ptr<Monster> monster)
+{
+	ClientRequest::GetClient()->SetAttacker(monster);
 }
 
 
 PitBattleStatus ClientPlayer::StepPitBattle()
 {
-	PitBattleStatus status;
-	status.state = PIT_BATTLE_WAITING_FOR_ACTION;
-	status.charge = 0;
-	status.damage = 0;
-	return status;
+	return ClientRequest::GetClient()->StepPitBattle(m_battleDefenders);
 }
 
 
 void ClientPlayer::SetPitBattleAction(PitBattleAction action)
 {
+	ClientRequest::GetClient()->SetPitBattleAction(action);
 }
 
 
-uint32_t ClientPlayer::RunFromPitBattle()
+uint32_t ClientPlayer::EndPitBattle()
 {
-	return 0;
+	return ClientRequest::GetClient()->EndPitBattle();
 }

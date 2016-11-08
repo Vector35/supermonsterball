@@ -83,6 +83,6 @@ public:
 	uint32_t GetPitReputation(int32_t x, int32_t y);
 	std::vector<std::shared_ptr<Monster>> GetPitDefenders(int32_t x, int32_t y);
 	bool AssignPitDefender(int32_t x, int32_t y, Team team, std::shared_ptr<Monster> monster);
-	void AddPitReputation(int32_t x, int32_t y, uint32_t reputation);
-	void RemovePitReputation(int32_t x, int32_t y, uint32_t reputation);
+	uint32_t AddPitReputation(int32_t x, int32_t y, uint32_t reputation);
+	uint32_t RemovePitReputation(int32_t x, int32_t y, uint32_t reputation);
 };

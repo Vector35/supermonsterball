@@ -44,5 +44,10 @@ public:
 	void SetTeam(Team team);
 	PitStatus GetPitStatus(int32_t x, int32_t y);
 	bool AssignPitDefender(int32_t x, int32_t y, std::shared_ptr<Monster> monster);
-	bool StartPitBattle(int32_t x, int32_t y, std::vector<std::shared_ptr<Monster>> monsters);
+	bool StartPitBattle(int32_t x, int32_t y, std::vector<std::shared_ptr<Monster>> monsters,
+		std::vector<std::shared_ptr<Monster>>& defenders);
+	void SetAttacker(std::shared_ptr<Monster> monster);
+	PitBattleStatus StepPitBattle(std::vector<std::shared_ptr<Monster>> defenders);
+	void SetPitBattleAction(PitBattleAction action);
+	uint32_t EndPitBattle();
 };

@@ -474,7 +474,8 @@ bool ClientRequest::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> 
 }
 
 
-bool ClientRequest::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
+bool ClientRequest::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters,
+	vector<shared_ptr<Monster>>& defenders)
 {
 	StartPitBattleRequest request;
 	request.set_x(x);
@@ -486,5 +487,163 @@ bool ClientRequest::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monst
 	StartPitBattleResponse response;
 	if (!response.ParseFromString(ReadResponse()))
 		throw NetworkException("Invalid pit battle response");
+
+	if (response.ok())
+	{
+		defenders.clear();
+		for (int i = 0; i < response.defenders_size(); i++)
+		{
+			shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(response.defenders(i).species()),
+				0, 0, 0));
+			monster->SetID(response.defenders(i).id());
+			monster->SetIV(response.defenders(i).attack(), response.defenders(i).defense(),
+				response.defenders(i).stamina());
+			monster->SetSize(response.defenders(i).size());
+			monster->SetLevel(response.defenders(i).level());
+			monster->SetName(response.defenders(i).name());
+			monster->SetHP(response.defenders(i).hp());
+			monster->SetMoves(Move::GetByIndex(response.defenders(i).quickmove()),
+				Move::GetByIndex(response.defenders(i).chargemove()));
+			monster->SetOwner(response.defenders(i).owner(), response.defenders(i).ownername());
+			monster->SetDefending(true);
+			defenders.push_back(monster);
+		}
+	}
+
 	return response.ok();
+}
+
+
+void ClientRequest::SetAttacker(shared_ptr<Monster> monster)
+{
+	SetAttackerRequest request;
+	request.set_monster(monster->GetID());
+	WriteRequest(Request_RequestType_SetAttacker, request.SerializeAsString());
+	ReadResponse();
+}
+
+
+PitBattleStatus ClientRequest::StepPitBattle(vector<shared_ptr<Monster>> defenders)
+{
+	WriteRequest(Request_RequestType_StepPitBattle, "");
+
+	StepPitBattleResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid step pit battle response");
+
+	PitBattleStatus status;
+	switch (response.state())
+	{
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_QUICK_MOVE_NOT_EFFECTIVE:
+		status.state = PIT_BATTLE_ATTACK_QUICK_MOVE_NOT_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE:
+		status.state = PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE:
+		status.state = PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_CHARGE_MOVE_NOT_EFFECTIVE:
+		status.state = PIT_BATTLE_ATTACK_CHARGE_MOVE_NOT_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_CHARGE_MOVE_EFFECTIVE:
+		status.state = PIT_BATTLE_ATTACK_CHARGE_MOVE_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_CHARGE_MOVE_SUPER_EFFECTIVE:
+		status.state = PIT_BATTLE_ATTACK_CHARGE_MOVE_SUPER_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_QUICK_MOVE_NOT_EFFECTIVE:
+		status.state = PIT_BATTLE_DEFEND_QUICK_MOVE_NOT_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE:
+		status.state = PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE:
+		status.state = PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_QUICK_MOVE_DODGE:
+		status.state = PIT_BATTLE_DEFEND_QUICK_MOVE_DODGE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE:
+		status.state = PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE:
+		status.state = PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE:
+		status.state = PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_CHARGE_MOVE_DODGE:
+		status.state = PIT_BATTLE_DEFEND_CHARGE_MOVE_DODGE;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_FAINT:
+		status.state = PIT_BATTLE_ATTACK_FAINT;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_FAINT:
+		status.state = PIT_BATTLE_DEFEND_FAINT;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_NEW_OPPONENT:
+		status.state = PIT_BATTLE_NEW_OPPONENT;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_WIN:
+		status.state = PIT_BATTLE_WIN;
+		break;
+	case StepPitBattleResponse_PitBattleState_PIT_BATTLE_LOSE:
+		status.state = PIT_BATTLE_LOSE;
+		break;
+	default:
+		status.state = PIT_BATTLE_WAITING_FOR_ACTION;
+		break;
+	}
+
+	status.charge = response.charge();
+	status.attackerHP = response.attackerhp();
+	status.defenderHP = response.defenderhp();
+
+	for (auto& i : defenders)
+	{
+		if (i->GetID() == response.opponent())
+		{
+			status.opponent = i;
+			break;
+		}
+	}
+
+	return status;
+}
+
+
+void ClientRequest::SetPitBattleAction(PitBattleAction action)
+{
+	SetPitBattleActionRequest request;
+	switch (action)
+	{
+	case PIT_ACTION_ATTACK_QUICK_MOVE:
+		request.set_action(SetPitBattleActionRequest_PitBattleAction_PIT_ACTION_ATTACK_QUICK_MOVE);
+		break;
+	case PIT_ACTION_ATTACK_CHARGE_MOVE:
+		request.set_action(SetPitBattleActionRequest_PitBattleAction_PIT_ACTION_ATTACK_CHARGE_MOVE);
+		break;
+	case PIT_ACTION_DODGE:
+		request.set_action(SetPitBattleActionRequest_PitBattleAction_PIT_ACTION_DODGE);
+		break;
+	default:
+		request.set_action(SetPitBattleActionRequest_PitBattleAction_PIT_ACTION_NOT_CHOSEN);
+		break;
+	}
+
+	WriteRequest(Request_RequestType_SetAttacker, request.SerializeAsString());
+	ReadResponse();
+}
+
+
+uint32_t ClientRequest::EndPitBattle()
+{
+	WriteRequest(Request_RequestType_EndPitBattle, "");
+
+	EndPitBattleResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid end pit battle response");
+
+	return response.reputation();
 }

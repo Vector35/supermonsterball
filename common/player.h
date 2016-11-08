@@ -43,22 +43,24 @@ enum PitBattleState
 	PIT_BATTLE_DEFEND_QUICK_MOVE_NOT_EFFECTIVE = 7,
 	PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE = 8,
 	PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE = 9,
-	PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE = 10,
-	PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE = 11,
-	PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE = 12,
-	PIT_BATTLE_DEFEND_DODGE = 13,
-	PIT_BATTLE_ATTACK_FAINT = 14,
-	PIT_BATTLE_DEFEND_FAINT = 15,
-	PIT_BATTLE_NEW_OPPONENT = 16,
-	PIT_BATTLE_WIN = 17,
-	PIT_BATTLE_LOSE = 18
+	PIT_BATTLE_DEFEND_QUICK_MOVE_DODGE = 10,
+	PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE = 11,
+	PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE = 12,
+	PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE = 13,
+	PIT_BATTLE_DEFEND_CHARGE_MOVE_DODGE = 14,
+	PIT_BATTLE_ATTACK_FAINT = 15,
+	PIT_BATTLE_DEFEND_FAINT = 16,
+	PIT_BATTLE_NEW_OPPONENT = 17,
+	PIT_BATTLE_WIN = 18,
+	PIT_BATTLE_LOSE = 19
 };
 
 enum PitBattleAction
 {
-	PIT_ACTION_ATTACK_QUICK_MOVE = 0,
-	PIT_ACTION_ATTACK_CHARGE_MOVE = 1,
-	PIT_ACTION_DODGE = 2
+	PIT_ACTION_NOT_CHOSEN = 0,
+	PIT_ACTION_ATTACK_QUICK_MOVE = 1,
+	PIT_ACTION_ATTACK_CHARGE_MOVE = 2,
+	PIT_ACTION_DODGE = 3
 };
 
 struct LevelUpItem
@@ -85,7 +87,7 @@ struct PitBattleStatus
 {
 	PitBattleState state;
 	uint32_t charge;
-	uint32_t damage;
+	uint32_t attackerHP, defenderHP;
 	std::shared_ptr<Monster> opponent;
 };
 
@@ -149,9 +151,11 @@ public:
 	virtual std::vector<std::shared_ptr<Monster>> GetPitDefenders(int32_t x, int32_t y) = 0;
 	virtual bool AssignPitDefender(int32_t x, int32_t y, std::shared_ptr<Monster> monster) = 0;
 	virtual bool StartPitBattle(int32_t x, int32_t y, std::vector<std::shared_ptr<Monster>> monsters) = 0;
+	virtual std::vector<std::shared_ptr<Monster>> GetPitBattleDefenders() = 0;
+	virtual void SetAttacker(std::shared_ptr<Monster> monster) = 0;
 	virtual PitBattleStatus StepPitBattle() = 0;
 	virtual void SetPitBattleAction(PitBattleAction action) = 0;
-	virtual uint32_t RunFromPitBattle() = 0;
+	virtual uint32_t EndPitBattle() = 0;
 
 	static uint32_t GetReputationRequirementForLevel(uint32_t level);
 	static uint32_t GetPitLevelByReputation(uint32_t reputation);

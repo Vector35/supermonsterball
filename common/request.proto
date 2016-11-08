@@ -29,6 +29,10 @@ message Request
 		GetPitStatus = 21;
 		AssignPitDefender = 22;
 		StartPitBattle = 23;
+		SetAttacker = 24;
+		StepPitBattle = 25;
+		SetPitBattleAction = 26;
+		EndPitBattle = 27;
 	}
 
 	RequestType type = 1;
@@ -349,5 +353,79 @@ message StartPitBattleRequest
 
 message StartPitBattleResponse
 {
+	message MonsterDetails
+	{
+		uint64 owner = 1;
+		string ownername = 2;
+		uint64 id = 3;
+		uint32 species = 4;
+		string name = 5;
+		uint32 hp = 6;
+		uint32 attack = 7;
+		uint32 defense = 8;
+		uint32 stamina = 9;
+		uint32 size = 10;
+		uint32 level = 11;
+		uint32 quickmove = 12;
+		uint32 chargemove = 13;
+	}
+
 	bool ok = 1;
+	repeated MonsterDetails defenders = 2;
+}
+
+message SetAttackerRequest
+{
+	uint64 monster = 1;
+}
+
+message StepPitBattleResponse
+{
+	enum PitBattleState
+	{
+		PIT_BATTLE_WAITING_FOR_ACTION = 0;
+		PIT_BATTLE_ATTACK_QUICK_MOVE_NOT_EFFECTIVE = 1;
+		PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE = 2;
+		PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE = 3;
+		PIT_BATTLE_ATTACK_CHARGE_MOVE_NOT_EFFECTIVE = 4;
+		PIT_BATTLE_ATTACK_CHARGE_MOVE_EFFECTIVE = 5;
+		PIT_BATTLE_ATTACK_CHARGE_MOVE_SUPER_EFFECTIVE = 6;
+		PIT_BATTLE_DEFEND_QUICK_MOVE_NOT_EFFECTIVE = 7;
+		PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE = 8;
+		PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE = 9;
+		PIT_BATTLE_DEFEND_QUICK_MOVE_DODGE = 10;
+		PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE = 11;
+		PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE = 12;
+		PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE = 13;
+		PIT_BATTLE_DEFEND_CHARGE_MOVE_DODGE = 14;
+		PIT_BATTLE_ATTACK_FAINT = 15;
+		PIT_BATTLE_DEFEND_FAINT = 16;
+		PIT_BATTLE_NEW_OPPONENT = 17;
+		PIT_BATTLE_WIN = 18;
+		PIT_BATTLE_LOSE = 19;
+	}
+
+	PitBattleState state = 1;
+	uint32 charge = 2;
+	uint32 attackerhp = 3;
+	uint32 defenderhp = 4;
+	uint64 opponent = 5;
+}
+
+message SetPitBattleActionRequest
+{
+	enum PitBattleAction
+	{
+		PIT_ACTION_NOT_CHOSEN = 0;
+		PIT_ACTION_ATTACK_QUICK_MOVE = 1;
+		PIT_ACTION_ATTACK_CHARGE_MOVE = 2;
+		PIT_ACTION_DODGE = 3;
+	}
+
+	PitBattleAction action = 1;
+}
+
+message EndPitBattleResponse
+{
+	uint32 reputation = 1;
 }

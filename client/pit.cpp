@@ -6,6 +6,11 @@
 using namespace std;
 
 
+static void PitBattle(Player* player, MapRenderer* map)
+{
+}
+
+
 static void ShowPitUnderlevelMessage()
 {
 	Terminal* term = Terminal::GetTerminal();
@@ -448,6 +453,9 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 				continue;
 			}
 
+			map->Paint();
+
+			PitBattle(player, map);
 			break;
 		}
 		break;

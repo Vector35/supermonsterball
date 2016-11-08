@@ -696,9 +696,175 @@ void ClientHandler::StartPitBattle(const string& msg)
 		}
 
 		if (ok)
+		{
 			response.set_ok(m_player->StartPitBattle(request.x(), request.y(), monsters));
+
+			for (auto& i : m_player->GetPitDefenders(request.x(), request.y()))
+			{
+				StartPitBattleResponse_MonsterDetails* monster = response.add_defenders();
+				monster->set_owner(i->GetOwnerID());
+				monster->set_ownername(i->GetOwnerName());
+				monster->set_id(i->GetID());
+				monster->set_species(i->GetSpecies()->GetIndex());
+				monster->set_name(i->GetName());
+				monster->set_hp(i->GetCurrentHP());
+				monster->set_attack(i->GetAttackIV());
+				monster->set_defense(i->GetDefenseIV());
+				monster->set_stamina(i->GetStaminaIV());
+				monster->set_size(i->GetSize());
+				monster->set_level(i->GetLevel());
+				monster->set_quickmove(i->GetQuickMove()->GetIndex());
+				monster->set_chargemove(i->GetChargeMove()->GetIndex());
+			}
+		}
 		else
+		{
 			response.set_ok(false);
+		}
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
+void ClientHandler::SetAttacker(const string& msg)
+{
+	SetAttackerRequest request;
+	if (!request.ParseFromString(msg))
+		throw SocketException("Bad set attacker request format");
+
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		shared_ptr<Monster> monster = m_player->GetMonsterByID(request.monster());
+		if (monster)
+			m_player->SetAttacker(monster);
+	});
+	WriteResponse("");
+}
+
+
+void ClientHandler::StepPitBattle()
+{
+	StepPitBattleResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		PitBattleStatus status = m_player->StepPitBattle();
+
+		switch (status.state)
+		{
+		case PIT_BATTLE_ATTACK_QUICK_MOVE_NOT_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_WAITING_FOR_ACTION);
+			break;
+		case PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE);
+			break;
+		case PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE);
+			break;
+		case PIT_BATTLE_ATTACK_CHARGE_MOVE_NOT_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_CHARGE_MOVE_NOT_EFFECTIVE);
+			break;
+		case PIT_BATTLE_ATTACK_CHARGE_MOVE_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_CHARGE_MOVE_EFFECTIVE);
+			break;
+		case PIT_BATTLE_ATTACK_CHARGE_MOVE_SUPER_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_CHARGE_MOVE_SUPER_EFFECTIVE);
+			break;
+		case PIT_BATTLE_DEFEND_QUICK_MOVE_NOT_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_QUICK_MOVE_NOT_EFFECTIVE);
+			break;
+		case PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE);
+			break;
+		case PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE);
+			break;
+		case PIT_BATTLE_DEFEND_QUICK_MOVE_DODGE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_QUICK_MOVE_DODGE);
+			break;
+		case PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE);
+			break;
+		case PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE);
+			break;
+		case PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE);
+			break;
+		case PIT_BATTLE_DEFEND_CHARGE_MOVE_DODGE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_CHARGE_MOVE_DODGE);
+			break;
+		case PIT_BATTLE_ATTACK_FAINT:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_ATTACK_FAINT);
+			break;
+		case PIT_BATTLE_DEFEND_FAINT:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_DEFEND_FAINT);
+			break;
+		case PIT_BATTLE_NEW_OPPONENT:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_NEW_OPPONENT);
+			break;
+		case PIT_BATTLE_WIN:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_WIN);
+			break;
+		case PIT_BATTLE_LOSE:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_LOSE);
+			break;
+		default:
+			response.set_state(StepPitBattleResponse_PitBattleState_PIT_BATTLE_WAITING_FOR_ACTION);
+			break;
+		}
+
+		response.set_charge(status.charge);
+		response.set_attackerhp(status.attackerHP);
+		response.set_defenderhp(status.defenderHP);
+		if (status.opponent)
+			response.set_opponent(status.opponent->GetID());
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
+void ClientHandler::SetPitBattleAction(const string& msg)
+{
+	SetPitBattleActionRequest request;
+	if (!request.ParseFromString(msg))
+		throw SocketException("Bad set action request format");
+
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		switch (request.action())
+		{
+		case SetPitBattleActionRequest_PitBattleAction_PIT_ACTION_ATTACK_QUICK_MOVE:
+			m_player->SetPitBattleAction(PIT_ACTION_ATTACK_QUICK_MOVE);
+			break;
+		case SetPitBattleActionRequest_PitBattleAction_PIT_ACTION_ATTACK_CHARGE_MOVE:
+			m_player->SetPitBattleAction(PIT_ACTION_ATTACK_CHARGE_MOVE);
+			break;
+		case SetPitBattleActionRequest_PitBattleAction_PIT_ACTION_DODGE:
+			m_player->SetPitBattleAction(PIT_ACTION_DODGE);
+			break;
+		default:
+			m_player->SetPitBattleAction(PIT_ACTION_NOT_CHOSEN);
+			break;
+		}
+	});
+	WriteResponse("");
+}
+
+
+void ClientHandler::EndPitBattle()
+{
+	EndPitBattleResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		response.set_reputation(m_player->EndPitBattle());
 	});
 	WriteResponse(response.SerializeAsString());
 }
@@ -785,6 +951,18 @@ void ClientHandler::ProcessRequests()
 				break;
 			case Request_RequestType_StartPitBattle:
 				StartPitBattle(request.data());
+				break;
+			case Request_RequestType_SetAttacker:
+				SetAttacker(request.data());
+				break;
+			case Request_RequestType_StepPitBattle:
+				StepPitBattle();
+				break;
+			case Request_RequestType_SetPitBattleAction:
+				SetPitBattleAction(request.data());
+				break;
+			case Request_RequestType_EndPitBattle:
+				EndPitBattle();
 				break;
 			default:
 				throw SocketException("Bad request type");

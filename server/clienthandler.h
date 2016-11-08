@@ -39,6 +39,10 @@ class ClientHandler
 	void GetPitStatus(const std::string& msg);
 	void AssignPitDefender(const std::string& msg);
 	void StartPitBattle(const std::string& msg);
+	void SetAttacker(const std::string& msg);
+	void StepPitBattle();
+	void SetPitBattleAction(const std::string& msg);
+	void EndPitBattle();
 
 public:
 	ClientHandler(SSLSocket* s);

@@ -1,4 +1,4 @@
-//#define DEBUG_MAXED_PLAYER
+#define DEBUG_MAXED_PLAYER
 
 #include <cstdlib>
 #include <set>
@@ -31,9 +31,11 @@ InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 	m_inventory[ITEM_KEG_OF_HEALTH] = 200;
 	m_inventory[ITEM_MEGA_SEED] = 200;
 
+	uint64_t id = 0xffff0000;
 	for (auto& i : MonsterSpecies::GetAll())
 	{
 		shared_ptr<Monster> monster(new Monster(i, 0, 0, 0));
+		monster->SetID(id++);
 		monster->SetLevel(40);
 		monster->SetIV(15, 15, 15);
 		monster->SetSize(16);

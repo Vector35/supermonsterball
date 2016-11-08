@@ -57,7 +57,7 @@ public:
 
 	static bool IsSuperEffective(Element attack, Element defense);
 	static bool IsNotEffective(Element attack, Element defense);
-	static uint32_t GetDamageFromAttack(uint32_t power, uint32_t attack, uint32_t defense);
+	static uint32_t GetDamageFromAttack(uint32_t power, uint32_t level, uint32_t attack, uint32_t defense);
 };
 
 struct Biome;

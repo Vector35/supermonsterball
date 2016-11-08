@@ -200,6 +200,9 @@ PitBattleStatus PitBattle::Step()
 		if (attackCooldown < 50)
 			attackCooldown = 50;
 
+		attackPower = Move::GetDamageFromAttack(attackPower, m_curAttacker->GetLevel(), m_curAttacker->GetTotalAttack(),
+			m_curDefender->GetTotalDefense());
+
 		vector<Element> attackerElements = m_curAttacker->GetSpecies()->GetTypes();
 		for (auto i : attackerElements)
 		{
@@ -249,7 +252,7 @@ PitBattleStatus PitBattle::Step()
 				status.state = PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE;
 			else
 				status.state = PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE;
-			m_attackerCharge += attackCooldown / 80;
+			m_attackerCharge += attackCooldown / 40;
 			if (m_attackerCharge > 100)
 				m_attackerCharge = 100;
 			status.charge = m_attackerCharge;
@@ -266,9 +269,7 @@ PitBattleStatus PitBattle::Step()
 			status.charge = m_attackerCharge;
 		}
 
-		uint32_t damage = Move::GetDamageFromAttack(attackPower, m_curAttacker->GetTotalAttack(),
-			m_curDefender->GetTotalDefense());
-		m_curDefender->Damage(damage);
+		m_curDefender->Damage(attackPower);
 		status.defenderHP = m_curDefender->GetCurrentHP();
 
 		m_defenderCooldown -= m_attackerCooldown;
@@ -318,6 +319,9 @@ PitBattleStatus PitBattle::Step()
 	}
 	if (attackCooldown < 50)
 		attackCooldown = 50;
+
+	attackPower = Move::GetDamageFromAttack(attackPower, m_curDefender->GetLevel(), m_curDefender->GetTotalAttack(),
+		m_curAttacker->GetTotalDefense());
 
 	vector<Element> attackerElements = m_curDefender->GetSpecies()->GetTypes();
 	for (auto i : attackerElements)
@@ -376,7 +380,7 @@ PitBattleStatus PitBattle::Step()
 			status.state = PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE;
 		else
 			status.state = PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE;
-		m_defenderCharge += attackCooldown / 80;
+		m_defenderCharge += attackCooldown / 40;
 		if (m_defenderCharge > 100)
 			m_defenderCharge = 100;
 	}
@@ -396,9 +400,7 @@ PitBattleStatus PitBattle::Step()
 	if ((m_attackerCooldown == 0) && (m_action == PIT_ACTION_DODGE))
 		m_action = PIT_ACTION_NOT_CHOSEN;
 
-	uint32_t damage = Move::GetDamageFromAttack(attackPower, m_curDefender->GetTotalAttack(),
-		m_curAttacker->GetTotalDefense());
-	m_curAttacker->Damage(damage);
+	m_curAttacker->Damage(attackPower);
 	status.attackerHP = m_curAttacker->GetCurrentHP();
 
 	if (m_defenderCooldown > m_attackerCooldown)

@@ -908,8 +908,11 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 		{
 			shared_ptr<Monster> toAssign = ShowMonsterList(player, map, true, false);
 			if (toAssign)
+			{
 				player->AssignPitDefender(x, y, toAssign);
-			map->Paint();
+				player->ForcePitRefresh();
+				break;
+			}
 			continue;
 		}
 		if (selection == changeBattleTeam)

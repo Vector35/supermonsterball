@@ -107,9 +107,10 @@ bool Move::IsNotEffective(Element attack, Element defense)
 }
 
 
-uint32_t Move::GetDamageFromAttack(uint32_t power, uint32_t attack, uint32_t defense)
+uint32_t Move::GetDamageFromAttack(uint32_t power, uint32_t level, uint32_t attack, uint32_t defense)
 {
-	return power;
+	return (uint32_t)(((((2.0f * (float)level) + 10.0f) / 250.0f) * ((float)attack /
+		(float)defense) * (float)power) + 2.0f);
 }
 
 

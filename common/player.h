@@ -159,4 +159,6 @@ public:
 
 	static uint32_t GetReputationRequirementForLevel(uint32_t level);
 	static uint32_t GetPitLevelByReputation(uint32_t reputation);
+
+	virtual void HealMonster(std::shared_ptr<Monster> monster, ItemType type) = 0;
 };

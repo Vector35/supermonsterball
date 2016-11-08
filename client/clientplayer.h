@@ -83,4 +83,6 @@ public:
 	virtual PitBattleStatus StepPitBattle() override;
 	virtual void SetPitBattleAction(PitBattleAction action) override;
 	virtual uint32_t EndPitBattle() override;
+
+	virtual void HealMonster(std::shared_ptr<Monster> monster, ItemType type) override;
 };

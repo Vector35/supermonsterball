@@ -50,4 +50,5 @@ public:
 	PitBattleStatus StepPitBattle(std::vector<std::shared_ptr<Monster>> defenders);
 	void SetPitBattleAction(PitBattleAction action);
 	uint32_t EndPitBattle();
+	void HealMonster(std::shared_ptr<Monster> monster, ItemType item, std::map<ItemType, uint32_t>& inventory);
 };

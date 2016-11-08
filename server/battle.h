@@ -2,9 +2,11 @@
 
 #include "player.h"
 #include "monster.h"
+#include "database.h"
 
 class PitBattle
 {
+	Database* m_db;
 	std::vector<std::shared_ptr<Monster>> m_attackers;
 	std::vector<std::shared_ptr<Monster>> m_defenders;
 	std::shared_ptr<Monster> m_curAttacker;
@@ -16,10 +18,12 @@ class PitBattle
 	uint32_t m_attackerCooldown, m_defenderCooldown;
 	uint32_t m_attackerCharge, m_defenderCharge;
 	uint32_t m_largestAttackerCP;
+	bool m_newDefender;
 
 public:
 	PitBattle(const std::vector<std::shared_ptr<Monster>>& attackers,
-		const std::vector<std::shared_ptr<Monster>>& defenders, bool training, int32_t x, int32_t y);
+		const std::vector<std::shared_ptr<Monster>>& defenders, bool training, int32_t x, int32_t y,
+		Database* db);
 
 	bool IsTraining() const { return m_training; }
 	int32_t GetPitX() const { return m_pitX; }

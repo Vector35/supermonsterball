@@ -5,13 +5,13 @@ using namespace std;
 
 
 shared_ptr<Monster> ShowMonsterList(Player* player, MapRenderer* map, bool selecting, bool showDefenders,
-	bool showFainted)
+	bool showFainted, bool healing, ItemType healItem)
 {
 	Terminal* term = Terminal::GetTerminal();
 
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
-	size_t width = 40;
+	size_t width = healing ? 42 : 40;
 	size_t height = 16;
 	size_t x = (centerX - (width / 2)) | 1;
 	size_t y = centerY - ((height + 2) / 2);
@@ -31,6 +31,8 @@ shared_ptr<Monster> ShowMonsterList(Player* player, MapRenderer* map, bool selec
 			if (i->IsDefending() && (!showDefenders))
 				continue;
 			if ((i->GetCurrentHP() == 0) && (!showFainted))
+				continue;
+			if (healing && (i->GetCurrentHP() == i->GetMaxHP()))
 				continue;
 			list.push_back(i);
 		}
@@ -82,7 +84,7 @@ shared_ptr<Monster> ShowMonsterList(Player* player, MapRenderer* map, bool selec
 			if ((scroll + i) >= list.size())
 			{
 				term->SetColor(255, 234);
-				for (size_t dx = 1; dx < (width - 1); dx++)
+				for (size_t dx = 1; dx < width; dx++)
 					term->Output(" ");
 				continue;
 			}
@@ -96,18 +98,35 @@ shared_ptr<Monster> ShowMonsterList(Player* player, MapRenderer* map, bool selec
 			term->Output(" ");
 			term->Output(list[scroll + i]->GetName());
 
-			for (size_t dx = 15 + list[scroll + i]->GetName().size(); dx < (width - 1); dx++)
-				term->Output(" ");
-
-			if (list[scroll + i]->IsDefending())
-				term->Output("🏆  ");
+			if (healing)
+			{
+				for (size_t dx = 17 + list[scroll + i]->GetName().size(); dx < (width - 1); dx++)
+					term->Output(" ");
+			}
 			else
-				term->Output("   ");
+			{
+				for (size_t dx = 15 + list[scroll + i]->GetName().size(); dx < (width - 1); dx++)
+					term->Output(" ");
+
+				if (list[scroll + i]->IsDefending())
+					term->Output("🏆  ");
+				else
+					term->Output("   ");
+			}
 
 			char cpStr[32];
-			sprintf(cpStr, "CP %d", list[scroll + i]->GetCP());
-			for (size_t dx = strlen(cpStr); dx < 7; dx++)
-				term->Output(" ");
+			if (healing)
+			{
+				sprintf(cpStr, "HP %d/%d", list[scroll + i]->GetCurrentHP(), list[scroll + i]->GetMaxHP());
+				for (size_t dx = strlen(cpStr); dx < 12; dx++)
+					term->Output(" ");
+			}
+			else
+			{
+				sprintf(cpStr, "CP %d", list[scroll + i]->GetCP());
+				for (size_t dx = strlen(cpStr); dx < 7; dx++)
+					term->Output(" ");
+			}
 			term->Output(cpStr);
 			term->Output(" ");
 		}
@@ -138,6 +157,14 @@ shared_ptr<Monster> ShowMonsterList(Player* player, MapRenderer* map, bool selec
 			{
 				map->Paint();
 				return list[selected];
+			}
+
+			if (healing)
+			{
+				player->HealMonster(list[selected], healItem);
+				if (player->GetItemCount(healItem) == 0)
+					break;
+				continue;
 			}
 
 			// Show details of selected monster

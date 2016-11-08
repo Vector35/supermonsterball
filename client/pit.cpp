@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <stdio.h>
+#include <unistd.h>
 #include "client.h"
 #include "player.h"
 #include "map.h"
@@ -6,8 +8,481 @@
 using namespace std;
 
 
-static void PitBattle(Player* player, MapRenderer* map)
+static const char* g_battleGraphics[] =
 {
+	"           .                      .                       ",
+	"                    .                     🌕               ",
+	"       .                  .          .        .           ",
+	" 🌳     🌲🌲 🌲 🌳 🌲🌳 🌳 🌲🌳🌳🌲 🌳🌲  🌲 🌳 🌲🌲  🌳🌲🌳🌳🌲  🌲 🌲🌲 🌳 🌲  🌳  🌳 ",
+	"                                                          ",
+	"                                                          ",
+	"                                                          ",
+	"                                                          ",
+	"                                                          ",
+	"                                                          ",
+};
+
+
+static void DrawBattle(shared_ptr<Monster> attacker, shared_ptr<Monster> defender, size_t x, size_t y,
+	size_t width, size_t height)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+	for (size_t dy = 0; dy < height; dy++)
+	{
+		term->SetCursorPosition(x, y + dy);
+		if (dy < 4)
+			term->SetColor(242, 17);
+		else
+			term->SetColor(255, 23);
+		term->Output(g_battleGraphics[dy]);
+	}
+	term->SetCursorPosition(x + ((width * 2) / 5), y + 6);
+	if (attacker)
+		term->Output(attacker->GetSpecies()->GetImage());
+	term->SetCursorPosition(x + ((width * 3) / 5), y + 5);
+	if (defender)
+		term->Output(defender->GetSpecies()->GetImage());
+	term->EndOutputQueue();
+}
+
+
+static void DrawBattleStatus(shared_ptr<Monster> attacker, shared_ptr<Monster> defender, size_t x, size_t y,
+	size_t width, size_t height, uint32_t charge)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+
+	if (defender)
+	{
+		term->SetCursorPosition(x + width - (defender->GetName().size() + 1), y);
+		term->SetColor(255, 17);
+		term->Output(defender->GetName());
+		term->SetCursorPosition(x + width - 19, y + 1);
+		term->SetColor(255, 17);
+		term->Output("HP ");
+		size_t health = (defender->GetCurrentHP() * 15) / defender->GetMaxHP();
+		term->SetColor(83, 17);
+		for (size_t i = 0; i < health; i++)
+			term->Output("━");
+		term->SetColor(246, 17);
+		for (size_t i = health; i < 15; i++)
+			term->Output("━");
+	}
+
+	if (attacker)
+	{
+		term->SetCursorPosition(x + 1, y + height - 5);
+		term->SetColor(255, 23);
+		term->Output(attacker->GetName());
+		term->SetCursorPosition(x + 1, y + height - 4);
+		term->SetColor(255, 23);
+		term->Output("HP ");
+		size_t health = (attacker->GetCurrentHP() * 15) / attacker->GetMaxHP();
+		term->SetColor(83, 23);
+		for (size_t i = 0; i < health; i++)
+			term->Output("━");
+		term->SetColor(246, 23);
+		for (size_t i = health; i < 15; i++)
+			term->Output("━");
+		term->SetCursorPosition(x + 1, y + height - 3);
+		term->SetColor(255, 23);
+		term->Output("Charge ");
+		size_t chargeBar = (charge * 11) / 100;
+		term->SetColor(255, 23);
+		for (size_t i = 0; i < chargeBar; i++)
+			term->Output("━");
+		term->SetColor(246, 23);
+		for (size_t i = chargeBar; i < 11; i++)
+			term->Output("━");
+	}
+}
+
+
+void EraseBattleText(size_t x, size_t y, size_t height)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+	for (size_t dy = (height - 2); dy < height; dy++)
+	{
+		term->SetCursorPosition(x, y + dy);
+		if (dy < 4)
+			term->SetColor(242, 17);
+		else
+			term->SetColor(255, 23);
+		term->Output(g_battleGraphics[dy]);
+	}
+	term->EndOutputQueue();
+}
+
+
+static void ShowBattleText(size_t x, size_t y, size_t width, size_t height, const string& text)
+{
+	DrawBoxText(x, y, width, height, text);
+	InterruptableWait(TEXT_WAIT_TIME);
+	EraseBattleText(x, y, height);
+}
+
+
+static void ShowBattleAttackerHit(size_t x, size_t y, size_t width, shared_ptr<Monster> monster)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+	term->SetColor(255, 23);
+	term->SetCursorPosition(x + ((width * 2) / 5), y + 6);
+	term->Output("✨💥✨");
+	term->EndOutputQueue();
+
+	usleep(150000);
+
+	term->BeginOutputQueue();
+	term->SetCursorPosition(x + ((width * 2) / 5), y + 6);
+	term->Output(monster->GetSpecies()->GetImage());
+	term->EndOutputQueue();
+}
+
+
+static void ShowBattleAttackerChange(size_t x, size_t y, size_t width, shared_ptr<Monster> monster)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+	term->SetColor(255, 23);
+	term->SetCursorPosition(x + ((width * 2) / 5), y + 6);
+	term->Output(" 💨 ");
+	term->EndOutputQueue();
+
+	usleep(250000);
+
+	term->BeginOutputQueue();
+	term->SetCursorPosition(x + ((width * 2) / 5), y + 6);
+	term->Output(monster->GetSpecies()->GetImage());
+	term->EndOutputQueue();
+}
+
+
+static void ShowBattleAttackerFaint(size_t x, size_t y, size_t width)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+	term->SetColor(255, 23);
+	term->SetCursorPosition(x + ((width * 2) / 5), y + 6);
+	term->Output(" ⚰ ");
+	term->EndOutputQueue();
+
+	usleep(250000);
+}
+
+
+static void ShowBattleDefenderHit(size_t x, size_t y, size_t width, shared_ptr<Monster> monster)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+	term->SetColor(255, 23);
+	term->SetCursorPosition(x + ((width * 3) / 5), y + 5);
+	term->Output("✨💥✨");
+	term->EndOutputQueue();
+
+	usleep(150000);
+
+	term->BeginOutputQueue();
+	term->SetCursorPosition(x + ((width * 3) / 5), y + 5);
+	term->Output(monster->GetSpecies()->GetImage());
+	term->EndOutputQueue();
+}
+
+
+static void ShowBattleDefenderChange(size_t x, size_t y, size_t width, shared_ptr<Monster> monster)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+	term->SetColor(255, 23);
+	term->SetCursorPosition(x + ((width * 3) / 5), y + 5);
+	term->Output(" 💨 ");
+	term->EndOutputQueue();
+
+	usleep(250000);
+
+	term->BeginOutputQueue();
+	term->SetCursorPosition(x + ((width * 3) / 5), y + 5);
+	term->Output(monster->GetSpecies()->GetImage());
+	term->EndOutputQueue();
+}
+
+
+static void ShowBattleDefenderFaint(size_t x, size_t y, size_t width)
+{
+	Terminal* term = Terminal::GetTerminal();
+	term->BeginOutputQueue();
+	term->SetColor(255, 23);
+	term->SetCursorPosition(x + ((width * 3) / 5), y + 5);
+	term->Output(" ⚰ ");
+	term->EndOutputQueue();
+
+	usleep(250000);
+}
+
+
+static bool SelectBattleAction(Player* player, MapRenderer* map, size_t x, size_t y, size_t width, size_t height,
+	vector<shared_ptr<Monster>> battleTeam, shared_ptr<Monster>& attacker, const PitBattleStatus& status)
+{
+	Terminal* term = Terminal::GetTerminal();
+	while (!term->HasQuit())
+	{
+		int32_t quickMove = -1;
+		int32_t chargeMove = -1;
+		int32_t change = -1;
+		int32_t run = -1;
+
+		vector<string> options;
+		quickMove = (int32_t)options.size();
+		options.push_back(attacker->GetQuickMove()->GetName());
+
+		uint32_t neededCharge = 100;
+		if (attacker->GetChargeMove()->GetType() == TwoChargeMove)
+			neededCharge = 50;
+		else if (attacker->GetChargeMove()->GetType() == ThreeChargeMove)
+			neededCharge = 33;
+		else if (attacker->GetChargeMove()->GetType() == FourChargeMove)
+			neededCharge = 25;
+		if (status.charge >= neededCharge)
+		{
+			chargeMove = (int32_t)options.size();
+			options.push_back(attacker->GetChargeMove()->GetName());
+		}
+
+		change = (int32_t)options.size();
+		options.push_back("Switch");
+		run = (int32_t)options.size();
+		options.push_back("Run");
+
+		int32_t selection = ShowBoxOptions(x, y, width, height, options);
+		if ((selection == -1) || (selection == run))
+			return false;
+
+		if (selection == quickMove)
+		{
+			player->SetPitBattleAction(PIT_ACTION_ATTACK_QUICK_MOVE);
+			break;
+		}
+		else if (selection == chargeMove)
+		{
+			player->SetPitBattleAction(PIT_ACTION_ATTACK_CHARGE_MOVE);
+			break;
+		}
+		else if (selection == change)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monster>> battleTeam, bool training)
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t width = strlen(g_battleGraphics[0]);
+	size_t height = sizeof(g_battleGraphics) / sizeof(char*);
+	size_t x = (centerX - (width / 2)) | 1;
+	size_t y = centerY - (height / 2);
+
+	vector<shared_ptr<Monster>> remainingAttackers = battleTeam;
+	shared_ptr<Monster> attacker = remainingAttackers[0];
+	shared_ptr<Monster> defender = player->GetPitBattleDefenders()[0];
+	player->SetAttacker(attacker);
+
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+	DrawBattle(attacker, nullptr, x, y, width, height);
+	DrawBattleStatus(attacker, nullptr, x, y, width, height, 0);
+	ShowBattleText(x, y, width, height, "Go " + attacker->GetName() + "!");
+
+	bool done = false;
+	shared_ptr<Monster> oldAttacker;
+	while ((!term->HasQuit()) && (!done))
+	{
+		PitBattleStatus status = player->StepPitBattle();
+		attacker->SetHP(status.attackerHP);
+		defender->SetHP(status.defenderHP);
+
+		switch (status.state)
+		{
+		case PIT_BATTLE_WAITING_FOR_ACTION:
+			oldAttacker = attacker;
+			if (!SelectBattleAction(player, map, x, y, width, height, remainingAttackers, attacker, status))
+				done = true;
+			if (attacker->GetID() != oldAttacker->GetID())
+			{
+				ShowBattleAttackerChange(x, y, width, attacker);
+				ShowBattleText(x, y, width, height, "Go " + attacker->GetName() + "!");
+			}
+			break;
+		case PIT_BATTLE_ATTACK_QUICK_MOVE_NOT_EFFECTIVE:
+			ShowBattleDefenderHit(x, y, width, defender);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, attacker->GetName() + " used " +
+				attacker->GetQuickMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, "It's not very effective.");
+			break;
+		case PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE:
+			ShowBattleDefenderHit(x, y, width, defender);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, attacker->GetName() + " used " +
+				attacker->GetQuickMove()->GetName() + ".");
+			break;
+		case PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE:
+			ShowBattleDefenderHit(x, y, width, defender);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, attacker->GetName() + " used " +
+				attacker->GetQuickMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, "It's super effective!");
+			break;
+		case PIT_BATTLE_ATTACK_CHARGE_MOVE_NOT_EFFECTIVE:
+			ShowBattleDefenderHit(x, y, width, defender);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, attacker->GetName() + " used " +
+				attacker->GetChargeMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, "It's not very effective.");
+			break;
+		case PIT_BATTLE_ATTACK_CHARGE_MOVE_EFFECTIVE:
+			ShowBattleDefenderHit(x, y, width, defender);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, attacker->GetName() + " used " +
+				attacker->GetChargeMove()->GetName() + ".");
+			break;
+		case PIT_BATTLE_ATTACK_CHARGE_MOVE_SUPER_EFFECTIVE:
+			ShowBattleDefenderHit(x, y, width, defender);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, attacker->GetName() + " used " +
+				attacker->GetChargeMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, "It's super effective!");
+			break;
+		case PIT_BATTLE_DEFEND_QUICK_MOVE_NOT_EFFECTIVE:
+			ShowBattleAttackerHit(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, defender->GetName() + " used " +
+				defender->GetQuickMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, "It's not very effective.");
+			break;
+		case PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE:
+			ShowBattleAttackerHit(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, defender->GetName() + " used " +
+				defender->GetQuickMove()->GetName() + ".");
+			break;
+		case PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE:
+			ShowBattleAttackerHit(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, defender->GetName() + " used " +
+				defender->GetQuickMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, "It's super effective!");
+			break;
+		case PIT_BATTLE_DEFEND_QUICK_MOVE_DODGE:
+			ShowBattleAttackerHit(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, defender->GetName() + " used " +
+				defender->GetQuickMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, attacker->GetName() + " dodged the attack.");
+			break;
+		case PIT_BATTLE_DEFEND_CHARGE_MOVE_NOT_EFFECTIVE:
+			ShowBattleAttackerHit(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, defender->GetName() + " used " +
+				defender->GetChargeMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, "It's not very effective.");
+			break;
+		case PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE:
+			ShowBattleAttackerHit(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, defender->GetName() + " used " +
+				defender->GetChargeMove()->GetName() + ".");
+			break;
+		case PIT_BATTLE_DEFEND_CHARGE_MOVE_SUPER_EFFECTIVE:
+			ShowBattleAttackerHit(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, defender->GetName() + " used " +
+				defender->GetChargeMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, "It's super effective!");
+			break;
+		case PIT_BATTLE_DEFEND_CHARGE_MOVE_DODGE:
+			ShowBattleAttackerHit(x, y, width, attacker);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, defender->GetName() + " used " +
+				defender->GetChargeMove()->GetName() + ".");
+			ShowBattleText(x, y, width, height, attacker->GetName() + " dodged the attack.");
+			break;
+		case PIT_BATTLE_ATTACK_FAINT:
+			ShowBattleAttackerFaint(x, y, width);
+			ShowBattleText(x, y, width, height, attacker->GetName() + " fainted.");
+			for (auto i = remainingAttackers.begin(); i != remainingAttackers.end(); ++i)
+			{
+				if ((*i)->GetID() == attacker->GetID())
+				{
+					remainingAttackers.erase(i);
+					break;
+				}
+			}
+			if (remainingAttackers.size() == 0)
+			{
+				ShowBattleText(x, y, width, height, player->GetName() + " lost the battle.");
+				done = true;
+				break;
+			}
+			attacker = remainingAttackers[0];
+			player->SetAttacker(attacker);
+			ShowBattleAttackerChange(x, y, width, attacker);
+			ShowBattleText(x, y, width, height, "Go " + attacker->GetName() + "!");
+			break;
+		case PIT_BATTLE_DEFEND_FAINT:
+			ShowBattleDefenderFaint(x, y, width);
+			ShowBattleText(x, y, width, height, defender->GetName() + " fainted.");
+			break;
+		case PIT_BATTLE_NEW_OPPONENT:
+			if (!status.opponent)
+			{
+				done = true;
+				break;
+			}
+			ShowBattleDefenderChange(x, y, width, status.opponent);
+			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			ShowBattleText(x, y, width, height, status.opponent->GetName() + " is ready to defend the pit.");
+			break;
+		case PIT_BATTLE_WIN:
+			ShowBattleText(x, y, width, height, player->GetName() + " won the battle!");
+			done = true;
+			break;
+		case PIT_BATTLE_LOSE:
+			ShowBattleText(x, y, width, height, player->GetName() + " lost the battle.");
+			done = true;
+			break;
+		default:
+			done = true;
+			return;
+		}
+
+		if (!status.opponent)
+		{
+			done = true;
+		}
+		else if (defender->GetID() != status.opponent->GetID())
+		{
+			defender = status.opponent;
+			DrawBattle(attacker, defender, x, y, width, height);
+		}
+	}
+
+	uint32_t reputation = player->EndPitBattle();
+	if (reputation != 0)
+	{
+		char msg[128];
+		if (training)
+			sprintf(msg, "Training increased pit reputation by %d.", reputation);
+		else
+			sprintf(msg, "Pit reputation reduced by %d.", reputation);
+		ShowBattleText(x, y, width, height, msg);
+	}
 }
 
 
@@ -455,7 +930,8 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 
 			map->Paint();
 
-			PitBattle(player, map);
+			PitBattle(player, map, finalBattleTeam, owner == player->GetTeam());
+			player->ForcePitRefresh();
 			break;
 		}
 		break;

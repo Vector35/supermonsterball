@@ -43,6 +43,7 @@ class ClientHandler
 	void StepPitBattle();
 	void SetPitBattleAction(const std::string& msg);
 	void EndPitBattle();
+	void HealMonster(const std::string& msg);
 
 public:
 	ClientHandler(SSLSocket* s);

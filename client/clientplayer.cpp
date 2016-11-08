@@ -367,7 +367,11 @@ bool ClientPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> m
 
 bool ClientPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
 {
-	return ClientRequest::GetClient()->StartPitBattle(x, y, monsters, m_battleDefenders);
+	if (!ClientRequest::GetClient()->StartPitBattle(x, y, monsters, m_battleDefenders))
+		return false;
+	if (m_battleDefenders.size() == 0)
+		return false;
+	return true;
 }
 
 
@@ -392,4 +396,10 @@ void ClientPlayer::SetPitBattleAction(PitBattleAction action)
 uint32_t ClientPlayer::EndPitBattle()
 {
 	return ClientRequest::GetClient()->EndPitBattle();
+}
+
+
+void ClientPlayer::HealMonster(shared_ptr<Monster> monster, ItemType type)
+{
+	ClientRequest::GetClient()->HealMonster(monster, type, m_inventory);
 }

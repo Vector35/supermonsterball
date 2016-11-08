@@ -48,6 +48,11 @@ void DrawMonsterDetails(size_t x, size_t y, size_t width, size_t height, Player*
 		term->SetColor(255, 234);
 	}
 
+	sprintf(cpStr, "HP %d/%d", monster->GetCurrentHP(), monster->GetMaxHP());
+	term->SetCursorPosition(x + width - (strlen(cpStr) + 1), y + 1);
+	term->SetColor(255, 234);
+	term->Output(cpStr);
+
 	size_t progress;
 	if (player->GetLevel() == 1)
 		progress = width - 2;

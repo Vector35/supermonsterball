@@ -241,7 +241,7 @@ void MonsterSpecies::Init()
 
 	Move* sneakAttack = new Move("Sneak Attack", Dark, QuickMove, 0, 0);
 	Move* backstab = new Move("Backstab", Dark, ThreeChargeMove, 0, 0);
-	Move* bite = new Move("Bite", Dark, QuickMove, 0, 0);
+	Move* bite = new Move("Bite", Dark, QuickMove, 60, 15);
 	Move* ghostBlade = new Move("Ghost Blade", Dark, QuickMove, 0, 0);
 	Move* hiddenDagger = new Move("Hidden Dagger", Dark, FourChargeMove, 0, 0);
 
@@ -832,9 +832,23 @@ void Monster::SetMoves(Move* quick, Move* charge)
 }
 
 
+uint32_t Monster::GetMaxHP()
+{
+	return 50;
+}
+
+
 void Monster::ResetHP()
 {
-	m_currentHP = 50;
+	m_currentHP = GetMaxHP();
+}
+
+
+void Monster::Heal(uint32_t amount)
+{
+	m_currentHP += amount;
+	if (m_currentHP > GetMaxHP())
+		m_currentHP = GetMaxHP();
 }
 
 

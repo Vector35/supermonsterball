@@ -632,7 +632,7 @@ void ClientRequest::SetPitBattleAction(PitBattleAction action)
 		break;
 	}
 
-	WriteRequest(Request_RequestType_SetAttacker, request.SerializeAsString());
+	WriteRequest(Request_RequestType_SetPitBattleAction, request.SerializeAsString());
 	ReadResponse();
 }
 
@@ -646,4 +646,20 @@ uint32_t ClientRequest::EndPitBattle()
 		throw NetworkException("Invalid end pit battle response");
 
 	return response.reputation();
+}
+
+
+void ClientRequest::HealMonster(shared_ptr<Monster> monster, ItemType item, map<ItemType, uint32_t>& inventory)
+{
+	HealMonsterRequest request;
+	request.set_monster(monster->GetID());
+	request.set_item((uint32_t)item);
+	WriteRequest(Request_RequestType_HealMonster, request.SerializeAsString());
+
+	HealMonsterResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid heal response");
+
+	monster->SetHP(response.hp());
+	inventory[item] = response.count();
 }

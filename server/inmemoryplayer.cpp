@@ -463,7 +463,7 @@ bool InMemoryPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Mons
 	if (defenders.size() == 0)
 		return false;
 
-	shared_ptr<PitBattle> battle(new PitBattle(monsters, defenders, pitTeam == m_team, x, y));
+	shared_ptr<PitBattle> battle(new PitBattle(monsters, defenders, pitTeam == m_team, x, y, nullptr));
 	m_battle = battle;
 	return true;
 }
@@ -525,4 +525,22 @@ uint32_t InMemoryPlayer::EndPitBattle()
 			reputationChange);
 	}
 	return reputationChange;
+}
+
+
+void InMemoryPlayer::HealMonster(std::shared_ptr<Monster> monster, ItemType type)
+{
+	if ((type != ITEM_STANDARD_HEAL) && (type != ITEM_SUPER_HEAL) && (type != ITEM_KEG_OF_HEALTH))
+		return;
+	if (monster->GetCurrentHP() == monster->GetMaxHP())
+		return;
+	if (!UseItem(type))
+		return;
+
+	if (type == ITEM_STANDARD_HEAL)
+		monster->Heal(20);
+	else if (type == ITEM_SUPER_HEAL)
+		monster->Heal(60);
+	else if (type == ITEM_KEG_OF_HEALTH)
+		monster->Heal(1000);
 }

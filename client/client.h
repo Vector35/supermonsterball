@@ -9,7 +9,7 @@ void GameLoop(Player* player);
 std::shared_ptr<Monster> Encounter(Player* player, int32_t x, int32_t y);
 void ShowMonsterDetails(Player* player, std::shared_ptr<Monster> monster);
 std::shared_ptr<Monster> ShowMonsterList(Player* player, MapRenderer* map, bool selecting = false,
-	bool showDefenders = true, bool showFainted = true);
+	bool showDefenders = true, bool showFainted = true, bool healing = false, ItemType healItem = ITEM_STANDARD_HEAL);
 void ShowInventory(Player* player, MapRenderer* map);
 void ShowMonsterIndex(Player* player, MapRenderer* map);
 void ShowMonsterInfo(Player* player, MonsterSpecies* species);

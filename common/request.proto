@@ -33,6 +33,7 @@ message Request
 		StepPitBattle = 25;
 		SetPitBattleAction = 26;
 		EndPitBattle = 27;
+		HealMonster = 28;
 	}
 
 	RequestType type = 1;
@@ -428,4 +429,16 @@ message SetPitBattleActionRequest
 message EndPitBattleResponse
 {
 	uint32 reputation = 1;
+}
+
+message HealMonsterRequest
+{
+	uint64 monster = 1;
+	uint32 item = 2;
+}
+
+message HealMonsterResponse
+{
+	uint32 hp = 1;
+	uint32 count = 2;
 }

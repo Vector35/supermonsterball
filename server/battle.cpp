@@ -4,8 +4,9 @@ using namespace std;
 
 
 PitBattle::PitBattle(const vector<shared_ptr<Monster>>& attackers, const vector<shared_ptr<Monster>>& defenders,
-	bool training, int32_t x, int32_t y)
+	bool training, int32_t x, int32_t y, Database* db)
 {
+	m_db = db;
 	m_attackers = attackers;
 	m_defenders = defenders;
 	m_curAttacker = attackers[0];
@@ -14,9 +15,10 @@ PitBattle::PitBattle(const vector<shared_ptr<Monster>>& attackers, const vector<
 	m_training = training;
 	m_pitX = x;
 	m_pitY = y;
+	m_newDefender = true;
 
 	m_attackerCooldown = 0;
-	m_defenderCooldown = 2000;
+	m_defenderCooldown = 1;
 
 	m_attackerCharge = 0;
 	m_defenderCharge = 0;
@@ -40,6 +42,15 @@ void PitBattle::SetAttacker(shared_ptr<Monster> monster)
 	{
 		if (i->GetID() == monster->GetID())
 		{
+			if (i->GetCurrentHP() == 0)
+				return;
+			if (i->GetID() != m_curAttacker->GetID())
+			{
+				if (m_db)
+					m_db->UpdateMonster(m_curAttacker->GetOwnerID(), m_curAttacker);
+				m_attackerCharge = 0;
+				m_defenderCooldown = 1;
+			}
 			m_curAttacker = i;
 			return;
 		}
@@ -69,6 +80,13 @@ PitBattleStatus PitBattle::Step()
 		return status;
 	}
 
+	if (m_newDefender)
+	{
+		status.state = PIT_BATTLE_NEW_OPPONENT;
+		m_newDefender = false;
+		return status;
+	}
+
 	if (m_curDefender->GetCurrentHP() == 0)
 	{
 		if (m_training)
@@ -80,6 +98,9 @@ PitBattleStatus PitBattle::Step()
 			else
 				m_reputationChange += 100;
 		}
+
+		if (m_db)
+			m_db->UpdateMonster(m_curAttacker->GetOwnerID(), m_curAttacker);
 
 		m_defenders.erase(m_defenders.begin());
 		if (m_defenders.size() == 0)
@@ -95,19 +116,21 @@ PitBattleStatus PitBattle::Step()
 			status.state = PIT_BATTLE_DEFEND_FAINT;
 			m_curDefender = m_defenders[0];
 			m_curDefender->ResetHP();
-			status.opponent = m_curDefender;
-			status.defenderHP =m_curDefender->GetCurrentHP();
+			m_newDefender = true;
 
 			if (!m_training)
 				m_reputationChange += 250;
 		}
 		m_defenderCharge = 0;
-		m_defenderCooldown = 2000;
+		m_defenderCooldown = 1;
 		return status;
 	}
 
 	if (m_curAttacker->GetCurrentHP() == 0)
 	{
+		if (m_db)
+			m_db->UpdateMonster(m_curAttacker->GetOwnerID(), m_curAttacker);
+
 		for (auto i = m_attackers.begin(); i != m_attackers.end(); ++i)
 		{
 			if ((*i)->GetID() == m_curAttacker->GetID())
@@ -117,18 +140,14 @@ PitBattleStatus PitBattle::Step()
 			}
 		}
 
+		status.state = PIT_BATTLE_ATTACK_FAINT;
 		if (m_attackers.size() == 0)
-		{
-			status.state = PIT_BATTLE_LOSE;
 			m_curAttacker.reset();
-		}
 		else
-		{
-			status.state = PIT_BATTLE_ATTACK_FAINT;
 			m_curAttacker = m_attackers[0];
-		}
 		m_attackerCharge = 0;
 		m_attackerCooldown = 0;
+		m_defenderCooldown = 1;
 		status.charge = 0;
 		return status;
 	}
@@ -228,6 +247,10 @@ PitBattleStatus PitBattle::Step()
 				status.state = PIT_BATTLE_ATTACK_QUICK_MOVE_SUPER_EFFECTIVE;
 			else
 				status.state = PIT_BATTLE_ATTACK_QUICK_MOVE_EFFECTIVE;
+			m_attackerCharge += attackCooldown / 80;
+			if (m_attackerCharge > 100)
+				m_attackerCharge = 100;
+			status.charge = m_attackerCharge;
 		}
 		else
 		{
@@ -248,6 +271,8 @@ PitBattleStatus PitBattle::Step()
 
 		m_defenderCooldown -= m_attackerCooldown;
 		m_attackerCooldown = attackCooldown;
+
+		m_action = PIT_ACTION_NOT_CHOSEN;
 		return status;
 	}
 
@@ -349,6 +374,9 @@ PitBattleStatus PitBattle::Step()
 			status.state = PIT_BATTLE_DEFEND_QUICK_MOVE_SUPER_EFFECTIVE;
 		else
 			status.state = PIT_BATTLE_DEFEND_QUICK_MOVE_EFFECTIVE;
+		m_defenderCharge += attackCooldown / 80;
+		if (m_defenderCharge > 100)
+			m_defenderCharge = 100;
 	}
 	else
 	{
@@ -362,6 +390,9 @@ PitBattleStatus PitBattle::Step()
 			status.state = PIT_BATTLE_DEFEND_CHARGE_MOVE_EFFECTIVE;
 		m_defenderCharge -= neededCharge;
 	}
+
+	if ((m_attackerCooldown == 0) && (m_action == PIT_ACTION_DODGE))
+		m_action = PIT_ACTION_NOT_CHOSEN;
 
 	uint32_t damage = Move::GetDamageFromAttack(attackPower, m_curDefender->GetTotalAttack(),
 		m_curAttacker->GetTotalDefense());

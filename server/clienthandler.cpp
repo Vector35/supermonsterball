@@ -870,6 +870,29 @@ void ClientHandler::EndPitBattle()
 }
 
 
+void ClientHandler::HealMonster(const string& msg)
+{
+	HealMonsterRequest request;
+	if (!request.ParseFromString(msg))
+		throw SocketException("Bad heal request format");
+
+	HealMonsterResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		shared_ptr<Monster> monster = m_player->GetMonsterByID(request.monster());
+		if (monster)
+		{
+			m_player->HealMonster(monster, (ItemType)request.item());
+			response.set_hp(monster->GetCurrentHP());
+			response.set_count(m_player->GetItemCount((ItemType)request.item()));
+		}
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
 void ClientHandler::ProcessRequests()
 {
 	try
@@ -963,6 +986,9 @@ void ClientHandler::ProcessRequests()
 				break;
 			case Request_RequestType_EndPitBattle:
 				EndPitBattle();
+				break;
+			case Request_RequestType_HealMonster:
+				HealMonster(request.data());
 				break;
 			default:
 				throw SocketException("Bad request type");

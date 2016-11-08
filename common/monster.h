@@ -170,6 +170,8 @@ public:
 	void SetMoves(Move* quick, Move* charge);
 	void SetOwner(uint64_t id, const std::string& name);
 	void SetDefending(bool defending);
+
+	uint32_t GetMaxHP();
 	void ResetHP();
 
 	void Evolve();
@@ -180,6 +182,7 @@ public:
 	uint32_t GetTotalStamina();
 
 	void Damage(uint32_t damage);
+	void Heal(uint32_t amount);
 };
 
 struct MonsterSighting

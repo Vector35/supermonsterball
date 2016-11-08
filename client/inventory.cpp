@@ -112,26 +112,33 @@ static string GetStringForInventoryItem(ItemType item, uint32_t count)
 
 void ShowInventory(Player* player, MapRenderer* map)
 {
-	vector<ItemType> items;
-	vector<string> names;
-	static vector<ItemType> itemOrdering {ITEM_STANDARD_BALL, ITEM_SUPER_BALL, ITEM_UBER_BALL,
-		ITEM_STANDARD_HEAL, ITEM_SUPER_HEAL, ITEM_KEG_OF_HEALTH, ITEM_MEGA_SEED};
-	for (auto& i : itemOrdering)
-	{
-		if (player->GetItemCount(i))
-		{
-			items.push_back(i);
-			names.push_back(GetStringForInventoryItem(i, player->GetItemCount(i)));
-		}
-	}
-
 	while (true)
 	{
+		vector<ItemType> items;
+		vector<string> names;
+		static vector<ItemType> itemOrdering {ITEM_STANDARD_BALL, ITEM_SUPER_BALL, ITEM_UBER_BALL,
+			ITEM_STANDARD_HEAL, ITEM_SUPER_HEAL, ITEM_KEG_OF_HEALTH, ITEM_MEGA_SEED};
+		for (auto& i : itemOrdering)
+		{
+			if (player->GetItemCount(i))
+			{
+				items.push_back(i);
+				names.push_back(GetStringForInventoryItem(i, player->GetItemCount(i)));
+			}
+		}
+
 		int32_t option = ShowInventoryOptions(30, names);
 		if (option == -1)
 			break;
 
 		map->Paint();
+
+		if ((items[option] == ITEM_STANDARD_HEAL) || (items[option] == ITEM_SUPER_HEAL) ||
+			(items[option] == ITEM_KEG_OF_HEALTH))
+		{
+			ShowMonsterList(player, map, false, false, true, true, items[option]);
+			map->Paint();
+		}
 	}
 }
 

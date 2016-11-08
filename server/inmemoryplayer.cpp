@@ -38,6 +38,8 @@ InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 		monster->SetIV(15, 15, 15);
 		monster->SetSize(16);
 		monster->SetCapture(true, ITEM_UBER_BALL);
+		if ((monster->GetSpecies()->GetQuickMoves().size() != 0) && (monster->GetSpecies()->GetChargeMoves().size() != 0))
+			monster->SetMoves(monster->GetSpecies()->GetQuickMoves()[0], monster->GetSpecies()->GetChargeMoves()[0]);
 		monster->ResetHP();
 		m_monsters.push_back(monster);
 

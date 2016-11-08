@@ -1,3 +1,5 @@
+//#define DEBUG_MAXED_PLAYER
+
 #include <cstdlib>
 #include <set>
 #include "inmemoryplayer.h"
@@ -9,15 +11,46 @@ using namespace std;
 InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 {
 	m_team = TEAM_UNASSIGNED;
+#ifdef DEBUG_MAXED_PLAYER
+	m_level = 40;
+#else
 	m_level = 5;
+#endif
 	m_xp = GetTotalExperienceNeededForCurrentLevel();
 	m_powder = 0;
 	m_x = 0;
 	m_y = 0;
 	m_nextMonsterID = 1;
 
+#ifdef DEBUG_MAXED_PLAYER
+	m_inventory[ITEM_STANDARD_BALL] = 200;
+	m_inventory[ITEM_SUPER_BALL] = 200;
+	m_inventory[ITEM_UBER_BALL] = 200;
+	m_inventory[ITEM_STANDARD_HEAL] = 200;
+	m_inventory[ITEM_SUPER_HEAL] = 200;
+	m_inventory[ITEM_KEG_OF_HEALTH] = 200;
+	m_inventory[ITEM_MEGA_SEED] = 200;
+
+	for (auto& i : MonsterSpecies::GetAll())
+	{
+		shared_ptr<Monster> monster(new Monster(i, 0, 0, 0));
+		monster->SetLevel(40);
+		monster->SetIV(15, 15, 15);
+		monster->SetSize(16);
+		monster->SetCapture(true, ITEM_UBER_BALL);
+		monster->ResetHP();
+		m_monsters.push_back(monster);
+
+		m_seen[i->GetIndex()] = 1;
+		m_captured[i->GetIndex()] = 1;
+		m_treats[i->GetIndex()] = 2000;
+	}
+	m_powder = 1000000;
+#else
 	m_inventory[ITEM_STANDARD_BALL] = 20;
-	m_inventory[ITEM_MEGA_SEED] = 5;
+	m_inventory[ITEM_STANDARD_HEAL] = 20;
+	m_inventory[ITEM_MEGA_SEED] = 10;
+#endif
 }
 
 

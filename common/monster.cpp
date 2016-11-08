@@ -1,5 +1,6 @@
 #include <map>
 #include <stdlib.h>
+#include <math.h>
 #include "monster.h"
 
 using namespace std;
@@ -165,6 +166,7 @@ void MonsterSpecies::Init()
 	Move* greatBallsOfFire = new Move("Great Balls of Fire", Fire, SingleChargeMove, 120, 32);
 	Move* batteryFire = new Move("Battery Fire", Fire, TwoChargeMove, 90, 27);
 	Move* handGrenade = new Move("Hand Grenade", Fire, SingleChargeMove, 120, 29);
+	Move* glassCannon = new Move("Glass Cannon", Fire, QuickMove, 40, 16);
 	Move* burstFire = new Move("Burst Fire", Fire, QuickMove, 80, 20);
 	Move* fullAuto = new Move("Full Auto", Fire, QuickMove, 20, 19);
 	Move* aimedShot = new Move("Aimed Shot", Fire, SingleChargeMove, 150, 31);
@@ -256,69 +258,70 @@ void MonsterSpecies::Init()
 	g_biomes["city"] = cityBiome;
 	g_biomes["mountain"] = mountainBiome;
 
-	MonsterSpecies* roppy = new MonsterSpecies("💥🐸 ", "Roppy", "This animatronic frog is assembled from a mishmash"
-		"of other frog parts.", Grass, Grass, 0, 0, 0,
+	MonsterSpecies* roppy = new MonsterSpecies("💥🐸 ", "Roppy", "This animatronic frog is assembled from a mishmash "
+		"of other frog parts.", Grass, Grass, 230, 175, 215,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 5, 2);
 	MonsterSpecies* poppy = new MonsterSpecies("✨🐸 ", "Poppy", "This frog prefers to be stacked up "
-		"and the top frog always jumps first.", Grass, Grass, 0, 0, 0,
+		"and the top frog always jumps first.", Grass, Grass, 170, 135, 155,
 		vector<MonsterSpecies*>{roppy}, 100, vector<Move*>{}, vector<Move*>{}, grassBiome, 20, 8);
-	MonsterSpecies* hoppy = new MonsterSpecies(" 🐸 ", "Hoppy", "A small frog that jumps right where it wants to go.", Grass, Grass, 0, 0, 0,
-		vector<MonsterSpecies*>{poppy}, 25, vector<Move*>{}, vector<Move*>{}, grassBiome, 100, 15);
+	MonsterSpecies* hoppy = new MonsterSpecies(" 🐸 ", "Hoppy", "A small frog that jumps right where it wants to go.",
+		Grass, Grass, 140, 95, 130, vector<MonsterSpecies*>{poppy}, 25, vector<Move*>{}, vector<Move*>{},
+		grassBiome, 100, 15);
 	m_list.push_back(hoppy);
 	m_list.push_back(poppy);
 	m_list.push_back(roppy);
 
 	MonsterSpecies* kablion = new MonsterSpecies("💥🦁 ", "Kablion", "The very ground seems to shake with each step"
-		" of this massive lion as tiny explosions appear all around it.", Fire, Fire, 0, 0, 0,
+		" of this massive lion as tiny explosions appear all around it.", Fire, Fire, 220, 210, 190,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 5, 2);
 	MonsterSpecies* pyrion = new MonsterSpecies("🔥🦁 ", "Pyrion", "A shifty-eyed lion that seems to set everything "
-		"it looks at on fire when no one is looking.", Fire, Fire, 0, 0, 0,
+		"it looks at on fire when no one is looking.", Fire, Fire, 160, 155, 145,
 		vector<MonsterSpecies*>{kablion}, 100, vector<Move*>{}, vector<Move*>{}, desertBiome, 20, 8);
 	MonsterSpecies* frion = new MonsterSpecies(" 🦁 ", "Frion", "A cuddly lion that seems to blaze with an inner "
-		"warmth.", Fire, Fire, 0, 0, 0,
+		"warmth.", Fire, Fire, 130, 120, 115,
 		vector<MonsterSpecies*>{pyrion}, 25, vector<Move*>{}, vector<Move*>{}, desertBiome, 100, 15);
 	m_list.push_back(frion);
 	m_list.push_back(pyrion);
 	m_list.push_back(kablion);
 
 	MonsterSpecies* whalegun = new MonsterSpecies("🌊🐋 ", "Whalegun", "A giant harpoon sticks out of this whale, but"
-		"strangely it appears to be facing outward, rather than being stuck in the whale.", Water, Water, 0, 0, 0,
+		"strangely it appears to be facing outward, rather than being stuck in the whale.", Water, Water, 190, 210, 220,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 5, 2);
 	MonsterSpecies* whaletail = new MonsterSpecies(" 🐋 ", "Whaletail", "Only a small portion of the back of this "
-		"whale sticks out above the water, but it appears to be wrapped in fishing line.", Water, Water, 0, 0, 0,
+		"whale sticks out above the water, but it appears to be wrapped in fishing line.", Water, Water, 135, 160, 165,
 		vector<MonsterSpecies*>{whalegun}, 100, vector<Move*>{}, vector<Move*>{}, waterBiome, 20, 8);
 	MonsterSpecies* wailer = new MonsterSpecies(" 🐳 ", "Wailer", "This small whale looks extremely relaxed as it "
-		"swims, whispering to itself 'Every little thing is gonna be all right.'", Water, Water, 0, 0, 0,
+		"swims, whispering to itself 'Every little thing is gonna be all right.'", Water, Water, 105, 125, 135,
 		vector<MonsterSpecies*>{whaletail}, 25, vector<Move*>{}, vector<Move*>{}, waterBiome, 100, 15);
 	m_list.push_back(wailer);
 	m_list.push_back(whaletail);
 	m_list.push_back(whalegun);
 
 	MonsterSpecies* beezer = new MonsterSpecies(" 🐝 ", "Beezer", "This elderly bee still packs quite a punch when it"
-		" stings.", Bug, Bug, 0, 0, 0,
+		" stings.", Bug, Bug, 220, 160, 140,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{sting}, vector<Move*>{poisonFang}, grassBiome, 20, 10);
 	MonsterSpecies* nutter = new MonsterSpecies(" 🌰 ", "Nutter", "Disguised as a small nut, this insect will go "
-		"absolutely crazy on you if you don't watch yourself.", Bug, Bug, 0, 0, 0,
+		"absolutely crazy on you if you don't watch yourself.", Bug, Bug, 100, 180, 140,
 		vector<MonsterSpecies*>{beezer}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 40, 20);
 	MonsterSpecies* crawler = new MonsterSpecies(" 🐛 ", "Crawler", "A segmented insect that appears to be searching "
-		"webs for morsels to eat.", Bug, Bug, 0, 0, 0,
+		"webs for morsels to eat.", Bug, Bug, 70, 80, 80,
 		vector<MonsterSpecies*>{nutter}, 12, vector<Move*>{}, vector<Move*>{}, grassBiome, 500, 300);
 	m_list.push_back(crawler);
 	m_list.push_back(nutter);
 	m_list.push_back(beezer);
 
 	MonsterSpecies* cock = new MonsterSpecies(" 🐓 ", "Cock", "The big daddy of all cluckers, this rooster is proud "
-		"of all its offspring.", Normal, Normal, 0, 0, 0,
+		"of all its offspring.", Normal, Normal, 230, 175, 210,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{trickle, wingAttack}, vector<Move*>{bigPecks, gusher},
 		grassBiome, 20, 10);
 	MonsterSpecies* motherclucker = new MonsterSpecies(" 🐔 ", "Motherclucker", "The hen of all cluckers, this large "
-		" bird jealously guards her brood.", Normal, Normal, 0, 0, 0,
+		"bird jealously guards her brood.", Normal, Normal, 190, 225, 225,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{wingAttack, diveBomb}, vector<Move*>{}, grassBiome, 20, 10);
 	MonsterSpecies* clucker = new MonsterSpecies(" 🐥 ", "Clucker", "The small chicken's most potent attacks don't do "
-		"much more damage than that inflicted by the obnoxious noises they make.", Normal, Normal, 0, 0, 0,
+		"much more damage than that inflicted by the obnoxious noises they make.", Normal, Normal, 145, 145, 145,
 		vector<MonsterSpecies*>{cock, motherclucker}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 60, 40);
 	MonsterSpecies* chickling = new MonsterSpecies(" 🐣 ", "Chickling", "A tiny chicken barely hatched that is nearly "
-		"defenseless.", Normal, Normal, 0, 0, 0,
+		"defenseless.", Normal, Normal, 115, 35, 45,
 		vector<MonsterSpecies*>{clucker}, 12, vector<Move*>{}, vector<Move*>{}, grassBiome, 500, 350);
 	m_list.push_back(chickling);
 	m_list.push_back(clucker);
@@ -326,292 +329,292 @@ void MonsterSpecies::Init()
 	m_list.push_back(motherclucker);
 
 	MonsterSpecies* windove = new MonsterSpecies("🌪🕊 ", "Windove", "It is able to control the power of the wind to "
-		"effortlessly fly around the world.", Flying, Flying, 0, 0, 0, vector<MonsterSpecies*>{}, 0,
+		"effortlessly fly around the world.", Flying, Flying, 215, 170, 190, vector<MonsterSpecies*>{}, 0,
 		vector<Move*>{diveBomb, wingAttack}, vector<Move*>{hurricane, cyclone}, cityBiome, 25, 15);
 	MonsterSpecies* birdove = new MonsterSpecies(" 🕊 ", "Birdove", "Is it a bird? Is is a dove? Why not both--they "
-		"are the same thing after all.", Flying, Flying, 0, 0, 0,
+		"are the same thing after all.", Flying, Flying, 150, 125, 120,
 		vector<MonsterSpecies*>{windove}, 50, vector<Move*>{}, vector<Move*>{}, cityBiome, 100, 75);
 	MonsterSpecies* dovelett = new MonsterSpecies(" 🐦 ", "Dovelett", "A diminutive bird that looks fantastically "
-		"clean.", Flying, Flying, 0, 0, 0,
+		"clean.", Flying, Flying, 95, 60, 70,
 		vector<MonsterSpecies*>{birdove}, 12, vector<Move*>{}, vector<Move*>{}, cityBiome, 1000, 750);
 	m_list.push_back(dovelett);
 	m_list.push_back(birdove);
 	m_list.push_back(windove);
 
 	MonsterSpecies* rattichewy = new MonsterSpecies("🧀🐀 ", "Rattichewy", "No matter where you hide or move the "
-		"cheese, this rat will certainly chew its way in to it.", Normal, Normal, 0, 0, 0,
+		"cheese, this rat will certainly chew its way in to it.", Normal, Normal, 170, 160, 160,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, cityBiome, 40, 35);
 	MonsterSpecies* rattitat = new MonsterSpecies(" 🐀 ", "Rattitat", "This annoying rodent's tell-tale noise reminds"
-		" reminds you of nothing so much as machine gun firing blanks.", Normal, Normal, 0, 0, 0,
+		" reminds you of nothing so much as machine gun firing blanks.", Normal, Normal, 80, 80, 80,
 		vector<MonsterSpecies*>{rattichewy}, 50, vector<Move*>{}, vector<Move*>{}, cityBiome, 1000, 900);
 	m_list.push_back(rattitat);
 	m_list.push_back(rattichewy);
 
 	MonsterSpecies* woofer = new MonsterSpecies(" 🐕 ", "Woofer", "The larger dog sends shockwaves through you with "
-		"its exceedingly loud and deep bark.", Sound, Sound, 0, 0, 0,
+		"its exceedingly loud and deep bark.", Sound, Sound, 225, 195, 195,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{wub}, vector<Move*>{sonicBoom}, cityBiome, 20, 10);
 	MonsterSpecies* subhound = new MonsterSpecies(" 🐶 ", "Subhound", "This bloodhound sniffs back and forth "
-		"searching for something, but it does so at a very low frequency.", Sound, Sound, 0, 0, 0,
+		"searching for something, but it does so at a very low frequency.", Sound, Sound, 115, 110, 100,
 		vector<MonsterSpecies*>{woofer}, 50, vector<Move*>{}, vector<Move*>{}, cityBiome, 150, 75);
 	m_list.push_back(subhound);
 	m_list.push_back(woofer);
 
 	MonsterSpecies* webadeth = new MonsterSpecies("🕸🕷 ", "Webadeth", "Don't end up in this spider's web. Seriously,"
-		" just don't.'", Bug, Poison, 0, 0, 0,
+		" just don't.", Bug, Poison, 240, 165, 155,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{poisonFang}, grassBiome, 20, 15);
 	MonsterSpecies* spidra = new MonsterSpecies(" 🕷 ", "Spidra", "You might not see the small spider, but you'll "
-		"definitely know if it bits you.", Bug, Poison, 0, 0, 0,
+		"definitely know if it bites you.", Bug, Poison, 140, 70, 60,
 		vector<MonsterSpecies*>{webadeth}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 200, 150);
 	m_list.push_back(spidra);
 	m_list.push_back(webadeth);
 
 	MonsterSpecies* drillboar = new MonsterSpecies(" 🐗 ", "Drillboar", "This goring, boring, boar is known for "
-		"being hairy. Oh, and also boring.", Ground, Ground, 0, 0, 0,
+		"being hairy. Oh, and also boring.", Ground, Ground, 212, 205, 200,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 5, 3);
 	MonsterSpecies* boghog = new MonsterSpecies(" 🐖 ", "Boghog", "Known for their surprising stealth, this porker "
-		"creeps out of the mist and attacks you if unprepared.", Ground, Ground, 0, 0, 0,
+		"creeps out of the mist and attacks you if unprepared.", Ground, Ground, 165, 150, 145,
 		vector<MonsterSpecies*>{drillboar}, 100, vector<Move*>{}, vector<Move*>{}, grassBiome, 30, 10);
 	MonsterSpecies* digpig = new MonsterSpecies(" 🐷 ", "Digpig", "Do you have any mud? Because this pig wants "
-		"nothing more than to lie in it all day.", Ground, Ground, 0, 0, 0,
+		"nothing more than to lie in it all day.", Ground, Ground, 105, 95, 80,
 		vector<MonsterSpecies*>{boghog}, 25, vector<Move*>{}, vector<Move*>{}, grassBiome, 200, 50);
 	m_list.push_back(digpig);
 	m_list.push_back(boghog);
 	m_list.push_back(drillboar);
 
 	MonsterSpecies* ramstine = new MonsterSpecies(" 🐏 ", "Ramstine", "You're not quite sure what the noises coming "
-		"out of this large sheep are, but they're quite gutteral and scary.", Normal, Grass, 0, 0, 0,
+		"out of this large sheep are, but they're quite gutteral and scary.", Normal, Grass, 220, 190, 190,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 15, 3);
 	MonsterSpecies* sheepler = new MonsterSpecies(" 🐑 ", "Sheepler", "This docile sheep seems to do whatever "
-		"everyone around it is doing.", Normal, Grass, 0, 0, 0,
+		"everyone around it is doing.", Normal, Grass, 60, 110, 110,
 		vector<MonsterSpecies*>{ramstine}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 150, 30);
 	m_list.push_back(sheepler);
 	m_list.push_back(ramstine);
 
 	MonsterSpecies* stingping = new MonsterSpecies(" 🦂 ", "Stingping", "The tricky part about the stinger on this "
-		"dangerous beast is that it can trick your immune system into attacking itself.", Bug, Poison, 0, 0, 0,
+		"dangerous beast is that it can trick your immune system into attacking itself.", Bug, Poison, 235, 145, 180,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 15, 5);
 	MonsterSpecies* antler = new MonsterSpecies(" 🐜 ", "Antler", "This small bug is well known for attacking deer "
-		"ticks.", Bug, Poison, 0, 0, 0,
+		"ticks.", Bug, Poison, 160, 60, 40,
 		vector<MonsterSpecies*>{stingping}, 50, vector<Move*>{}, vector<Move*>{}, desertBiome, 200, 75);
 	m_list.push_back(antler);
 	m_list.push_back(stingping);
 
 	MonsterSpecies* harerazer = new MonsterSpecies(" 🐇 ", "Harerazer", "Something about this rabbit gives you the "
-		"creeps. Maybe it's the spikes, or the grooves that cross its skin.", Electric, Electric, 0, 0, 0,
+		"creeps. Maybe it's the spikes, or the grooves that cross its skin.", Electric, Electric, 255, 200, 150,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{lightningBolt}, desertBiome, 15, 3);
 	MonsterSpecies* bunnybolt = new MonsterSpecies(" 🐰 ", "Bunnybolt", "This cuddly rabbit can give you quite a "
-		"shock!", Electric, Electric, 0, 0, 0,
+		"shock!", Electric, Electric, 170, 80, 70,
 		vector<MonsterSpecies*>{harerazer}, 50, vector<Move*>{}, vector<Move*>{}, desertBiome, 150, 30);
 	m_list.push_back(bunnybolt);
 	m_list.push_back(harerazer);
 
 	MonsterSpecies* wabbitwap = new MonsterSpecies("🕳🐇 ", "Wabbitwap", "I knew I shoulda taken that left turn at "
-		"Albuquerque!", Normal, Ground, 0, 0, 0,
+		"Albuquerque!", Normal, Ground, 195, 215, 215,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{trap}, vector<Move*>{earthquake}, grassBiome, 10, 4);
 	MonsterSpecies* wascaly = new MonsterSpecies("🕳🐰 ", "Wascaly", "Do you happen to know what the penalty is for "
-		"shooting a fricaseeing rabbit without a fricaseeing rabbit license?", Normal, Ground, 0, 0, 0,
+		"shooting a fricaseeing rabbit without a fricaseeing rabbit license?", Normal, Ground, 90, 120, 120,
 		vector<MonsterSpecies*>{wabbitwap}, 50, vector<Move*>{dig}, vector<Move*>{}, grassBiome, 100, 40);
 	m_list.push_back(wascaly);
 	m_list.push_back(wabbitwap);
 
 	MonsterSpecies* ohkamel = new MonsterSpecies(" 🐪 ", "Ohkamel", "A very functional beast of burden that looks "
-		"quite powerful except for its inability to work in a herd.", Normal, Water, 0, 0, 0,
+		"quite powerful except for its inability to work in a herd.", Normal, Water, 165, 235, 260,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 20, 2);
 	MonsterSpecies* kamelcase = new MonsterSpecies(" 🐫 ", "Kamelcase", "An easy to work with camel with two "
-		"humps that are exactly the same height.", Normal, Water, 0, 0, 0,
+		"humps that are exactly the same height.", Normal, Water, 70, 120, 140,
 		vector<MonsterSpecies*>{ohkamel}, 50, vector<Move*>{}, vector<Move*>{}, desertBiome, 175, 20);
 	m_list.push_back(kamelcase);
 	m_list.push_back(ohkamel);
 
 	MonsterSpecies* glostar = new MonsterSpecies("🌟🌟 ", "Glostar", "A brilliant star that overshadows "
-		"all else.", Light, Light, 0, 0, 0,
+		"all else.", Light, Light, 205, 205, 205,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, mountainBiome, 5, 1);
 	MonsterSpecies* costar = new MonsterSpecies("⭐⭐ ", "Costar", "Always stuck in the shadow of something brighter, "
-		"and not happy about it.", Light, Light, 0, 0, 0,
+		"and not happy about it.", Light, Light, 150, 150, 150,
 		vector<MonsterSpecies*>{glostar}, 100, vector<Move*>{}, vector<Move*>{}, mountainBiome, 30, 5);
-	MonsterSpecies* starem = new MonsterSpecies(" ⭐ ", "Starem", "A pretty, twinkling star.", Light, Light, 0, 0, 0,
+	MonsterSpecies* starem = new MonsterSpecies(" ⭐ ", "Starem", "A pretty, twinkling star.", Light, Light, 90, 90, 90,
 		vector<MonsterSpecies*>{costar}, 25, vector<Move*>{}, vector<Move*>{}, mountainBiome, 150, 25);
 	m_list.push_back(starem);
 	m_list.push_back(costar);
 	m_list.push_back(glostar);
 
 	MonsterSpecies* stormikloud = new MonsterSpecies(" ⛈ ", "Stormikloud", "A massive storm capable of vast "
-		"destruction.", Water, Electric, 0, 0, 0,
+		"destruction.", Water, Electric, 270, 125, 210,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 10, 7);
 	MonsterSpecies* electrikloud = new MonsterSpecies(" 🌩 ", "Electrikloud", "A dangerous cloud capable of both "
-		"water and electric attacks.", Water, Electric, 0, 0, 0,
+		"water and electric attacks.", Water, Electric, 180, 105, 135,
 		vector<MonsterSpecies*>{stormikloud}, 100, vector<Move*>{}, vector<Move*>{}, waterBiome, 40, 25);
 	MonsterSpecies* hoverkloud = new MonsterSpecies(" 🌥 ", "Hoverkloud", "A small cloud that seems to have trouble "
-		"getting very high.", Water, Water, 0, 0, 0,
+		"getting very high.", Water, Water, 100, 60, 80,
 		vector<MonsterSpecies*>{electrikloud}, 25, vector<Move*>{}, vector<Move*>{}, waterBiome, 125, 80);
 	m_list.push_back(hoverkloud);
 	m_list.push_back(electrikloud);
 	m_list.push_back(stormikloud);
 
 	MonsterSpecies* snowmo = new MonsterSpecies("❄⛄ ", "Snowmo", "If you ask him for mercy, he'll just tell you "
-		"there is no 'mo.", Ice, Ice, 0, 0, 0,
+		"there is no 'mo.", Ice, Ice, 215, 205, 200,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{blizzard, snowmageddon}, mountainBiome, 5, 1);
 	MonsterSpecies* snowblo = new MonsterSpecies("🌪⛄ ", "Snowblo", "The air that swirls around this snowman is "
-		"bitter cold.", Ice, Ice, 0, 0, 0,
+		"bitter cold.", Ice, Ice, 155, 145, 140,
 		vector<MonsterSpecies*>{snowmo}, 100, vector<Move*>{}, vector<Move*>{snowstorm, blizzard}, mountainBiome, 30, 3);
 	MonsterSpecies* snowbro = new MonsterSpecies(" ⛄ ", "Snowbro", "A very chill snowman who seems to like just "
-		"hanging out.", Ice, Ice, 0, 0, 0,
+		"hanging out.", Ice, Ice, 95, 90, 85,
 		vector<MonsterSpecies*>{snowblo}, 25, vector<Move*>{}, vector<Move*>{}, mountainBiome, 200, 10);
 	m_list.push_back(snowbro);
 	m_list.push_back(snowblo);
 	m_list.push_back(snowmo);
 
-	MonsterSpecies* krabber = new MonsterSpecies(" 🦀 ", "Krabber", "Watch out, they jump.", Water, Water, 0, 0, 0,
+	MonsterSpecies* krabber = new MonsterSpecies(" 🦀 ", "Krabber", "Watch out, they jump.", Water, Water, 180, 215, 205,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 20, 3);
 	MonsterSpecies* shellkra = new MonsterSpecies(" 🐚 ", "Shellkra", "If you think you like popping shells, you "
-		"better watch out, Shellkra might want revenge.", Water, Water, 0, 0, 0,
+		"better watch out, Shellkra might want revenge.", Water, Water, 60, 110, 120,
 		vector<MonsterSpecies*>{krabber}, 50, vector<Move*>{}, vector<Move*>{}, waterBiome, 150, 10);
 	m_list.push_back(shellkra);
 	m_list.push_back(krabber);
 
 	MonsterSpecies* oktokore = new MonsterSpecies(" 🐙 ", "Oktokore", "It has eight brains and has been known to "
-		"capture eight prey at the same time.", Water, Water, 0, 0, 0, vector<MonsterSpecies*>{}, 0,
+		"capture eight prey at the same time.", Water, Water, 235, 205, 160, vector<MonsterSpecies*>{}, 0,
 		vector<Move*>{}, vector<Move*>{}, waterBiome, 80, 8);
 	m_list.push_back(oktokore);
 
 	MonsterSpecies* snukinasnail = new MonsterSpecies(" 🐌 ", "Snukinasnail", "It slowly moves in the shadows but "
-		"strikes its target fiercely when least expected.", Water, Dark, 0, 0, 0, vector<MonsterSpecies*>{}, 0,
+		"strikes its target fiercely when least expected.", Water, Dark, 245, 165, 190, vector<MonsterSpecies*>{}, 0,
 		vector<Move*>{sneakAttack}, vector<Move*>{}, grassBiome, 75, 45);
 	m_list.push_back(snukinasnail);
 
 	MonsterSpecies* lazybug = new MonsterSpecies(" 🐞 ", "Lazybug", "This bug is too lazy to move, so it uses its "
-		"psychic powers to force its food to come near.", Bug, Psychic, 0, 0, 0, vector<MonsterSpecies*>{}, 0,
+		"psychic powers to force its food to come near.", Bug, Psychic, 230, 210, 165, vector<MonsterSpecies*>{}, 0,
 		vector<Move*>{}, vector<Move*>{}, cityBiome, 125, 80);
 	m_list.push_back(lazybug);
 
 	MonsterSpecies* turtlejet = new MonsterSpecies("🌊🐢 ", "Turtlejet", "Capable of both extremely high and "
-		"extremely low speeds, this animal is very power efficient.", Water, Water, 0, 0, 0,
+		"extremely low speeds, this animal is very power efficient.", Water, Water, 185, 255, 180,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 20, 4);
 	MonsterSpecies* turtlewet = new MonsterSpecies(" 🐢 ", "Turtlewet", "The water that accompanies it wherever it "
-		"goes differentiates it from other, more dry, turtles.", Water, Water, 0, 0, 0,
+		"goes differentiates it from other, more dry, turtles.", Water, Water, 80, 170, 85,
 		vector<MonsterSpecies*>{turtlejet}, 50, vector<Move*>{}, vector<Move*>{}, waterBiome, 150, 30);
 	m_list.push_back(turtlewet);
 	m_list.push_back(turtlejet);
 
 	MonsterSpecies* gatorath = new MonsterSpecies("💥🐊 ", "Gatorath", "An angry gator is never a pleasant foe. And "
-		"even though you've never met this one, he already doesn't like you.", Water, Water, 0, 0, 0,
+		"even though you've never met this one, he already doesn't like you.", Water, Water, 235, 195, 180,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 10, 2);
 	MonsterSpecies* gatorate = new MonsterSpecies(" 🐊 ", "Gatorate", "If you stop to ask what the gatorate, the "
-		"answer is probably YOU.", Water, Water, 0, 0, 0,
+		"answer is probably YOU.", Water, Water, 160, 110, 70,
 		vector<MonsterSpecies*>{gatorath}, 50, vector<Move*>{}, vector<Move*>{}, waterBiome, 60, 20);
 	m_list.push_back(gatorate);
 	m_list.push_back(gatorath);
 
 	MonsterSpecies* chiptune = new MonsterSpecies(" 🐿 ", "Chiptune", "The strange noises that come from this "
-		"rodent's mouth sound nothing at all like crunching nuts.", Sound, Sound, 0, 0, 0,
+		"rodent's mouth sound nothing at all like crunching nuts.", Sound, Sound, 200, 220, 210,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 50, 30);
 	m_list.push_back(chiptune);
 
 	MonsterSpecies* cowabusta = new MonsterSpecies(" 🐄 ", "Cowabusta", "This bovine has serious rhythm. Just "
-		"watch him MOO-VE!", Normal, Normal, 0, 0, 0,
+		"watch him MOO-VE!", Normal, Normal, 215, 200, 195,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 25, 10);
 	MonsterSpecies* cowabucka = new MonsterSpecies(" 🐮 ", "Cowabucka", "If you try to go for a ride, you might find "
-		"yourself cowed.", Normal, Normal, 0, 0, 0,
+		"yourself cowed.", Normal, Normal, 115, 110, 110,
 		vector<MonsterSpecies*>{cowabusta}, 50, vector<Move*>{}, vector<Move*>{}, grassBiome, 120, 50);
 	m_list.push_back(cowabucka);
 	m_list.push_back(cowabusta);
 
 	MonsterSpecies* monkadoo = new MonsterSpecies(" 🐒 ", "Monkadoo", "This odorous monkey appears to be fighting "
-		"with a nasty biological weapon.", Normal, Normal, 0, 0, 0,
+		"with a nasty biological weapon.", Normal, Normal, 215, 195, 205,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 15, 3);
 	MonsterSpecies* monkasee = new MonsterSpecies(" 🐵 ", "Monkasee", "Careful what you do around this monkey. He's "
-		"watching. Always watching.", Normal, Normal, 0, 0, 0,
+		"watching. Always watching.", Normal, Normal, 70, 100, 140,
 		vector<MonsterSpecies*>{monkadoo}, 50, vector<Move*>{}, vector<Move*>{}, desertBiome, 200, 50);
 	m_list.push_back(monkasee);
 	m_list.push_back(monkadoo);
 
 	MonsterSpecies* unihorn = new MonsterSpecies(" 🦄 ", "Unihorn", "The startup time for this mythical creature "
-		"appears short, and it's extremely highly valued.", Normal, Psychic, 0, 0, 0,
+		"appears short, and it's extremely highly valued.", Normal, Psychic, 225, 185, 200,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 10, 3);
 	MonsterSpecies* warpsteed = new MonsterSpecies(" 🐎 ", "Warpsteed", "This horse canna work miracles, but it sure "
-		"runs really fast.", Normal, Normal, 0, 0, 0,
+		"runs really fast.", Normal, Normal, 175, 125, 130,
 		vector<MonsterSpecies*>{unihorn}, 100, vector<Move*>{}, vector<Move*>{}, desertBiome, 50, 20);
 	MonsterSpecies* fasteed = new MonsterSpecies(" 🐴 ", "Fasteed", "This purebread looks ready to race. Just let "
-		"it warm up first.", Normal, Normal, 0, 0, 0,
+		"it warm up first.", Normal, Normal, 80, 90, 125,
 		vector<MonsterSpecies*>{warpsteed}, 25, vector<Move*>{}, vector<Move*>{}, desertBiome, 130, 40);
 	m_list.push_back(fasteed);
 	m_list.push_back(warpsteed);
 	m_list.push_back(unihorn);
 
 	MonsterSpecies* leptear = new MonsterSpecies(" 🐆 ", "Leptear", "Try and run, but this feline menace will hunt "
-		"you down.", Normal, Normal, 0, 0, 0,
+		"you down.", Normal, Normal, 215, 180, 215,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, cityBiome, 2, 1);
 	MonsterSpecies* kitear = new MonsterSpecies(" 🐈 ", "Kitear", "No cuddly cat here, this kitty's claws are out "
-		"and sharp.", Normal, Normal, 0, 0, 0,
+		"and sharp.", Normal, Normal, 155, 140, 155,
 		vector<MonsterSpecies*>{leptear}, 100, vector<Move*>{}, vector<Move*>{}, cityBiome, 20, 10);
 	MonsterSpecies* kitease = new MonsterSpecies(" 🐱 ", "Kitease", "An inviting cat that looks fun to play with but "
-		"keeps backing up when you approach.", Normal, Normal, 0, 0, 0,
+		"keeps backing up when you approach.", Normal, Normal, 100, 80, 100,
 		vector<MonsterSpecies*>{kitear}, 25, vector<Move*>{}, vector<Move*>{}, cityBiome, 300, 150);
 	m_list.push_back(kitease);
 	m_list.push_back(kitear);
 	m_list.push_back(leptear);
 
 	MonsterSpecies* jackfry = new MonsterSpecies("🔥🎃 ", "Jackfry", "You never thought you'd see something both "
-		"firey and dark, but now you know it's possible.", Fire, Dark, 0, 0, 0,
+		"firey and dark, but now you know it's possible.", Fire, Dark, 220, 225, 175,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, cityBiome, 5, 2);
 	MonsterSpecies* jackflare = new MonsterSpecies(" 🎃 ", "Jackflare", "The eerie light flickering from this pumpkin"
-		" gives you the chills.", Fire, Dark, 0, 0, 0,
+		" gives you the chills.", Fire, Dark, 130, 135, 90,
 		vector<MonsterSpecies*>{jackfry}, 50, vector<Move*>{}, vector<Move*>{}, cityBiome, 40, 20);
 	m_list.push_back(jackflare);
 	m_list.push_back(jackfry);
 
 	MonsterSpecies* shroomdoom = new MonsterSpecies(" 🍄 ", "Shroomdoom", "Anyone thinking that eating this will make"
-	 	" them a fun guy, would be dead wrong.", Dark, Poison, 0, 0, 0,
+	 	" them a fun guy, would be dead wrong.", Dark, Poison, 255, 155, 170,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 75, 45);
 	m_list.push_back(shroomdoom);
 
 	MonsterSpecies* bonedread = new MonsterSpecies(" ☠ ", "Bonedread", "Pray you never stumble across this foul beast"
-	 	" on a dark night -- it might be your last.", Dark, Dark, 0, 0, 0,
+	 	" on a dark night -- it might be your last.", Dark, Dark, 230, 185, 185,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 20, 4);
 	MonsterSpecies* skullker = new MonsterSpecies(" 💀 ", "Skullker", "This monster likes to keep to the shadows, "
-		"hiding in them with ease.", Dark, Dark, 0, 0, 0,
+		"hiding in them with ease.", Dark, Dark, 150, 110, 110,
 		vector<MonsterSpecies*>{bonedread}, 50, vector<Move*>{}, vector<Move*>{}, desertBiome, 250, 40);
 	m_list.push_back(skullker);
 	m_list.push_back(bonedread);
 
 	MonsterSpecies* spiriboo = new MonsterSpecies(" 👻 ", "Spiriboo", "Attracted to abandoned buildings. It enjoys "
-		"giving jump scares to passerbys.", Dark, Dark, 0, 0, 0, vector<MonsterSpecies*>{}, 0,
+		"giving jump scares to passerbys.", Dark, Dark, 190, 235, 180, vector<MonsterSpecies*>{}, 0,
 		vector<Move*>{}, vector<Move*>{}, cityBiome, 80, 1);
 	m_list.push_back(spiriboo);
 
 	MonsterSpecies* impest = new MonsterSpecies(" 👿 ", "Impest", "This prankster pest has a way of knowing just when"
-	 	" your guard is down.", Dark, Psychic, 0, 0, 0,
+	 	" your guard is down.", Dark, Psychic, 210, 205, 205,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, mountainBiome, 200, 15);
 	m_list.push_back(impest);
 
 	MonsterSpecies* ogreat = new MonsterSpecies("👑👹 ", "Ogreat", "Should you run into this beast, you'll surely say"
-	 	" its name.", Fighting, Fighting, 0, 0, 0,
+	 	" its name.", Fighting, Fighting, 195, 225, 228,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, mountainBiome, 30, 4);
 	MonsterSpecies* ogrim = new MonsterSpecies(" 👹 ", "Ogrim", "For such a fierce ogre, this monster looks a little "
-		"sad.", Fighting, Fighting, 0, 0, 0,
+		"sad.", Fighting, Fighting, 125, 145, 145,
 		vector<MonsterSpecies*>{ogreat}, 50, vector<Move*>{}, vector<Move*>{}, mountainBiome, 150, 35);
 	m_list.push_back(ogrim);
 	m_list.push_back(ogreat);
 
 	MonsterSpecies* pilapoo = new MonsterSpecies(" 💩 ", "Pilapoo", "A sludge of incredibly vile nature gained a "
-		"life of its own.", Poison, Poison, 0, 0, 0, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{},
+		"life of its own.", Poison, Poison, 240, 165, 180, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{},
 		cityBiome, 100, 35);
 	m_list.push_back(pilapoo);
 
 	MonsterSpecies* flaret = new MonsterSpecies("🔥👽 ", "Flaret", "This alien form is most comfortable when aflame.",
-		Fire, Fire, 0, 0, 0, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 5, 1);
+		Fire, Fire, 220, 200, 200, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 5, 1);
 	MonsterSpecies* electret = new MonsterSpecies("⚡👽 ", "Electret", "This alien form is at home with electrical "
-		"fields.", Electric, Electric, 0, 0, 0,
+		"fields.", Electric, Electric, 245, 175, 175,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, cityBiome, 5, 1);
-	MonsterSpecies* pouret = new MonsterSpecies("🌊👽 ", "Pouret", "This alien form is adapted to aquatic regions",
-		Water, Water, 0, 0, 0, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 5, 1);
+	MonsterSpecies* pouret = new MonsterSpecies("🌊👽 ", "Pouret", "This alien form is adapted to aquatic regions.",
+		Water, Water, 212, 206, 206, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 5, 1);
 	MonsterSpecies* freezet = new MonsterSpecies("❄👽 ", "Freezet", "This alien form is adapted to cold climates.",
-		Ice, Ice, 0, 0, 0, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, mountainBiome, 5, 1);
-	MonsterSpecies* pixet = new MonsterSpecies(" 👾 ", "Pixet", "This alien form seems to blend into video games quite"
-	 	"well.", Light, Sound, 0, 0, 0,
+		Ice, Ice, 207, 210, 207, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, mountainBiome, 5, 1);
+	MonsterSpecies* pixet = new MonsterSpecies(" 👾 ", "Pixet", "This alien form seems to blend into video games quite "
+	 	"well.", Light, Sound, 208, 208, 208,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, grassBiome, 5, 1);
 	MonsterSpecies* eetee = new MonsterSpecies(" 👽 ", "Eetee", "An alien with an exotic genetic structure capable of "
-		"quickly adapting to a wide variety of environments.", Normal, Normal, 0, 0, 0,
+		"quickly adapting to a wide variety of environments.", Normal, Normal, 125, 125, 125,
 		vector<MonsterSpecies*>{flaret, electret, pouret, freezet, pixet}, 25,
 		vector<Move*>{}, vector<Move*>{}, cityBiome, 125, 125);
 	m_list.push_back(eetee);
@@ -622,94 +625,94 @@ void MonsterSpecies::Init()
 	m_list.push_back(pixet);
 
 	MonsterSpecies* flyver = new MonsterSpecies(" 💸 ", "Flyver", "Money has a way of disappearing"
-	"--this monster does it by flying.", Normal, Flying, 0, 0, 0,
+	"--this monster does it by flying.", Normal, Flying, 204, 204, 204,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, cityBiome, 10, 1);
 	m_list.push_back(flyver);
 
 	MonsterSpecies* wyrmton = new MonsterSpecies("🌊🐉 ", "Wyrmton", "A giant dragon that weighs over 2000lbs.",
-		Water, Flying, 0, 0, 0, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 10, 1);
+		Water, Flying, 230, 190, 205, vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 10, 1);
 	MonsterSpecies* phishy = new MonsterSpecies(" 🐟 ", "Phishy", "A useless fish that can't do much of anything.",
-		Water, Water, 0, 0, 0, vector<MonsterSpecies*>{wyrmton}, 400, vector<Move*>{flop, splash},
+		Water, Water, 30, 60, 60, vector<MonsterSpecies*>{wyrmton}, 400, vector<Move*>{flop, splash},
 		vector<Move*>{struggle}, waterBiome, 250, 5);
 	m_list.push_back(phishy);
 	m_list.push_back(wyrmton);
 
 	MonsterSpecies* bottabuzz = new MonsterSpecies("⚡🤖 ", "Bottabuzz", "This bot packs a lotta juice!",
-		Electric, Electric, 0, 0, 0,
+		Electric, Electric, 195, 220, 215,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, cityBiome, 10, 1);
 	MonsterSpecies* botto = new MonsterSpecies(" 🤖 ", "Botto", "Friendly helper or obnoxious pest? You decide.",
-		Electric, Electric, 0, 0, 0,
+		Electric, Electric, 110, 135, 130,
 		vector<MonsterSpecies*>{bottabuzz}, 50, vector<Move*>{}, vector<Move*>{}, cityBiome, 75, 5);
 	m_list.push_back(botto);
 	m_list.push_back(bottabuzz);
 
 	MonsterSpecies* ohdaze = new MonsterSpecies(" 🌞 ", "Ohdaze", "This powerful monster is misunderstood, especially"
-	 	" by journalists.", Light, Psychic, 0, 0, 0,
+	 	" by journalists.", Light, Psychic, 260, 165, 190,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{memoryCorruption}, desertBiome, 15, 5);
 	MonsterSpecies* sundaze = new MonsterSpecies(" ☀ ", "Sundaze", "The glare from this glowing orb is hard to see "
-		"through.", Light, Light, 0, 0, 0,
+		"through.", Light, Light, 155, 120, 135,
 		vector<MonsterSpecies*>{ohdaze}, 100, vector<Move*>{}, vector<Move*>{}, desertBiome, 120, 40);
 	m_list.push_back(sundaze);
 	m_list.push_back(ohdaze);
 
 	MonsterSpecies* doomboom = new MonsterSpecies("💥💣 ", "Doomboom", "The label on the side says 'BFB'. Wonder what"
-	 	" that stands for?", Fire, Dark, 0, 0, 0,
+	 	" that stands for?", Fire, Dark, 360, 80, 165,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 15, 10);
 	MonsterSpecies* kabomb = new MonsterSpecies(" 💣 ", "Kabomb", "If you were wondering where the earth-shattering "
-	 	"kaboom is? Right here.", Fire, Fire, 0, 0, 0,
+	 	"kaboom is? Right here.", Fire, Fire, 230, 60, 115,
 		vector<MonsterSpecies*>{doomboom}, 50, vector<Move*>{}, vector<Move*>{}, desertBiome, 90, 60);
 	m_list.push_back(kabomb);
 	m_list.push_back(doomboom);
 
 	MonsterSpecies* liarkake = new MonsterSpecies(" 🎂 ", "Lyarkake", "Fills the mind of anything around it with "
-		"lies and broken promises.", Psychic, Psychic, 0, 0, 0, vector<MonsterSpecies*>{}, 0,
+		"lies and broken promises.", Psychic, Psychic, 235, 155, 225, vector<MonsterSpecies*>{}, 0,
 		vector<Move*>{}, vector<Move*>{}, cityBiome, 40, 10);
 	m_list.push_back(liarkake);
 
 	MonsterSpecies* tacocat = new MonsterSpecies(" 🌮 ", "Tacocat", "Looks like a delicious taco to draw its prey near.",
-		Normal, Normal, 0, 0, 0, vector<MonsterSpecies*>{}, 0, vector<Move*>{palindrome}, vector<Move*>{hotSauce},
+		Normal, Normal, 202, 191, 202, vector<MonsterSpecies*>{}, 0, vector<Move*>{palindrome}, vector<Move*>{hotSauce},
 		cityBiome, 40, 10);
 	m_list.push_back(tacocat);
 
 	MonsterSpecies* tuxacool = new MonsterSpecies(" 🐧 ", "Tuxacool", "Not always easy to work with, but you can't "
-		"beat the price.", Water, Ice, 0, 0, 0,
+		"beat the price.", Water, Ice, 230, 145, 245,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, waterBiome, 90, 25);
 	m_list.push_back(tuxacool);
 
 	MonsterSpecies* panfoo = new MonsterSpecies(" 🐼 ", "Panfoo", "Noodles? Don't noodles? That is the question.",
-		Fighting, Fighting, 0, 0, 0,
+		Fighting, Fighting, 225, 220, 165,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{}, desertBiome, 90, 25);
 	m_list.push_back(panfoo);
 
 	MonsterSpecies* crystrike = new MonsterSpecies(" 💎 ", "Crystrike", "A multifaceted and deadly shimmering gem.",
-		Light, Psychic, 0, 0, 0,
+		Light, Psychic, 170, 225, 250,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{}, vector<Move*>{laser}, mountainBiome, 90, 25);
 	m_list.push_back(crystrike);
 
 	MonsterSpecies* galaxseven = new MonsterSpecies(" 📱 ", "Galaxseven", "A product release gone horribly wrong "
-		"turned a smartphone into a monster.", Electric, Fire, 0, 0, 0, vector<MonsterSpecies*>{}, 0,
-		vector<Move*>{shortCircuit}, vector<Move*>{batteryFire, handGrenade}, cityBiome, 150, 5);
+		"turned a smartphone into a monster.", Electric, Fire, 385, 155, 90, vector<MonsterSpecies*>{}, 0,
+		vector<Move*>{shortCircuit, glassCannon}, vector<Move*>{batteryFire, handGrenade}, cityBiome, 150, 5);
 	m_list.push_back(galaxseven);
 
 	MonsterSpecies* burninator = new MonsterSpecies("🔥🐲 ", "Burninator", "It likes to burninate the peasants "
-		"wherever it can find them.", Fire, Flying, 0, 0, 0, vector<MonsterSpecies*>{}, 0,
+		"wherever it can find them.", Fire, Flying, 235, 190, 220, vector<MonsterSpecies*>{}, 0,
 		vector<Move*>{}, vector<Move*>{}, grassBiome, 1, 1);
-	MonsterSpecies* slithaburn = new MonsterSpecies("🔥🐍 ", "Slithaburn", "This forked tongue spits fire with its"
-	 	"lies.", Fire, Poison, 0, 0, 0,
+	MonsterSpecies* slithaburn = new MonsterSpecies("🔥🐍 ", "Slithaburn", "This forked tongue spits fire with its "
+	 	"lies.", Fire, Poison, 175, 135, 155,
 		vector<MonsterSpecies*>{burninator}, 100, vector<Move*>{}, vector<Move*>{}, grassBiome, 8, 3);
 	MonsterSpecies* slither = new MonsterSpecies(" 🐍 ", "Slither", "Easily mistaken for a garden hose, but don't "
-		"step on it!", Poison, Poison, 0, 0, 0,
+		"step on it!", Poison, Poison, 135, 115, 110,
 		vector<MonsterSpecies*>{slithaburn}, 25, vector<Move*>{}, vector<Move*>{}, grassBiome, 30, 5);
 	m_list.push_back(slither);
 	m_list.push_back(slithaburn);
 	m_list.push_back(burninator);
 
 	MonsterSpecies* ehkaybear = new MonsterSpecies("🔫🐻 ", "Ehkaybear", "Commonly found guarding mysterious "
-		"treasure chests and shooting anything that tries to open them.", Normal, Fire, 0, 0, 0,
+		"treasure chests and shooting anything that tries to open them.", Normal, Fire, 270, 150, 190,
 		vector<MonsterSpecies*>{}, 0, vector<Move*>{fullAuto, burstFire}, vector<Move*>{aimedShot, handGrenade},
 		grassBiome, 5, 3);
 	MonsterSpecies* bearly = new MonsterSpecies(" 🐻 ", "Bearly", "An obtuse bear, ignorant of puns, that when asked "
-		"to carry a chest will instead shave his fur off.", Normal, Normal, 0, 0, 0,
+		"to carry a chest will instead shave his fur off.", Normal, Normal, 145, 100, 150,
 		vector<MonsterSpecies*>{ehkaybear}, 100, vector<Move*>{bite}, vector<Move*>{chomp}, grassBiome, 75, 15);
 	m_list.push_back(bearly);
 	m_list.push_back(ehkaybear);
@@ -775,8 +778,10 @@ Monster::Monster(MonsterSpecies* species, int32_t x, int32_t y, uint32_t spawnTi
 
 uint32_t Monster::GetCP() const
 {
-	// FIXME
-	return m_level;
+	uint32_t cp = (uint32_t)((sqrt(GetTotalStamina()) * (float)GetTotalAttack() * sqrt(GetTotalDefense())) / 10.0f);
+	if (cp < 1)
+		cp = 1;
+	return cp;
 }
 
 
@@ -834,7 +839,7 @@ void Monster::SetMoves(Move* quick, Move* charge)
 
 uint32_t Monster::GetMaxHP()
 {
-	return 50;
+	return GetTotalStamina();
 }
 
 
@@ -911,21 +916,21 @@ void Monster::SetDefending(bool defending)
 }
 
 
-uint32_t Monster::GetTotalAttack()
+uint32_t Monster::GetTotalAttack() const
 {
-	return m_species->GetBaseAttack() + m_attackIV;
+	return (uint32_t)((m_species->GetBaseAttack() + m_attackIV) * (sqrt(2 * m_level) * 0.1f));
 }
 
 
-uint32_t Monster::GetTotalDefense()
+uint32_t Monster::GetTotalDefense() const
 {
-	return m_species->GetBaseDefense() + m_defenseIV;
+	return (uint32_t)((m_species->GetBaseDefense() + m_defenseIV) * (sqrt(2 * m_level) * 0.1f));
 }
 
 
-uint32_t Monster::GetTotalStamina()
+uint32_t Monster::GetTotalStamina() const
 {
-	return m_species->GetBaseStamina() + m_staminaIV;
+	return (uint32_t)((m_species->GetBaseStamina() + m_staminaIV) * (sqrt(2 * m_level) * 0.1f));
 }
 
 

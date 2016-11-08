@@ -178,9 +178,9 @@ public:
 	void Evolve();
 	void SetSpecies(MonsterSpecies* species);
 
-	uint32_t GetTotalAttack();
-	uint32_t GetTotalDefense();
-	uint32_t GetTotalStamina();
+	uint32_t GetTotalAttack() const;
+	uint32_t GetTotalDefense() const;
+	uint32_t GetTotalStamina() const;
 
 	void Damage(uint32_t damage);
 	void Heal(uint32_t amount);

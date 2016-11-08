@@ -57,6 +57,8 @@ static void DrawBattleStatus(shared_ptr<Monster> attacker, shared_ptr<Monster> d
 	{
 		term->SetCursorPosition(x + width - (defender->GetName().size() + 1), y);
 		term->SetColor(255, 17);
+		term->Output("                ");
+		term->SetCursorPosition(x + width - (defender->GetName().size() + 1), y);
 		term->Output(defender->GetName());
 		term->SetCursorPosition(x + width - 19, y + 1);
 		term->SetColor(255, 17);
@@ -74,6 +76,8 @@ static void DrawBattleStatus(shared_ptr<Monster> attacker, shared_ptr<Monster> d
 	{
 		term->SetCursorPosition(x + 1, y + height - 5);
 		term->SetColor(255, 23);
+		term->Output("                ");
+		term->SetCursorPosition(x + 1, y + height - 5);
 		term->Output(attacker->GetName());
 		term->SetCursorPosition(x + 1, y + height - 4);
 		term->SetColor(255, 23);

@@ -10,6 +10,7 @@ all: game_client game_server standalone
 
 common/request.pb.cc: common/request.proto Makefile
 	protoc -I=common --cpp_out=common common/request.proto
+	protoc -I=common --python_out=solution common/request.proto
 
 common/request.pb.o: common/request.pb.cc common/request.proto
 	g++ $(CFLAGS) -std=c++11 -o $@ -Icommon -Iclient -Iserver -c $<

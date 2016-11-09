@@ -6,3 +6,4 @@ standalone
 common/request.pb.h
 common/request.pb.cc
 db.sqlite
+solution/request_pb2.py

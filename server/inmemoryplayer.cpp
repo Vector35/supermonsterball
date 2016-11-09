@@ -241,14 +241,11 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
 	}
 
-	switch (rand() % 15)
+	BallThrowResult result = m_encounter->GetThrowResult(type, m_seedGiven);
+	m_seedGiven = false;
+	switch (result)
 	{
-	case 0:
-	case 1:
-	case 2:
-	case 3:
-	case 4:
-	case 5:
+	case THROW_RESULT_CATCH:
 		if (GetNumberCaptured(m_encounter->GetSpecies()) == 0)
 			EarnExperience(600);
 		else
@@ -259,29 +256,18 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 		m_powder += 100;
 		m_monsters.push_back(m_encounter);
 		EndEncounter(true, type);
-		return THROW_RESULT_CATCH;
-	case 6:
-	case 7:
-		return THROW_RESULT_BREAK_OUT_AFTER_ONE;
-	case 8:
-	case 9:
-		return THROW_RESULT_BREAK_OUT_AFTER_TWO;
-	case 10:
-	case 11:
-		return THROW_RESULT_BREAK_OUT_AFTER_THREE;
-	case 12:
+		break;
+	case THROW_RESULT_RUN_AWAY_AFTER_ONE:
+	case THROW_RESULT_RUN_AWAY_AFTER_TWO:
+	case THROW_RESULT_RUN_AWAY_AFTER_THREE:
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
 		EndEncounter(false, type);
-		return THROW_RESULT_RUN_AWAY_AFTER_ONE;
-	case 13:
-		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
-		EndEncounter(false, type);
-		return THROW_RESULT_RUN_AWAY_AFTER_TWO;
+		break;
 	default:
-		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
-		EndEncounter(false, type);
-		return THROW_RESULT_RUN_AWAY_AFTER_THREE;
+		break;
 	}
+
+	return result;
 }
 
 
@@ -385,9 +371,6 @@ map<ItemType, uint32_t> InMemoryPlayer::GetItemsFromStop(int32_t x, int32_t y)
 		}
 		i++;
 	}
-
-	if (m_recentStopsVisited.size() > MAX_STOPS_WITHIN_COOLDOWN)
-		return map<ItemType, uint32_t>();
 
 	map<ItemType, uint32_t> itemWeights;
 	itemWeights[ITEM_STANDARD_BALL] = 20;

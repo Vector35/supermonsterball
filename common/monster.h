@@ -75,6 +75,7 @@ class MonsterSpecies
 	MonsterSpecies* m_baseForm;
 	uint32_t m_evolutionCost;
 	std::vector<Move*> m_quickMoves, m_chargeMoves;
+	uint32_t m_catchRate;
 
 	static std::vector<MonsterSpecies*> m_list;
 
@@ -88,7 +89,7 @@ public:
 		Element type1, Element type2, uint32_t attack, uint32_t defense, uint32_t stamina,
 		const std::vector<MonsterSpecies*>& evolutions, uint32_t evolutionCost,
 		const std::vector<Move*>& quickMoves, const std::vector<Move*>& chargeMoves,
-		Biome* commonBiome, uint32_t commonWeight, uint32_t uncommonWeight);
+		Biome* commonBiome, uint32_t commonWeight, uint32_t uncommonWeight, uint32_t catchRate);
 
 	static void Init();
 	static MonsterSpecies* GetByIndex(uint32_t monster);
@@ -106,6 +107,7 @@ public:
 	uint32_t GetBaseAttack() const { return m_baseAttack; }
 	uint32_t GetBaseDefense() const { return m_baseDefense; }
 	uint32_t GetBaseStamina() const { return m_baseStamina; }
+	uint32_t GetCatchRate() const { return m_catchRate; }
 
 	const std::vector<MonsterSpecies*>& GetEvolutions() const { return m_evolutions; }
 	uint32_t GetEvolutionCost() const { return m_evolutionCost; }
@@ -116,6 +118,17 @@ public:
 	Biome* GetCommonBiome() const { return m_commonBiome; }
 	uint32_t GetCommonWeight() const { return m_commonWeight; }
 	uint32_t GetUncommonWeight() const { return m_uncommonWeight; }
+};
+
+enum BallThrowResult
+{
+	THROW_RESULT_CATCH = 0,
+	THROW_RESULT_BREAK_OUT_AFTER_ONE = 1,
+	THROW_RESULT_BREAK_OUT_AFTER_TWO = 2,
+	THROW_RESULT_BREAK_OUT_AFTER_THREE = 3,
+	THROW_RESULT_RUN_AWAY_AFTER_ONE = 4,
+	THROW_RESULT_RUN_AWAY_AFTER_TWO = 5,
+	THROW_RESULT_RUN_AWAY_AFTER_THREE = 6
 };
 
 class Monster
@@ -185,6 +198,8 @@ public:
 
 	void Damage(uint32_t damage);
 	void Heal(uint32_t amount);
+
+	BallThrowResult GetThrowResult(ItemType ball, bool seedGiven);
 };
 
 struct MonsterSighting

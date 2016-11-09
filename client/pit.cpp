@@ -623,6 +623,12 @@ static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monste
 		else
 			sprintf(msg, "Pit reputation reduced by %d.", reputation);
 		ShowBattleText(x, y, width, height, msg);
+
+		if (reputation >= 10)
+		{
+			sprintf(msg, " earned %d XP.", reputation / 10);
+			ShowBattleText(x, y, width, height, player->GetName() + msg);
+		}
 	}
 
 	if (win && pitOfDoom)

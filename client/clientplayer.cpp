@@ -289,9 +289,6 @@ map<ItemType, uint32_t> ClientPlayer::GetItemsFromStop(int32_t x, int32_t y)
 		i++;
 	}
 
-	if (m_recentStopsVisited.size() > MAX_STOPS_WITHIN_COOLDOWN)
-		return map<ItemType, uint32_t>();
-
 	map<ItemType, uint32_t> result = ClientRequest::GetClient()->GetItemsFromStop(x, y);
 	m_inventory = ClientRequest::GetClient()->GetInventory();
 

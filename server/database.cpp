@@ -361,7 +361,7 @@ DatabaseLoginResult Database::GetUserByID(uint64_t id, string& name)
 	if (sqlite3_bind_int64(m_readUserQuery, 1, id) != SQLITE_OK)
 		throw DatabaseException(sqlite3_errmsg(m_db));
 
-	if (sqlite3_step(m_loginQuery) == SQLITE_ROW)
+	if (sqlite3_step(m_readUserQuery) == SQLITE_ROW)
 	{
 		name = string((const char*)sqlite3_column_text(m_readUserQuery, 0),
 			(size_t)sqlite3_column_bytes(m_readUserQuery, 0));
@@ -374,6 +374,7 @@ DatabaseLoginResult Database::GetUserByID(uint64_t id, string& name)
 		result.y = sqlite3_column_int(m_readUserQuery, 7);
 		result.team = (Team)sqlite3_column_int(m_readUserQuery, 8);
 		FinishStatement(m_readUserQuery);
+		result.id = id;
 		result.valid = true;
 	}
 
@@ -1017,6 +1018,12 @@ PitStatus Database::GetPitStatus(int32_t x, int32_t y)
 
 			if (foundMonster)
 				status.defenders.push_back(foundMonster);
+			else
+				printf("Monster ID %d not found for player ID %d\n", (int)monster, (int)user);
+		}
+		else
+		{
+			printf("Player ID %d invalid\n", (int)user);
 		}
 
 		result = sqlite3_step(m_readPitMonstersQuery);

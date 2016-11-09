@@ -527,7 +527,7 @@ string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, u
 		}
 		else if ((input == "\r") || (input == "\n"))
 		{
-			term->SetCursorPosition(x + input.size(), y);
+			term->SetCursorPosition(x + result.size(), y);
 			term->Output(" ");
 			return result;
 		}
@@ -616,8 +616,8 @@ static int32_t ShowMainMenuOptions(size_t width, const vector<string>& options)
 
 bool ShowMainMenu(Player* player, MapRenderer* map)
 {
-	int32_t option = ShowMainMenuOptions(20, vector<string>{"Continue", "Your Captures", "Monster Index", "Inventory",
-		"Quit Game"});
+	int32_t option = ShowMainMenuOptions(25, vector<string>{"Continue", "Your Captures", "Monster Index", "Inventory",
+		"Travel to Pit of Doom", "Quit Game"});
 	if ((option == -1) || (option == 0))
 		return false;
 
@@ -639,6 +639,13 @@ bool ShowMainMenu(Player* player, MapRenderer* map)
 	if (option == 3)
 	{
 		ShowInventory(player, map);
+		return false;
+	}
+
+	if (option == 4)
+	{
+		player->TravelToPitOfDoom();
+		map->EnsurePlayerVisible();
 		return false;
 	}
 

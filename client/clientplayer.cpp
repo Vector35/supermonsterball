@@ -412,6 +412,14 @@ void ClientPlayer::HealMonster(shared_ptr<Monster> monster, ItemType type)
 }
 
 
+void ClientPlayer::TravelToPitOfDoom()
+{
+	m_x = SPAWN_X;
+	m_y = SPAWN_Y;
+	ClientRequest::GetClient()->TravelToPitOfDoom();
+}
+
+
 string ClientPlayer::GetLevel40Flag()
 {
 	return ClientRequest::GetClient()->GetLevel40Flag();

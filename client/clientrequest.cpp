@@ -665,6 +665,13 @@ void ClientRequest::HealMonster(shared_ptr<Monster> monster, ItemType item, map<
 }
 
 
+void ClientRequest::TravelToPitOfDoom()
+{
+	WriteRequest(Request_RequestType_TravelToPitOfDoom, "");
+	ReadResponse();
+}
+
+
 string ClientRequest::GetLevel40Flag()
 {
 	WriteRequest(Request_RequestType_GetLevel40Flag, "");

@@ -162,6 +162,8 @@ public:
 
 	virtual void HealMonster(std::shared_ptr<Monster> monster, ItemType type) = 0;
 
+	virtual void TravelToPitOfDoom() = 0;
+
 	virtual std::string GetLevel40Flag() = 0;
 	virtual std::string GetCatchEmAllFlag() = 0;
 };

@@ -34,8 +34,9 @@ message Request
 		SetPitBattleAction = 26;
 		EndPitBattle = 27;
 		HealMonster = 28;
-		GetLevel40Flag = 29;
-		GetCatchEmAllFlag = 30;
+		TravelToPitOfDoom = 29;
+		GetLevel40Flag = 30;
+		GetCatchEmAllFlag = 31;
 	}
 
 	RequestType type = 1;

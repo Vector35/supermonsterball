@@ -88,6 +88,8 @@ public:
 
 	virtual void HealMonster(std::shared_ptr<Monster> monster, ItemType type) override;
 
+	virtual void TravelToPitOfDoom() override;
+
 	virtual std::string GetLevel40Flag() override;
 	virtual std::string GetCatchEmAllFlag() override;
 };

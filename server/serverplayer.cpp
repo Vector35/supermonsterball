@@ -674,6 +674,13 @@ void ServerPlayer::HealMonster(std::shared_ptr<Monster> monster, ItemType type)
 }
 
 
+void ServerPlayer::TravelToPitOfDoom()
+{
+	m_x = SPAWN_X;
+	m_y = SPAWN_Y;
+}
+
+
 string ServerPlayer::GetLevel40Flag()
 {
 	if (m_level < 40)

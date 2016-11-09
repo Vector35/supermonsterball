@@ -44,6 +44,7 @@ class ClientHandler
 	void SetPitBattleAction(const std::string& msg);
 	void EndPitBattle();
 	void HealMonster(const std::string& msg);
+	void TravelToPitOfDoom();
 	void GetLevel40Flag();
 	void GetCatchEmAllFlag();
 

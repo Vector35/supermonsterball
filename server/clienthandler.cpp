@@ -893,6 +893,17 @@ void ClientHandler::HealMonster(const string& msg)
 }
 
 
+void ClientHandler::TravelToPitOfDoom()
+{
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+		m_player->TravelToPitOfDoom();
+	});
+	WriteResponse("");
+}
+
+
 void ClientHandler::GetLevel40Flag()
 {
 	GetLevel40FlagResponse response;
@@ -1013,6 +1024,9 @@ void ClientHandler::ProcessRequests()
 				break;
 			case Request_RequestType_HealMonster:
 				HealMonster(request.data());
+				break;
+			case Request_RequestType_TravelToPitOfDoom:
+				TravelToPitOfDoom();
 				break;
 			case Request_RequestType_GetLevel40Flag:
 				GetLevel40Flag();

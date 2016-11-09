@@ -606,6 +606,13 @@ void InMemoryPlayer::HealMonster(std::shared_ptr<Monster> monster, ItemType type
 }
 
 
+void InMemoryPlayer::TravelToPitOfDoom()
+{
+	m_x = SPAWN_X;
+	m_y = SPAWN_Y;
+}
+
+
 string InMemoryPlayer::GetLevel40Flag()
 {
 	if (m_level < 40)

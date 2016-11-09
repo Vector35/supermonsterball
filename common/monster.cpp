@@ -387,11 +387,11 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* webadeth = new MonsterSpecies("🕸🕷 ", "Webadeth", "Don't end up in this spider's web. Seriously,"
 		" just don't.", Bug, Poison, 240, 165, 155,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{bite, mandibleMunch}, vector<Move*>{poisonFang, infestation},
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{bugBite, mandibleMunch}, vector<Move*>{poisonFang, infestation},
 		grassBiome, 20, 15);
 	MonsterSpecies* spidra = new MonsterSpecies(" 🕷 ", "Spidra", "You might not see the small spider, but you'll "
 		"definitely know if it bites you.", Bug, Poison, 140, 70, 60,
-		vector<MonsterSpecies*>{webadeth}, 50, vector<Move*>{bite}, vector<Move*>{infect}, grassBiome, 200, 150);
+		vector<MonsterSpecies*>{webadeth}, 50, vector<Move*>{bugBite}, vector<Move*>{infect}, grassBiome, 200, 150);
 	m_list.push_back(spidra);
 	m_list.push_back(webadeth);
 
@@ -423,10 +423,10 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* stingping = new MonsterSpecies(" 🦂 ", "Stingping", "The tricky part about the stinger on this "
 		"dangerous beast is that it can trick your immune system into attacking itself.", Bug, Poison, 235, 145, 180,
-		vector<MonsterSpecies*>{}, 0, vector<Move*>{sting, bite}, vector<Move*>{infect, poisonFang}, desertBiome, 15, 5);
+		vector<MonsterSpecies*>{}, 0, vector<Move*>{sting, bugBite}, vector<Move*>{infect, poisonFang}, desertBiome, 15, 5);
 	MonsterSpecies* antler = new MonsterSpecies(" 🐜 ", "Antler", "This small bug is well known for attacking deer "
 		"ticks.", Bug, Poison, 160, 60, 40,
-		vector<MonsterSpecies*>{stingping}, 50, vector<Move*>{sting, bite}, vector<Move*>{chomp}, desertBiome, 200, 75);
+		vector<MonsterSpecies*>{stingping}, 50, vector<Move*>{sting, bugBite}, vector<Move*>{chomp}, desertBiome, 200, 75);
 	m_list.push_back(antler);
 	m_list.push_back(stingping);
 
@@ -524,7 +524,7 @@ void MonsterSpecies::Init()
 
 	MonsterSpecies* lazybug = new MonsterSpecies(" 🐞 ", "Lazybug", "This bug is too lazy to move, so it uses its "
 		"psychic powers to force its food to come near.", Bug, Psychic, 230, 210, 165, vector<MonsterSpecies*>{}, 0,
-		vector<Move*>{bite}, vector<Move*>{memoryCorruption, infestation}, cityBiome, 125, 80);
+		vector<Move*>{bite, bugBite}, vector<Move*>{memoryCorruption, infestation}, cityBiome, 125, 80);
 	m_list.push_back(lazybug);
 
 	MonsterSpecies* turtlejet = new MonsterSpecies("🌊🐢 ", "Turtlejet", "Capable of both extremely high and "

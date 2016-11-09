@@ -823,7 +823,7 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 	size_t centerX = term->GetWidth() / 2;
 	size_t centerY = term->GetHeight() / 2;
 	size_t width = 76;
-	size_t height = 15;
+	size_t height = 25;
 	size_t baseX = (centerX - (width / 2)) | 1;
 	size_t baseY = centerY - (height / 2);
 
@@ -901,7 +901,7 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 		for (size_t dx = 0; dx < width; dx++)
 			term->Output("┄");
 
-		for (size_t dy = 0; dy < 11; dy++)
+		for (size_t dy = 0; dy < 21; dy++)
 		{
 			term->SetCursorPosition(baseX + (width / 2), baseY + 2 + dy);
 			term->Output("┆");
@@ -941,7 +941,7 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 		{
 			if (defenders[i]->GetOwnerID() == player->GetID())
 				hasMonsterAssigned = true;
-			term->SetCursorPosition(baseX + (width / 2) + 2, baseY + 3 + i);
+			term->SetCursorPosition(baseX + (width / 2) + 2, baseY + 3 + (i * 2));
 			sprintf(repStr, "%2d. ", (int)i + 1);
 			term->SetColor(240, 234);
 			term->Output(repStr);
@@ -949,9 +949,12 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 			term->Output(defenders[i]->GetSpecies()->GetImage());
 			term->Output(" ");
 			term->Output(defenders[i]->GetName());
-			term->SetCursorPosition(baseX + width - 9, baseY + 3 + i);
+			term->SetCursorPosition(baseX + width - 9, baseY + 3 + (i * 2));
 			sprintf(repStr, "CP %d", defenders[i]->GetCP());
 			term->Output(repStr);
+			term->SetCursorPosition(baseX + (width / 2) + 6, baseY + 4 + (i * 2));
+			term->SetColor(246, 234);
+			term->Output(defenders[i]->GetOwnerName());
 		}
 
 		term->EndOutputQueue();

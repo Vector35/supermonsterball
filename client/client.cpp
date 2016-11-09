@@ -520,7 +520,7 @@ string InputString(size_t x, size_t y, size_t width, uint32_t foregroundColor, u
 		string input = term->GetInput();
 		if (input == "\033")
 			break;
-		else if (input == "\b")
+		else if ((input == "\b") || (input == "\x7f"))
 		{
 			if (result.size() > 0)
 				result = result.substr(0, result.size() - 1);

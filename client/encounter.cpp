@@ -38,6 +38,13 @@ static void DrawEncounter(shared_ptr<Monster> monster, size_t x, size_t y, size_
 	term->Output(monster->GetSpecies()->GetImage());
 	term->SetCursorPosition(x + ((width * 2) / 3), y + 6);
 	term->Output("🚶");
+	term->SetCursorPosition(x + 1, y);
+	term->SetColor(255, 17);
+	term->Output(monster->GetName());
+	char cpStr[32];
+	sprintf(cpStr, "CP %d", monster->GetCP());
+	term->SetCursorPosition(x + 1, y + 1);
+	term->Output(cpStr);
 	term->EndOutputQueue();
 }
 

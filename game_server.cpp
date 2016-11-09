@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 	CRYPTO_set_locking_callback(LockingCallback);
 
 	// Create TLS only SSL context
-	SSL_CTX* ctx = SSL_CTX_new(TLS_server_method());
+	SSL_CTX* ctx = SSL_CTX_new(TLSv1_2_server_method());
 
 	// Load SSL certificate
 	if (SSL_CTX_use_certificate_file(ctx, "server.crt", SSL_FILETYPE_PEM) <= 0)

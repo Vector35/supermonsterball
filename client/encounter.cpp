@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <string.h>
 #include "client.h"
 #include "terminal.h"
 

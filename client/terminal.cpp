@@ -4,6 +4,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <errno.h>
+#include <signal.h>
 #include "terminal.h"
 
 using namespace std;

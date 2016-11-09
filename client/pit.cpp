@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include "client.h"
 #include "player.h"
 #include "map.h"

@@ -385,7 +385,7 @@ int main(int argc, char* argv[])
 	ERR_load_BIO_strings();
 	OpenSSL_add_all_algorithms();
 
-	SSL_CTX* context = SSL_CTX_new(TLS_client_method());
+	SSL_CTX* context = SSL_CTX_new(TLSv1_2_client_method());
 
 	if (SSL_CTX_load_verify_locations(context, "server.crt", NULL) <= 0)
 	{

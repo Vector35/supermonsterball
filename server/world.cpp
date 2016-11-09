@@ -2,6 +2,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "world.h"
 #include "perlin2d.h"
 #include "database.h"

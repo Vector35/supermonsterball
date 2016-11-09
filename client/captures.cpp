@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <string.h>
 #include "client.h"
 
 using namespace std;

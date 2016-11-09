@@ -552,8 +552,9 @@ static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monste
 				done = true;
 				break;
 			}
+			status.opponent->SetHP(status.defenderHP);
 			ShowBattleDefenderChange(x, y, width, status.opponent);
-			DrawBattleStatus(attacker, defender, x, y, width, height, status.charge);
+			DrawBattleStatus(attacker, status.opponent, x, y, width, height, status.charge);
 			ShowBattleText(x, y, width, height, status.opponent->GetName() + " is ready to defend the pit.");
 			break;
 		case PIT_BATTLE_WIN:

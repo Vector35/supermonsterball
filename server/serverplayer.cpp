@@ -168,6 +168,7 @@ shared_ptr<Monster> ServerPlayer::StartWildEncounter(int32_t x, int32_t y)
 		return nullptr;
 
 	m_encounter = World::GetWorld()->GetMonsterAt(x, y, m_level);
+	m_encounter->SetOwner(m_id, m_name);
 	m_seedGiven = false;
 	return m_encounter;
 }
@@ -520,32 +521,59 @@ bool ServerPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monste
 {
 	Team pitTeam = GetPitTeam(x, y);
 	if (pitTeam == TEAM_UNASSIGNED)
+	{
+		printf("Player %s trying to battle pit, but pit has no defenders.\n", m_name.c_str());
 		return false;
+	}
 	if (m_team == TEAM_UNASSIGNED)
+	{
+		printf("Player %s trying to battle pit, but has no team.\n", m_name.c_str());
 		return false;
+	}
 	if (monsters.size() == 0)
+	{
+		printf("Player %s trying to battle pit, but has no valid attackers.\n", m_name.c_str());
 		return false;
+	}
 
 	if ((pitTeam == m_team) && (GetPitReputation(x, y) >= MAX_PIT_REPUTATION))
+	{
+		printf("Player %s trying to battle pit, but pit is already max reputation.\n", m_name.c_str());
 		return false;
+	}
 
 	set<uint64_t> seen;
 	for (auto& i : monsters)
 	{
 		if (seen.count(i->GetID()) > 0)
+		{
+			printf("Player %s trying to battle pit, but has duplicate attackers.\n", m_name.c_str());
 			return false;
+		}
 		if (i->GetOwnerID() != m_id)
+		{
+			printf("Player %s trying to battle pit, but is trying to attack with a monster that isn't theirs.\n", m_name.c_str());
 			return false;
+		}
 		if (i->GetCurrentHP() == 0)
+		{
+			printf("Player %s trying to battle pit, but is trying to attack with a fainted monster.\n", m_name.c_str());
 			return false;
+		}
 		if (i->IsDefending())
+		{
+			printf("Player %s trying to battle pit, but is trying to attack with a defender.\n", m_name.c_str());
 			return false;
+		}
 		seen.insert(i->GetID());
 	}
 
 	vector<shared_ptr<Monster>> defenders = GetPitDefenders(x, y);
 	if (defenders.size() == 0)
+	{
+		printf("Player %s trying to battle pit, but pit has no valid defenders.\n", m_name.c_str());
 		return false;
+	}
 
 	shared_ptr<PitBattle> battle(new PitBattle(monsters, defenders, pitTeam == m_team, x, y, Database::GetDatabase()));
 	m_battle = battle;

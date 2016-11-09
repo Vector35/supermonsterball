@@ -12,9 +12,10 @@ ServerPlayer::ServerPlayer(const string& name, uint64_t id): m_name(name)
 	m_level = 1;
 	m_xp = 0;
 	m_powder = 0;
-	m_x = 0;
-	m_y = 0;
+	m_x = SPAWN_X;
+	m_y = SPAWN_Y;
 	m_team = TEAM_UNASSIGNED;
+	m_banReason = "Unknown, try again with another account";
 
 	m_inventory[ITEM_STANDARD_BALL] = 20;
 	m_inventory[ITEM_MEGA_SEED] = 5;
@@ -32,6 +33,7 @@ ServerPlayer::ServerPlayer(const string& name, const DatabaseLoginResult& login)
 	m_x = login.x;
 	m_y = login.y;
 	m_team = login.team;
+	m_banReason = "Unknown, try again with another account";
 
 	map<uint32_t, uint32_t> inventory = Database::GetDatabase()->GetInventory(m_id);
 	for (auto& i : inventory)
@@ -520,11 +522,28 @@ bool ServerPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> m
 bool ServerPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
 {
 	Team pitTeam = GetPitTeam(x, y);
-	if (pitTeam == TEAM_UNASSIGNED)
+	if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
 	{
-		printf("Player %s trying to battle pit, but pit has no defenders.\n", m_name.c_str());
-		return false;
+		if (m_level < 40)
+		{
+			printf("Player %s trying to battle Pit of Doom below level 40.\n", m_name.c_str());
+			return false;
+		}
 	}
+	else
+	{
+		if (pitTeam == TEAM_UNASSIGNED)
+		{
+			printf("Player %s trying to battle pit, but pit has no defenders.\n", m_name.c_str());
+			return false;
+		}
+		if ((pitTeam == m_team) && (GetPitReputation(x, y) >= MAX_PIT_REPUTATION))
+		{
+			printf("Player %s trying to battle pit, but pit is already max reputation.\n", m_name.c_str());
+			return false;
+		}
+	}
+
 	if (m_team == TEAM_UNASSIGNED)
 	{
 		printf("Player %s trying to battle pit, but has no team.\n", m_name.c_str());
@@ -533,12 +552,6 @@ bool ServerPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monste
 	if (monsters.size() == 0)
 	{
 		printf("Player %s trying to battle pit, but has no valid attackers.\n", m_name.c_str());
-		return false;
-	}
-
-	if ((pitTeam == m_team) && (GetPitReputation(x, y) >= MAX_PIT_REPUTATION))
-	{
-		printf("Player %s trying to battle pit, but pit is already max reputation.\n", m_name.c_str());
 		return false;
 	}
 
@@ -658,4 +671,27 @@ void ServerPlayer::HealMonster(std::shared_ptr<Monster> monster, ItemType type)
 	else if (type == ITEM_KEG_OF_HEALTH)
 		monster->Heal(1000);
 	Database::GetDatabase()->UpdateMonster(m_id, monster);
+}
+
+
+string ServerPlayer::GetLevel40Flag()
+{
+	if (m_level < 40)
+		return "You are not level 40!";
+	if (m_flaggedForBan)
+		return string("Cheater! You were caught: ") + m_banReason;
+	return "CSAW{Prepare4TrubbleAndMakeItDubble}";
+}
+
+
+string ServerPlayer::GetCatchEmAllFlag()
+{
+	for (auto& i : MonsterSpecies::GetAll())
+	{
+		if (GetNumberCaptured(i) == 0)
+			return "You need to go catch 'em all.";
+	}
+	if (m_flaggedForBan)
+		return string("Cheater! You were caught: ") + m_banReason;
+	return "CSAW{ImDaBestLikeNo1EvarWuz}";
 }

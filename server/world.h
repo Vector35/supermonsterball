@@ -12,6 +12,14 @@
 
 #define DEFAULT_SPAWN_TIME (15 * 60)
 
+#define PIT_OF_DOOM_X (-26)
+#define PIT_OF_DOOM_Y 16
+#define PROFESSOR_X (-25)
+#define PROFESSOR_Y 15
+
+#define SPAWN_X (-20)
+#define SPAWN_Y 16
+
 enum MapTile
 {
 	TILE_GRASS = 0,
@@ -62,6 +70,7 @@ class World
 	std::map<uint32_t, GridData> m_data;
 	uint8_t* m_mapData;
 	Database* m_db;
+	PitStatus m_pitOfDoom;
 
 	void AddSpawnPoint(const SpawnPoint& data);
 	PitStatus LoadPit(int32_t x, int32_t y);

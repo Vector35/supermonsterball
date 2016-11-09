@@ -154,6 +154,19 @@ World::World(Database* db)
 				}
 			}
 
+			if ((x >= ((MAP_SIZE / 2) + PIT_OF_DOOM_X - 1)) && (x <= ((MAP_SIZE / 2) + PIT_OF_DOOM_X + 1)) &&
+				(y >= ((MAP_SIZE / 2) + PIT_OF_DOOM_Y - 1)) && (y <= ((MAP_SIZE / 2) + PIT_OF_DOOM_Y + 1)))
+			{
+				tile = TILE_CITY;
+				if ((x == ((MAP_SIZE / 2) + PIT_OF_DOOM_X)) && (y == ((MAP_SIZE / 2) + PIT_OF_DOOM_Y)))
+					tile = TILE_PIT;
+			}
+			else if ((x > ((MAP_SIZE / 2) + PIT_OF_DOOM_X)) && (x <= ((MAP_SIZE / 2) + PIT_OF_DOOM_X + 8)) &&
+				(y == ((MAP_SIZE / 2) + PIT_OF_DOOM_Y)))
+			{
+				tile = TILE_CITY;
+			}
+
 			m_mapData[(y * MAP_SIZE) + x] = tile;
 
 			afterChurch = (tile == TILE_SUBURB_CHURCH);
@@ -175,6 +188,71 @@ World::World(Database* db)
 			}
 		}
 	}
+
+	m_pitOfDoom.x = PIT_OF_DOOM_X;
+	m_pitOfDoom.y = PIT_OF_DOOM_Y;
+	m_pitOfDoom.team = TEAM_UNASSIGNED;
+	m_pitOfDoom.reputation = 100000;
+
+	shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(12), 0, 0, 0)); // Beezer
+	monster->SetIV(8, 8, 8);
+	monster->SetLevel(30);
+	monster->SetSize(31);
+	monster->SetMoves(Move::GetByName("Bug Bite"), Move::GetByName("Infestation"));
+	monster->ResetHP();
+	monster->SetID((uint64_t)-1);
+	monster->SetOwner((uint64_t)-1, "Prof. Vick");
+	m_pitOfDoom.defenders.push_back(monster);
+
+	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(72), 0, 0, 0)); // Bonedread
+	monster->SetIV(8, 8, 8);
+	monster->SetLevel(30);
+	monster->SetSize(31);
+	monster->SetMoves(Move::GetByName("Ghost Blade"), Move::GetByName("Shadow Claw"));
+	monster->ResetHP();
+	monster->SetID((uint64_t)-2);
+	monster->SetOwner((uint64_t)-1, "Prof. Vick");
+	m_pitOfDoom.defenders.push_back(monster);
+
+	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(76), 0, 0, 0)); // Ogreat
+	monster->SetIV(8, 8, 8);
+	monster->SetLevel(30);
+	monster->SetSize(31);
+	monster->SetMoves(Move::GetByName("Pound"), Move::GetByName("Juggernaut"));
+	monster->ResetHP();
+	monster->SetID((uint64_t)-3);
+	monster->SetOwner((uint64_t)-1, "Prof. Vick");
+	m_pitOfDoom.defenders.push_back(monster);
+
+	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(49), 0, 0, 0)); // Krabber
+	monster->SetIV(8, 8, 8);
+	monster->SetLevel(30);
+	monster->SetSize(31);
+	monster->SetMoves(Move::GetByName("Water Blast"), Move::GetByName("Heavy Rain"));
+	monster->ResetHP();
+	monster->SetID((uint64_t)-4);
+	monster->SetOwner((uint64_t)-1, "Prof. Vick");
+	m_pitOfDoom.defenders.push_back(monster);
+
+	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(101), 0, 0, 0)); // Burninator
+	monster->SetIV(8, 8, 8);
+	monster->SetLevel(30);
+	monster->SetSize(31);
+	monster->SetMoves(Move::GetByName("Fireball"), Move::GetByName("Burninate"));
+	monster->ResetHP();
+	monster->SetID((uint64_t)-5);
+	monster->SetOwner((uint64_t)-1, "Prof. Vick");
+	m_pitOfDoom.defenders.push_back(monster);
+
+	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(103), 0, 0, 0)); // Ehkaybear
+	monster->SetIV(8, 8, 8);
+	monster->SetLevel(30);
+	monster->SetSize(31);
+	monster->SetMoves(Move::GetByName("Burst Fire"), Move::GetByName("Aimed Shot"));
+	monster->ResetHP();
+	monster->SetID((uint64_t)-6);
+	monster->SetOwner((uint64_t)-1, "Prof. Vick");
+	m_pitOfDoom.defenders.push_back(monster);
 }
 
 
@@ -215,6 +293,9 @@ PitStatus World::LoadPit(int32_t x, int32_t y)
 
 PitStatus* World::GetPit(int32_t x, int32_t y)
 {
+	if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
+		return &m_pitOfDoom;
+
 	if (GetMapTile(x, y) != TILE_PIT)
 		return nullptr;
 
@@ -423,6 +504,8 @@ bool World::AssignPitDefender(int32_t x, int32_t y, Team team, shared_ptr<Monste
 		return false;
 	if (monster->IsDefending())
 		return false;
+	if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
+		return false;
 
 	if (pit->team == TEAM_UNASSIGNED)
 	{
@@ -490,6 +573,8 @@ uint32_t World::AddPitReputation(int32_t x, int32_t y, uint32_t reputation)
 		return 0;
 	if (pit->team == TEAM_UNASSIGNED)
 		return 0;
+	if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
+		return 0;
 
 	pit->reputation += reputation;
 	if (pit->reputation > MAX_PIT_REPUTATION)
@@ -510,6 +595,8 @@ uint32_t World::RemovePitReputation(int32_t x, int32_t y, uint32_t reputation)
 	if (!pit)
 		return 0;
 	if (pit->team == TEAM_UNASSIGNED)
+		return 0;
+	if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
 		return 0;
 
 	if (reputation >= pit->reputation)

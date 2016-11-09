@@ -54,6 +54,7 @@ public:
 	uint32_t GetDamagePerSecond() const { return m_dps; }
 
 	static Move* GetByIndex(uint32_t i);
+	static Move* GetByName(const std::string& name);
 
 	static bool IsSuperEffective(Element attack, Element defense);
 	static bool IsNotEffective(Element attack, Element defense);

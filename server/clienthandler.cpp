@@ -893,6 +893,30 @@ void ClientHandler::HealMonster(const string& msg)
 }
 
 
+void ClientHandler::GetLevel40Flag()
+{
+	GetLevel40FlagResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+		response.set_flag(m_player->GetLevel40Flag());
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
+void ClientHandler::GetCatchEmAllFlag()
+{
+	GetCatchEmAllFlagResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+		response.set_flag(m_player->GetCatchEmAllFlag());
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
 void ClientHandler::ProcessRequests()
 {
 	try
@@ -989,6 +1013,12 @@ void ClientHandler::ProcessRequests()
 				break;
 			case Request_RequestType_HealMonster:
 				HealMonster(request.data());
+				break;
+			case Request_RequestType_GetLevel40Flag:
+				GetLevel40Flag();
+				break;
+			case Request_RequestType_GetCatchEmAllFlag:
+				GetCatchEmAllFlag();
 				break;
 			default:
 				throw SocketException("Bad request type");

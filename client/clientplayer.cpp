@@ -410,3 +410,15 @@ void ClientPlayer::HealMonster(shared_ptr<Monster> monster, ItemType type)
 {
 	ClientRequest::GetClient()->HealMonster(monster, type, m_inventory);
 }
+
+
+string ClientPlayer::GetLevel40Flag()
+{
+	return ClientRequest::GetClient()->GetLevel40Flag();
+}
+
+
+string ClientPlayer::GetCatchEmAllFlag()
+{
+	return ClientRequest::GetClient()->GetCatchEmAllFlag();
+}

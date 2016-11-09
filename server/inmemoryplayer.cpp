@@ -1,4 +1,4 @@
-#define DEBUG_MAXED_PLAYER
+//#define DEBUG_MAXED_PLAYER
 
 #include <cstdlib>
 #include <set>
@@ -18,8 +18,8 @@ InMemoryPlayer::InMemoryPlayer(const string& name): m_name(name)
 #endif
 	m_xp = GetTotalExperienceNeededForCurrentLevel();
 	m_powder = 0;
-	m_x = 0;
-	m_y = 0;
+	m_x = SPAWN_X;
+	m_y = SPAWN_Y;
 	m_nextMonsterID = 1;
 
 #ifdef DEBUG_MAXED_PLAYER
@@ -474,15 +474,38 @@ bool InMemoryPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster>
 bool InMemoryPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
 {
 	Team pitTeam = GetPitTeam(x, y);
-	if (pitTeam == TEAM_UNASSIGNED)
-		return false;
-	if (m_team == TEAM_UNASSIGNED)
-		return false;
-	if (monsters.size() == 0)
-		return false;
+	if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
+	{
+		if (m_level < 40)
+		{
+			printf("Player %s trying to battle Pit of Doom below level 40.\n", m_name.c_str());
+			return false;
+		}
+	}
+	else
+	{
+		if (pitTeam == TEAM_UNASSIGNED)
+		{
+			printf("Player %s trying to battle pit, but pit has no defenders.\n", m_name.c_str());
+			return false;
+		}
+		if ((pitTeam == m_team) && (GetPitReputation(x, y) >= MAX_PIT_REPUTATION))
+		{
+			printf("Player %s trying to battle pit, but pit is already max reputation.\n", m_name.c_str());
+			return false;
+		}
+	}
 
-	if ((pitTeam == m_team) && (GetPitReputation(x, y) >= MAX_PIT_REPUTATION))
+	if (m_team == TEAM_UNASSIGNED)
+	{
+		printf("Player %s trying to battle pit, but has no team.\n", m_name.c_str());
 		return false;
+	}
+	if (monsters.size() == 0)
+	{
+		printf("Player %s trying to battle pit, but has no valid attackers.\n", m_name.c_str());
+		return false;
+	}
 
 	set<uint64_t> seen;
 	for (auto& i : monsters)
@@ -580,4 +603,23 @@ void InMemoryPlayer::HealMonster(std::shared_ptr<Monster> monster, ItemType type
 		monster->Heal(60);
 	else if (type == ITEM_KEG_OF_HEALTH)
 		monster->Heal(1000);
+}
+
+
+string InMemoryPlayer::GetLevel40Flag()
+{
+	if (m_level < 40)
+		return "You are not level 40!";
+	return "Level 40 flag";
+}
+
+
+string InMemoryPlayer::GetCatchEmAllFlag()
+{
+	for (auto& i : MonsterSpecies::GetAll())
+	{
+		if (GetNumberCaptured(i) == 0)
+			return "You need to go catch 'em all.";
+	}
+	return "Catch 'em all flag";
 }

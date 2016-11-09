@@ -663,3 +663,27 @@ void ClientRequest::HealMonster(shared_ptr<Monster> monster, ItemType item, map<
 	monster->SetHP(response.hp());
 	inventory[item] = response.count();
 }
+
+
+string ClientRequest::GetLevel40Flag()
+{
+	WriteRequest(Request_RequestType_GetLevel40Flag, "");
+
+	GetLevel40FlagResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid flag response");
+
+	return response.flag();
+}
+
+
+string ClientRequest::GetCatchEmAllFlag()
+{
+	WriteRequest(Request_RequestType_GetCatchEmAllFlag, "");
+
+	GetCatchEmAllFlagResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid flag response");
+
+	return response.flag();
+}

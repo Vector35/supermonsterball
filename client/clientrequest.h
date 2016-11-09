@@ -51,4 +51,6 @@ public:
 	void SetPitBattleAction(PitBattleAction action);
 	uint32_t EndPitBattle();
 	void HealMonster(std::shared_ptr<Monster> monster, ItemType item, std::map<ItemType, uint32_t>& inventory);
+	std::string GetLevel40Flag();
+	std::string GetCatchEmAllFlag();
 };

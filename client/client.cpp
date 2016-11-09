@@ -348,6 +348,10 @@ void GameLoop(Player* player)
 				{
 					StartPitInteraction(player, &map, x, y);
 				}
+				else if ((x == PROFESSOR_X) && (y == PROFESSOR_Y))
+				{
+					StartProfessorInteraction(player);
+				}
 				else if (player->IsMapTileTraversable(x, y))
 				{
 					lastMovement = chrono::steady_clock::now();
@@ -367,6 +371,10 @@ void GameLoop(Player* player)
 				else if (player->GetMapTile(x, y) == TILE_PIT)
 				{
 					StartPitInteraction(player, &map, x, y);
+				}
+				else if ((x == PROFESSOR_X) && (y == PROFESSOR_Y))
+				{
+					StartProfessorInteraction(player);
 				}
 				else if (player->IsMapTileTraversable(x, y))
 				{
@@ -388,6 +396,10 @@ void GameLoop(Player* player)
 				{
 					StartPitInteraction(player, &map, x, y);
 				}
+				else if ((x == PROFESSOR_X) && (y == PROFESSOR_Y))
+				{
+					StartProfessorInteraction(player);
+				}
 				else if (player->IsMapTileTraversable(x, y))
 				{
 					lastMovement = chrono::steady_clock::now();
@@ -407,6 +419,10 @@ void GameLoop(Player* player)
 				else if (player->GetMapTile(x, y) == TILE_PIT)
 				{
 					StartPitInteraction(player, &map, x, y);
+				}
+				else if ((x == PROFESSOR_X) && (y == PROFESSOR_Y))
+				{
+					StartProfessorInteraction(player);
 				}
 				else if (player->IsMapTileTraversable(x, y))
 				{

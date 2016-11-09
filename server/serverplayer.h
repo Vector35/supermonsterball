@@ -20,6 +20,8 @@ class ServerPlayer: public Player
 	std::shared_ptr<Monster> m_encounter;
 	bool m_seedGiven;
 	std::shared_ptr<PitBattle> m_battle;
+	bool m_flaggedForBan;
+	std::string m_banReason;
 
 	void EndEncounter(bool caught, ItemType ball = ITEM_STANDARD_BALL);
 	void EarnExperience(uint32_t xp);
@@ -85,4 +87,7 @@ public:
 	virtual uint32_t EndPitBattle() override;
 
 	virtual void HealMonster(std::shared_ptr<Monster> monster, ItemType type) override;
+
+	virtual std::string GetLevel40Flag() override;
+	virtual std::string GetCatchEmAllFlag() override;
 };

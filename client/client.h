@@ -16,6 +16,7 @@ void ShowMonsterInfo(Player* player, MonsterSpecies* species);
 bool ShowMainMenu(Player* player, MapRenderer* map);
 void GetAndShowItemsFromStop(Player* player, int32_t x, int32_t y);
 void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y);
+void StartProfessorInteraction(Player* player);
 
 void InterruptableWait(uint32_t ms);
 

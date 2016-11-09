@@ -4,6 +4,7 @@
 #include "client.h"
 #include "player.h"
 #include "map.h"
+#include "world.h"
 
 using namespace std;
 
@@ -383,7 +384,36 @@ static bool SelectBattleAction(Player* player, MapRenderer* map, size_t x, size_
 }
 
 
-static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monster>> battleTeam, bool training)
+static void ShowLevel40Flag(Player* player)
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t width = 70;
+	size_t height = 1;
+	size_t x = (centerX - (width / 2)) | 1;
+	size_t y = centerY - (height / 2);
+
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+	term->SetCursorPosition(x + 1, y);
+	term->SetColor(255, 234);
+	term->Output(player->GetLevel40Flag());
+
+	sleep(10);
+	term->GetInput();
+
+	while (!term->HasQuit())
+	{
+		string input = term->GetInput();
+		if ((input == " ") || (input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == "\033"))
+			break;
+	}
+}
+
+
+static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monster>> battleTeam, bool training,
+	bool pitOfDoom)
 {
 	Terminal* term = Terminal::GetTerminal();
 	size_t centerX = term->GetWidth() / 2;
@@ -404,6 +434,7 @@ static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monste
 	ShowBattleText(x, y, width, height, "Go " + attacker->GetName() + "!");
 
 	bool done = false;
+	bool win = false;
 	shared_ptr<Monster> oldAttacker;
 	while ((!term->HasQuit()) && (!done))
 	{
@@ -559,6 +590,7 @@ static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monste
 			break;
 		case PIT_BATTLE_WIN:
 			ShowBattleText(x, y, width, height, player->GetName() + " won the battle!");
+			win = true;
 			done = true;
 			break;
 		case PIT_BATTLE_LOSE:
@@ -591,6 +623,12 @@ static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monste
 			sprintf(msg, "Pit reputation reduced by %d.", reputation);
 		ShowBattleText(x, y, width, height, msg);
 	}
+
+	if (win && pitOfDoom)
+	{
+		map->Paint();
+		ShowLevel40Flag(player);
+	}
 }
 
 
@@ -609,6 +647,31 @@ static void ShowPitUnderlevelMessage()
 	term->SetCursorPosition(x + 1, y);
 	term->SetColor(255, 234);
 	term->Output("You must be level 5 to battle in the pits.");
+
+	while (!term->HasQuit())
+	{
+		string input = term->GetInput();
+		if ((input == " ") || (input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == "\033"))
+			break;
+	}
+}
+
+
+static void ShowPitOfDoomUnderlevelMessage()
+{
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t width = 70;
+	size_t height = 1;
+	size_t x = (centerX - (width / 2)) | 1;
+	size_t y = centerY - (height / 2);
+
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+	term->SetCursorPosition(x + 1, y);
+	term->SetColor(255, 234);
+	term->Output("You must be level 40 to battle the Pit of Doom and claim the Flag.");
 
 	while (!term->HasQuit())
 	{
@@ -704,6 +767,15 @@ static int32_t PickTeam(Player* player)
 
 void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 {
+	if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
+	{
+		if (player->GetLevel() < 40)
+		{
+			ShowPitOfDoomUnderlevelMessage();
+			return;
+		}
+	}
+
 	if (player->GetTeam() == TEAM_UNASSIGNED)
 	{
 		if (player->GetLevel() < 5)
@@ -816,7 +888,10 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 			break;
 		default:
 			term->SetColor(255, 234);
-			term->Output("Unclaimed pit, claim it for your team!");
+			if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
+				term->Output("The Pit of Doom, win this battle to get the Flag!");
+			else
+				term->Output("Unclaimed pit, claim it for your team!");
 			break;
 		}
 
@@ -884,22 +959,32 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 		int changeBattleTeam = -1;
 		int battle = -1;
 		vector<string> options;
-		if ((!hasMonsterAssigned) && ((owner == TEAM_UNASSIGNED) || ((owner == player->GetTeam()) &&
-			(defenders.size() < level))))
-		{
-			assignDefender = (int)options.size();
-			options.push_back("Assign Defender");
-		}
-		if ((battleTeam.size() != 0) && (owner != TEAM_UNASSIGNED) && (((owner == player->GetTeam()) && (level < 10)) ||
-			(owner != player->GetTeam())))
+		if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
 		{
 			changeBattleTeam = (int)options.size();
 			options.push_back("Change Battle Team");
 			battle = (int)options.size();
-			if (owner == player->GetTeam())
-				options.push_back("Train in the Pit");
-			else
-				options.push_back("Attack the Pit");
+			options.push_back("Challenge the Pit of Doom");
+		}
+		else
+		{
+			if ((!hasMonsterAssigned) && ((owner == TEAM_UNASSIGNED) || ((owner == player->GetTeam()) &&
+				(defenders.size() < level))))
+			{
+				assignDefender = (int)options.size();
+				options.push_back("Assign Defender");
+			}
+			if ((battleTeam.size() != 0) && (owner != TEAM_UNASSIGNED) && (((owner == player->GetTeam()) && (level < 10)) ||
+				(owner != player->GetTeam())))
+			{
+				changeBattleTeam = (int)options.size();
+				options.push_back("Change Battle Team");
+				battle = (int)options.size();
+				if (owner == player->GetTeam())
+					options.push_back("Train in the Pit");
+				else
+					options.push_back("Attack the Pit");
+			}
 		}
 		options.push_back("Done");
 		int32_t selection = ShowBoxOptions(baseX, baseY, width, height, options);
@@ -1041,10 +1126,82 @@ void StartPitInteraction(Player* player, MapRenderer* map, int32_t x, int32_t y)
 
 			map->Paint();
 
-			PitBattle(player, map, finalBattleTeam, owner == player->GetTeam());
+			PitBattle(player, map, finalBattleTeam, owner == player->GetTeam(),
+				(x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y));
 			player->ForcePitRefresh();
 			break;
 		}
 		break;
+	}
+}
+
+
+void StartProfessorInteraction(Player* player)
+{
+	uint32_t total = 0;
+	uint32_t caught = 0;
+	for (auto& i : MonsterSpecies::GetAll())
+	{
+		total++;
+		if (player->GetNumberCaptured(i) > 0)
+			caught++;
+	}
+
+	string msg;
+	char countStr[32];
+	sprintf(countStr, "%d", caught);
+	if (caught == total)
+		msg = "Wow! You caught 'em all!";
+	else if (caught >= (total - 3))
+		msg = string("You've caught ") + countStr + " types of monsters. Almost there!";
+	else if (caught >= 50)
+		msg = string("You've caught ") + countStr + " types of monsters. Keep it up!";
+	else if (caught >= 10)
+		msg = string("You've caught ") + countStr + " types of monsters. Good start!";
+	else if (caught > 1)
+		msg = string("You've caught ") + countStr + " types of monsters. Get out there and explore!";
+	else if (caught == 1)
+		msg = "You've caught one! Now go explore and catch more!";
+	else
+		msg = "I'm Professor Vick. I'll rate your progress as you capture monsters.";
+
+	Terminal* term = Terminal::GetTerminal();
+	size_t centerX = term->GetWidth() / 2;
+	size_t centerY = term->GetHeight() / 2;
+	size_t width = 75;
+	size_t height = 1;
+	size_t x = (centerX - (width / 2)) | 1;
+	size_t y = centerY - (height / 2);
+
+	DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+	term->SetCursorPosition(x + 1, y);
+	term->SetColor(255, 234);
+	term->Output(msg);
+
+	while (!term->HasQuit())
+	{
+		string input = term->GetInput();
+		if ((input == " ") || (input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == "\033"))
+			break;
+	}
+
+	if (caught == total)
+	{
+		DrawBox(x - 1, y - 1, width + 2, height + 2, 234);
+
+		term->SetCursorPosition(x + 1, y);
+		term->SetColor(255, 234);
+		term->Output(player->GetCatchEmAllFlag());
+
+		sleep(10);
+		term->GetInput();
+
+		while (!term->HasQuit())
+		{
+			string input = term->GetInput();
+			if ((input == " ") || (input == "\r") || (input == "\n") || (input == "e") || (input == "E") || (input == "\033"))
+				break;
+		}
 	}
 }

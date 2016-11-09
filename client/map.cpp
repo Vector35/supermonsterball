@@ -118,45 +118,52 @@ void MapRenderer::Paint()
 			if (found)
 				continue;
 
-			switch (tile)
+			if ((curX == PROFESSOR_X) && (curY == PROFESSOR_Y))
 			{
-			case TILE_GRASS_TREE_1:
-				term->Output("🌲 ");
-				break;
-			case TILE_GRASS_TREE_2:
-				term->Output("🌳 ");
-				break;
-			case TILE_GRASS_PALM_TREE:
-				term->Output("🌴 ");
-				break;
-			case TILE_DESERT_HOUSE:
-			case TILE_SUBURB_HOUSE:
-				term->Output("🏠 ");
-				break;
-			case TILE_SUBURB_CHURCH:
-				term->Output("⛪ ");
-				break;
-			case TILE_DESERT_CACTUS:
-				term->Output("🌵 ");
-				break;
-			case TILE_CITY_BUILDING_1:
-				term->Output("🏢 ");
-				break;
-			case TILE_CITY_BUILDING_2:
-				term->Output("🏨 ");
-				break;
-			case TILE_CITY_BUILDING_3:
-				term->Output("🏬 ");
-				break;
-			case TILE_PIT:
-				term->Output("🏆 ");
-				break;
-			case TILE_STOP:
-				term->Output("🚏 ");
-				break;
-			default:
-				term->Output("  ");
-				break;
+				term->Output("🕴 ");
+			}
+			else
+			{
+				switch (tile)
+				{
+				case TILE_GRASS_TREE_1:
+					term->Output("🌲 ");
+					break;
+				case TILE_GRASS_TREE_2:
+					term->Output("🌳 ");
+					break;
+				case TILE_GRASS_PALM_TREE:
+					term->Output("🌴 ");
+					break;
+				case TILE_DESERT_HOUSE:
+				case TILE_SUBURB_HOUSE:
+					term->Output("🏠 ");
+					break;
+				case TILE_SUBURB_CHURCH:
+					term->Output("⛪ ");
+					break;
+				case TILE_DESERT_CACTUS:
+					term->Output("🌵 ");
+					break;
+				case TILE_CITY_BUILDING_1:
+					term->Output("🏢 ");
+					break;
+				case TILE_CITY_BUILDING_2:
+					term->Output("🏨 ");
+					break;
+				case TILE_CITY_BUILDING_3:
+					term->Output("🏬 ");
+					break;
+				case TILE_PIT:
+					term->Output("🏆 ");
+					break;
+				case TILE_STOP:
+					term->Output("🚏 ");
+					break;
+				default:
+					term->Output("  ");
+					break;
+				}
 			}
 		}
 
@@ -223,6 +230,11 @@ void MapRenderer::Paint()
 		for (uint32_t i = bars; i < 10; i++)
 			term->Output("━");
 	}
+
+	term->SetColor(242, 16);
+	char posStr[64];
+	sprintf(posStr, "  (%d, %d)", playerX, playerY);
+	term->Output(posStr);
 
 	// Show nearby monsters in the status bar
 	std::vector<MonsterSighting> nearby = m_sightings;

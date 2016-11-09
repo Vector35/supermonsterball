@@ -44,6 +44,8 @@ class ClientHandler
 	void SetPitBattleAction(const std::string& msg);
 	void EndPitBattle();
 	void HealMonster(const std::string& msg);
+	void GetLevel40Flag();
+	void GetCatchEmAllFlag();
 
 public:
 	ClientHandler(SSLSocket* s);

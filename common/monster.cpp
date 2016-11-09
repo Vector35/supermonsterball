@@ -27,6 +27,18 @@ Move* Move::GetByIndex(uint32_t i)
 }
 
 
+Move* Move::GetByName(const string& name)
+{
+	for (auto& i : m_list)
+	{
+		if (i->GetName() == name)
+			return i;
+	}
+	printf("ERROR: Bad move %s\n", name.c_str());
+	return nullptr;
+}
+
+
 bool Move::IsSuperEffective(Element attack, Element defense)
 {
 	switch (attack)
@@ -46,7 +58,7 @@ bool Move::IsSuperEffective(Element attack, Element defense)
 	case Poison:
 		return (defense == Grass);
 	case Psychic:
-		return (defense == Psychic);
+		return (defense == Psychic) || (defense == Fighting);
 	case Flying:
 		return (defense == Grass) || (defense == Bug) || (defense == Ground) || (defense == Bug);
 	case Sound:
@@ -54,7 +66,7 @@ bool Move::IsSuperEffective(Element attack, Element defense)
 	case Ground:
 		return (defense == Electric) || (defense == Fire) || (defense == Sound);
 	case Fighting:
-		return (defense == Normal) || (defense == Ice) || (defense == Psychic);
+		return (defense == Normal) || (defense == Ice);
 	case Ice:
 		return (defense == Grass) || (defense == Water) || (defense == Flying);
 	case Light:
@@ -86,7 +98,7 @@ bool Move::IsNotEffective(Element attack, Element defense)
 	case Poison:
 		return (defense == Dark);
 	case Psychic:
-		return (defense == Bug) || (defense == Sound) || (defense == Fighting) || (defense == Dark);
+		return (defense == Bug) || (defense == Sound) || (defense == Dark);
 	case Flying:
 		return (defense == Electric) || (defense == Ice);
 	case Sound:
@@ -94,7 +106,7 @@ bool Move::IsNotEffective(Element attack, Element defense)
 	case Ground:
 		return (defense == Water) || (defense == Grass) || (defense == Flying);
 	case Fighting:
-		return (defense == Sound);
+		return (defense == Sound) || (defense == Psychic);
 	case Ice:
 		return (defense == Fire) || (defense == Fighting) || (defense == Light);
 	case Light:

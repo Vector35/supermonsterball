@@ -85,4 +85,7 @@ public:
 	virtual uint32_t EndPitBattle() override;
 
 	virtual void HealMonster(std::shared_ptr<Monster> monster, ItemType type) override;
+
+	virtual std::string GetLevel40Flag() override;
+	virtual std::string GetCatchEmAllFlag() override;
 };

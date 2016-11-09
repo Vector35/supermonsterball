@@ -34,6 +34,8 @@ message Request
 		SetPitBattleAction = 26;
 		EndPitBattle = 27;
 		HealMonster = 28;
+		GetLevel40Flag = 29;
+		GetCatchEmAllFlag = 30;
 	}
 
 	RequestType type = 1;
@@ -441,4 +443,14 @@ message HealMonsterResponse
 {
 	uint32 hp = 1;
 	uint32 count = 2;
+}
+
+message GetLevel40FlagResponse
+{
+	string flag = 1;
+}
+
+message GetCatchEmAllFlagResponse
+{
+	string flag = 1;
 }

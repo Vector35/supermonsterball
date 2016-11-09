@@ -732,8 +732,8 @@ void MonsterSpecies::Init()
 		vector<Move*>{typeConfusion}, vector<Move*>{mindMelt, memoryCorruption}, cityBiome, 40, 10);
 	m_list.push_back(liarkake);
 
-	MonsterSpecies* tacocat = new MonsterSpecies(" 🌮 ", "Tacocat", "Looks like a delicious taco to draw its prey near.",
-		Normal, Normal, 202, 191, 202, vector<MonsterSpecies*>{}, 0, vector<Move*>{palindrome, bite},
+	MonsterSpecies* tacocat = new MonsterSpecies(" 🌮 ", "Tacocat", "Was it a cat I saw? Looks like a delicious taco to draw "
+		"its prey near.", Normal, Normal, 202, 191, 202, vector<MonsterSpecies*>{}, 0, vector<Move*>{palindrome, bite},
 		vector<Move*>{hotSauce, heatWave}, cityBiome, 40, 10);
 	m_list.push_back(tacocat);
 

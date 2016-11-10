@@ -90,13 +90,18 @@ void MapRenderer::Paint()
 			if (newColor != lastColor)
 			{
 				lastColor = newColor;
-				term->SetColor(255, newColor);
+				if ((tile == TILE_PIT) || (tile == TILE_STOP))
+					term->SetColor(16, newColor);
+				else
+					term->SetColor(255, newColor);
 			}
 
 			// Show player avatar
 			if ((curX == m_player->GetLastLocationX()) && (curY == m_player->GetLastLocationY()))
 			{
+				term->SetColor(227, newColor);
 				term->Output("🚶 ");
+				term->SetColor(255, newColor);
 				continue;
 			}
 
@@ -110,7 +115,9 @@ void MapRenderer::Paint()
 
 				if ((curX == i.x) && (curY == i.y))
 				{
+					term->SetColor(214, newColor);
 					term->Output(i.species->GetImage().substr(0, i.species->GetImage().size() - 1));
+					term->SetColor(255, newColor);
 					found = true;
 					break;
 				}

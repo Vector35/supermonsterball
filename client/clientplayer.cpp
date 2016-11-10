@@ -326,7 +326,10 @@ void ClientPlayer::ForcePitRefresh()
 PitStatus ClientPlayer::GetPitStatus(int32_t x, int32_t y)
 {
 	if ((time(NULL) - m_lastPitRequest) >= 10)
+	{
 		m_cachedPits.clear();
+		m_lastPitRequest = time(NULL);
+	}
 
 	for (auto& i : m_cachedPits)
 	{
@@ -335,6 +338,8 @@ PitStatus ClientPlayer::GetPitStatus(int32_t x, int32_t y)
 	}
 
 	PitStatus status = ClientRequest::GetClient()->GetPitStatus(x, y);
+	status.x = x;
+	status.y = y;
 	m_cachedPits.push_back(status);
 	return status;
 }

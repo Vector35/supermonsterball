@@ -654,6 +654,7 @@ uint32_t World::RemovePitReputation(int32_t x, int32_t y, uint32_t reputation)
 			if (m_db)
 				m_db->UpdateMonster(i->GetOwnerID(), i);
 		}
+		pit->defenders.clear();
 		if (m_db)
 			m_db->SetPitStatus(*pit);
 		return reputation;

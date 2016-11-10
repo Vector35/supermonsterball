@@ -401,9 +401,12 @@ int main(int argc, char* argv[])
 
 	SSL_CTX_set_verify(context, SSL_VERIFY_PEER, NULL);
 
-	const char* server = "localhost";
-	if (argc > 1)
-		server = argv[1];
+	if (argc <= 1)
+	{
+		fprintf(stderr, "Expected server hostname\n");
+		return 1;
+	}
+	const char* server = argv[1];
 
 	hostent* ent = gethostbyname(server);
 	if ((!ent) || (ent->h_addrtype != AF_INET))

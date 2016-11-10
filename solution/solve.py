@@ -10,6 +10,7 @@ s = socket.create_connection((sys.argv[1], 2525))
 s = ssl.wrap_socket(s)
 
 ignored_response_count = 0
+challenge = None
 
 def readall(s, length):
     result = ""
@@ -23,6 +24,8 @@ def readall(s, length):
 def send_request(s, t, r = None):
     if r is None:
         data = ""
+    elif type(r) == str:
+        data = r
     else:
         data = r.SerializeToString()
     req = Request()
@@ -45,6 +48,7 @@ def ignore_response():
     ignored_response_count += 1
 
 def register(s, name, password):
+    global challenge
     req = RegisterRequest()
     req.username = name
     req.password = password
@@ -52,7 +56,19 @@ def register(s, name, password):
 
     resp = RegisterResponse()
     resp.ParseFromString(get_response(s))
+    challenge = resp.connectionid
     return resp.status
+
+def get_challenge_response(value):
+    value ^= 0xc0decafefeedface
+    mix = ((value * 25214903917) + 11) & 0xffffffffffffffff;
+    value = ((value >> 17) | (value << 47)) & 0xffffffffffffffff;
+    value = (value + mix) & 0xffffffffffffffff;
+    return value
+
+def get_encounter_validation(x, y):
+    seed = (((x & 0xffffffffffffffff) * 694847539) + ((y & 0xffffffffffffffff) * 91939)) + 92893
+    return (seed >> 16) & 0xffffffff
 
 def get_monsters_in_range(s, x, y):
     req = GetMonstersInRangeRequest()
@@ -117,11 +133,13 @@ for x in xrange(-2048, 2048, 128):
             if ((ch >> 4) & 0xf) == 0xf:
                 stops.append((x + 1 + ((i % 64) * 2), y + (i / 64)))
 
-send_request(s, Request.GetPlayerDetails)
-resp = GetPlayerDetailsResponse()
+# One GetAllPlayerInfo request must be made with an 8 byte challenge/reponse token before performing any
+# throws or gathing any items, otherwise a ban
+send_request(s, Request.GetAllPlayerInfo, struct.pack("<Q", get_challenge_response(challenge)))
+resp = GetAllPlayerInfoResponse()
 resp.ParseFromString(get_response(s))
-x = resp.x
-y = resp.y
+x = resp.player.x
+y = resp.player.y
 last_x = x
 last_y = y
 x_move = 64
@@ -220,6 +238,7 @@ while True:
         req = StartEncounterRequest()
         req.x = m[0]
         req.y = m[1]
+        req.data = get_encounter_validation(req.x, req.y)
         step_move(s, req.x, req.y)
         send_request(s, Request.StartEncounter, req)
         resp = StartEncounterResponse()

@@ -182,3 +182,20 @@ uint32_t Player::GetPitLevelByReputation(uint32_t reputation)
 	}
 	return 1;
 }
+
+
+uint64_t Player::GetChallengeResponseValue(uint64_t challenge)
+{
+	challenge ^= 0xc0decafefeedfaceLL;
+	uint64_t mix = (challenge * 25214903917LL) + 11;
+	challenge = (challenge >> 17) | (challenge << 47);
+	challenge += mix;
+	return challenge;
+}
+
+
+uint32_t Player::GetEncounterValidationValue(int32_t x, int32_t y)
+{
+	uint64_t seed = (((uint64_t)x * 694847539LL) + ((uint64_t)y * 91939LL)) + 92893LL;
+	return (uint32_t)(seed >> 16);
+}

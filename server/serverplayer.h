@@ -24,6 +24,7 @@ class ServerPlayer: public Player
 	bool m_flaggedForBan, m_banned;
 	std::string m_banReason;
 	time_t m_lastSavedLocation;
+	bool m_hasValidChallengeResponse;
 
 	void EndEncounter(bool caught, ItemType ball = ITEM_STANDARD_BALL);
 	void EarnExperience(uint32_t xp);
@@ -98,4 +99,5 @@ public:
 	void FlagForBan(const std::string& reason);
 	void BanWave();
 	bool IsBanned() const { return m_banned; }
+	void MarkValidChallengeResponse() { m_hasValidChallengeResponse = true; }
 };

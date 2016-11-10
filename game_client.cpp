@@ -153,7 +153,10 @@ static Player* ShowLoginPage()
 
 	LoginResponse_AccountStatus status = ClientRequest::GetClient()->Login(username, password);
 	if (status == LoginResponse_AccountStatus_LoginOK)
-		return new ClientPlayer(ClientRequest::GetClient()->GetID(), username);
+	{
+		return new ClientPlayer(ClientRequest::GetClient()->GetID(), username,
+			ClientRequest::GetClient()->GetChallenge());
+	}
 
 	if (status == LoginResponse_AccountStatus_AccountBanned)
 	{
@@ -234,7 +237,10 @@ static Player* ShowRegisterPage()
 
 	RegisterResponse_RegisterStatus status = ClientRequest::GetClient()->Register(username, password);
 	if (status == RegisterResponse_RegisterStatus_RegisterOK)
-		return new ClientPlayer(ClientRequest::GetClient()->GetID(), username);
+	{
+		return new ClientPlayer(ClientRequest::GetClient()->GetID(), username,
+			ClientRequest::GetClient()->GetChallenge());
+	}
 
 	term->BeginOutputQueue();
 	term->SetColor(255, 16);

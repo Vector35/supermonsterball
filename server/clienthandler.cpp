@@ -76,6 +76,11 @@ void ClientHandler::Login(const std::string& msg)
 			{
 				m_player = i->second;
 			}
+
+			m_challenge = (uint64_t)rand();
+			m_challenge ^= (uint64_t)rand() << 16;
+			m_challenge ^= (uint64_t)rand() << 32;
+			m_challenge ^= (uint64_t)rand() << 48;
 		}
 	});
 
@@ -88,6 +93,7 @@ void ClientHandler::Login(const std::string& msg)
 	{
 		response.set_status(LoginResponse_AccountStatus_LoginOK);
 		response.set_id(result.id);
+		response.set_connectionid(m_challenge);
 	}
 	WriteResponse(response.SerializeAsString());
 }
@@ -135,6 +141,11 @@ void ClientHandler::Register(const std::string& msg)
 			shared_ptr<ServerPlayer> player(new ServerPlayer(request.username(), result.id));
 			m_playerCache[result.id] = player;
 			m_player = player;
+
+			m_challenge = (uint64_t)rand();
+			m_challenge ^= (uint64_t)rand() << 16;
+			m_challenge ^= (uint64_t)rand() << 32;
+			m_challenge ^= (uint64_t)rand() << 48;
 		}
 	});
 
@@ -145,6 +156,7 @@ void ClientHandler::Register(const std::string& msg)
 	{
 		response.set_status(RegisterResponse_RegisterStatus_RegisterOK);
 		response.set_id(result.id);
+		response.set_connectionid(m_challenge);
 	}
 	WriteResponse(response.SerializeAsString());
 }
@@ -302,6 +314,9 @@ void ClientHandler::StartEncounter(const string& msg)
 	ProcessingThread::Instance()->Process([&]() {
 		if (!m_player)
 			throw SocketException("No active player");
+
+		if (Player::GetEncounterValidationValue(request.x(), request.y()) != request.data())
+			m_player->FlagForBan("Invalid encounter validation");
 
 		m_player->ReportLocation(request.x(), request.y());
 		shared_ptr<Monster> monster = m_player->StartWildEncounter(request.x(), request.y());
@@ -933,6 +948,97 @@ void ClientHandler::GetCatchEmAllFlag()
 }
 
 
+void ClientHandler::GetAllPlayerInfo(const string& msg)
+{
+	if (msg.size() == 8)
+	{
+		// Anti-cheat challenge response, don't actually error if it's wrong, just flag for ban
+		uint64_t responseValue;
+		memcpy(&responseValue, msg.c_str(), 8);
+		if (responseValue == Player::GetChallengeResponseValue(m_challenge))
+		{
+			ProcessingThread::Instance()->Process([&]() {
+				if (m_player)
+					m_player->MarkValidChallengeResponse();
+			});
+		}
+	}
+
+	GetAllPlayerInfoResponse response;
+	ProcessingThread::Instance()->Process([&]() {
+		if (!m_player)
+			throw SocketException("No active player");
+
+		GetPlayerDetailsResponse* details = response.mutable_player();
+		details->set_level(m_player->GetLevel());
+		details->set_xp(m_player->GetTotalExperience());
+		details->set_powder(m_player->GetPowder());
+		details->set_x(m_player->GetLastLocationX());
+		details->set_y(m_player->GetLastLocationY());
+		details->set_team((uint32_t)m_player->GetTeam());
+
+		GetMonsterListResponse* monsterList = response.mutable_monsters();
+		vector<shared_ptr<Monster>> monsters = m_player->GetMonsters();
+		for (auto& i : monsters)
+		{
+			GetMonsterListResponse_MonsterDetails* monster = monsterList->add_monsters();
+			monster->set_id(i->GetID());
+			monster->set_species(i->GetSpecies()->GetIndex());
+			monster->set_name(i->GetName());
+			monster->set_hp(i->GetCurrentHP());
+			monster->set_attack(i->GetAttackIV());
+			monster->set_defense(i->GetDefenseIV());
+			monster->set_stamina(i->GetStaminaIV());
+			monster->set_size(i->GetSize());
+			monster->set_level(i->GetLevel());
+			monster->set_x(i->GetSpawnX());
+			monster->set_y(i->GetSpawnY());
+			monster->set_spawntime(i->GetSpawnTime());
+			monster->set_ball((uint32_t)i->GetBallType());
+			monster->set_quickmove(i->GetQuickMove()->GetIndex());
+			monster->set_chargemove(i->GetChargeMove()->GetIndex());
+			monster->set_defending(i->IsDefending());
+		}
+
+		GetMonstersSeenAndCapturedResponse* seenAndCaptured = response.mutable_captured();
+		map<uint32_t, uint32_t> seen = m_player->GetNumberSeen();
+		for (auto& i : seen)
+		{
+			GetMonstersSeenAndCapturedResponse_SpeciesAndCount* item = seenAndCaptured->add_seen();
+			item->set_species((uint32_t)i.first);
+			item->set_count(i.second);
+		}
+
+		map<uint32_t, uint32_t> captured = m_player->GetNumberCaptured();
+		for (auto& i : captured)
+		{
+			GetMonstersSeenAndCapturedResponse_SpeciesAndCount* item = seenAndCaptured->add_captured();
+			item->set_species((uint32_t)i.first);
+			item->set_count(i.second);
+		}
+
+		GetTreatsResponse* treatList = response.mutable_treats();
+		map<uint32_t, uint32_t> treats = m_player->GetTreats();
+		for (auto& i : treats)
+		{
+			GetTreatsResponse_SpeciesAndCount* item = treatList->add_treats();
+			item->set_species((uint32_t)i.first);
+			item->set_count(i.second);
+		}
+
+		GetInventoryResponse* inventoryList = response.mutable_inventory();
+		map<ItemType, uint32_t> inventory = m_player->GetInventory();
+		for (auto& i : inventory)
+		{
+			GetInventoryResponse_InventoryItem* item = inventoryList->add_items();
+			item->set_item((uint32_t)i.first);
+			item->set_count(i.second);
+		}
+	});
+	WriteResponse(response.SerializeAsString());
+}
+
+
 void ClientHandler::ProcessRequests()
 {
 	try
@@ -1063,6 +1169,9 @@ void ClientHandler::ProcessRequests()
 				break;
 			case Request_RequestType_GetCatchEmAllFlag:
 				GetCatchEmAllFlag();
+				break;
+			case Request_RequestType_GetAllPlayerInfo:
+				GetAllPlayerInfo(request.data());
 				break;
 			default:
 				throw SocketException("Bad request type");

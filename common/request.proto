@@ -37,6 +37,7 @@ message Request
 		TravelToPitOfDoom = 29;
 		GetLevel40Flag = 30;
 		GetCatchEmAllFlag = 31;
+		GetAllPlayerInfo = 32;
 	}
 
 	RequestType type = 1;
@@ -61,6 +62,7 @@ message LoginResponse
 
 	AccountStatus status = 1;
 	uint64 id = 2;
+	uint64 connectionid = 3;
 }
 
 message RegisterRequest
@@ -81,6 +83,7 @@ message RegisterResponse
 
 	RegisterStatus status = 1;
 	uint64 id = 2;
+	uint64 connectionid = 3;
 }
 
 message GetPlayerDetailsResponse
@@ -169,6 +172,7 @@ message StartEncounterRequest
 {
 	int32 x = 1;
 	int32 y = 2;
+	uint32 data = 3;
 }
 
 message StartEncounterResponse
@@ -454,4 +458,13 @@ message GetLevel40FlagResponse
 message GetCatchEmAllFlagResponse
 {
 	string flag = 1;
+}
+
+message GetAllPlayerInfoResponse
+{
+	GetPlayerDetailsResponse player = 1;
+	GetMonsterListResponse monsters = 2;
+	GetMonstersSeenAndCapturedResponse captured = 3;
+	GetTreatsResponse treats = 4;
+	GetInventoryResponse inventory = 5;
 }

@@ -5,12 +5,26 @@
 #include "player.h"
 #include "world.h"
 
+struct AllPlayerInfo
+{
+	uint32_t level, xp, powder, x, y;
+	Team team;
+
+	std::vector<std::shared_ptr<Monster>> monsters;
+	std::map<uint32_t, uint32_t> seen;
+	std::map<uint32_t, uint32_t> captured;
+	std::map<uint32_t, uint32_t> treats;
+
+	std::map<ItemType, uint32_t> inventory;
+};
+
 class ClientRequest
 {
 	static ClientRequest* m_requests;
 	ClientSocket* m_ssl;
 	uint64_t m_id;
 	std::string m_name;
+	uint64_t m_challenge;
 
 	void WriteRequest(request::Request_RequestType type, const std::string& msg);
 	std::string ReadResponse();
@@ -21,6 +35,7 @@ public:
 
 	static ClientRequest* GetClient() { return m_requests; }
 	uint64_t GetID() const { return m_id; }
+	uint64_t GetChallenge() const { return m_challenge; }
 
 	request::LoginResponse_AccountStatus Login(const std::string username, const std::string& password);
 	request::RegisterResponse_RegisterStatus Register(const std::string username, const std::string& password);
@@ -54,4 +69,5 @@ public:
 	void TravelToPitOfDoom();
 	std::string GetLevel40Flag();
 	std::string GetCatchEmAllFlag();
+	AllPlayerInfo GetAllPlayerInfo(bool provideChallengeResponse = false, uint64_t responseValue = 0);
 };

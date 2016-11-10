@@ -19,6 +19,7 @@ ServerPlayer::ServerPlayer(const string& name, uint64_t id): m_name(name)
 	m_team = TEAM_UNASSIGNED;
 	m_flaggedForBan = false;
 	m_banned = false;
+	m_hasValidChallengeResponse = false;
 	m_banReason = "Unknown, try again with another account";
 
 	m_inventory[ITEM_STANDARD_BALL] = 20;
@@ -39,6 +40,7 @@ ServerPlayer::ServerPlayer(const string& name, const DatabaseLoginResult& login)
 	m_team = login.team;
 	m_flaggedForBan = false;
 	m_banned = false;
+	m_hasValidChallengeResponse = false;
 	m_banReason = "Unknown, try again with another account";
 
 	map<uint32_t, uint32_t> inventory = Database::GetDatabase()->GetInventory(m_id);
@@ -186,6 +188,9 @@ vector<MonsterSighting> ServerPlayer::GetMonstersInRange()
 
 shared_ptr<Monster> ServerPlayer::StartWildEncounter(int32_t x, int32_t y)
 {
+	if (!m_hasValidChallengeResponse)
+		FlagForBan("Invalid login challenge/response");
+
 	uint32_t dist = abs(x - m_x) + abs(y - m_y);
 	if (dist > CAPTURE_RADIUS)
 		return nullptr;
@@ -432,6 +437,9 @@ bool ServerPlayer::IsStopAvailable(int32_t x, int32_t y)
 
 map<ItemType, uint32_t> ServerPlayer::GetItemsFromStop(int32_t x, int32_t y)
 {
+	if (!m_hasValidChallengeResponse)
+		FlagForBan("Invalid login challenge/response");
+
 	if (!IsStopAvailable(x, y))
 		return map<ItemType, uint32_t>();
 
@@ -538,6 +546,9 @@ bool ServerPlayer::AssignPitDefender(int32_t x, int32_t y, shared_ptr<Monster> m
 
 bool ServerPlayer::StartPitBattle(int32_t x, int32_t y, vector<shared_ptr<Monster>> monsters)
 {
+	if (!m_hasValidChallengeResponse)
+		FlagForBan("Invalid login challenge/response");
+
 	Team pitTeam = GetPitTeam(x, y);
 	if ((x == PIT_OF_DOOM_X) && (y == PIT_OF_DOOM_Y))
 	{

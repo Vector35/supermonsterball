@@ -9,6 +9,7 @@ class ClientHandler
 	SSLSocket* m_ssl;
 	std::shared_ptr<ServerPlayer> m_player;
 	std::shared_ptr<Monster> m_encounter;
+	uint64_t m_challenge;
 
 	static std::map<uint64_t, std::shared_ptr<ServerPlayer>> m_playerCache;
 	static std::mutex m_playerCacheMutex;
@@ -47,6 +48,7 @@ class ClientHandler
 	void TravelToPitOfDoom();
 	void GetLevel40Flag();
 	void GetCatchEmAllFlag();
+	void GetAllPlayerInfo(const std::string& msg);
 
 public:
 	ClientHandler(SSLSocket* s);

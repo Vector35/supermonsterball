@@ -157,4 +157,7 @@ public:
 
 	virtual std::string GetLevel40Flag() = 0;
 	virtual std::string GetCatchEmAllFlag() = 0;
+
+	static uint64_t GetChallengeResponseValue(uint64_t challenge);
+	static uint32_t GetEncounterValidationValue(int32_t x, int32_t y);
 };

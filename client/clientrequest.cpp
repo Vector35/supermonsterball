@@ -67,6 +67,7 @@ LoginResponse_AccountStatus ClientRequest::Login(const string username, const st
 	{
 		m_id = response.id();
 		m_name = username;
+		m_challenge = response.connectionid();
 	}
 	return response.status();
 }
@@ -86,6 +87,7 @@ RegisterResponse_RegisterStatus ClientRequest::Register(const string username, c
 	{
 		m_id = response.id();
 		m_name = username;
+		m_challenge = response.connectionid();
 	}
 	return response.status();
 }
@@ -197,6 +199,7 @@ shared_ptr<Monster> ClientRequest::StartEncounter(int32_t x, int32_t y)
 	StartEncounterRequest request;
 	request.set_x(x);
 	request.set_y(y);
+	request.set_data(Player::GetEncounterValidationValue(x, y));
 	WriteRequest(Request_RequestType_StartEncounter, request.SerializeAsString());
 
 	StartEncounterResponse response;
@@ -693,4 +696,57 @@ string ClientRequest::GetCatchEmAllFlag()
 		throw NetworkException("Invalid flag response");
 
 	return response.flag();
+}
+
+
+AllPlayerInfo ClientRequest::GetAllPlayerInfo(bool provideChallengeResponse, uint64_t responseValue)
+{
+	AllPlayerInfo result;
+
+	if (provideChallengeResponse)
+		WriteRequest(Request_RequestType_GetAllPlayerInfo, string((const char*)&responseValue, sizeof(responseValue)));
+	else
+		WriteRequest(Request_RequestType_GetAllPlayerInfo, "");
+
+	GetAllPlayerInfoResponse response;
+	if (!response.ParseFromString(ReadResponse()))
+		throw NetworkException("Invalid player info response");
+
+	result.level = response.player().level();
+	result.xp = response.player().xp();
+	result.powder = response.player().powder();
+	result.x = response.player().x();
+	result.y = response.player().y();
+	result.team = (Team)response.player().team();
+
+	for (int i = 0; i < response.monsters().monsters_size(); i++)
+	{
+		shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(response.monsters().monsters(i).species()),
+			response.monsters().monsters(i).x(), response.monsters().monsters(i).y(),
+			response.monsters().monsters(i).spawntime()));
+		monster->SetID(response.monsters().monsters(i).id());
+		monster->SetOwner(m_id, m_name);
+		monster->SetName(response.monsters().monsters(i).name());
+		monster->SetHP(response.monsters().monsters(i).hp());
+		monster->SetIV(response.monsters().monsters(i).attack(), response.monsters().monsters(i).defense(),
+			response.monsters().monsters(i).stamina());
+		monster->SetSize(response.monsters().monsters(i).size());
+		monster->SetLevel(response.monsters().monsters(i).level());
+		monster->SetCapture(true, (ItemType)response.monsters().monsters(i).ball());
+		monster->SetMoves(Move::GetByIndex(response.monsters().monsters(i).quickmove()),
+			Move::GetByIndex(response.monsters().monsters(i).chargemove()));
+		monster->SetDefending(response.monsters().monsters(i).defending());
+		result.monsters.push_back(monster);
+	}
+
+	for (int i = 0; i < response.captured().seen_size(); i++)
+		result.seen[response.captured().seen(i).species()] = response.captured().seen(i).count();
+	for (int i = 0; i < response.captured().captured_size(); i++)
+		result.captured[response.captured().captured(i).species()] = response.captured().captured(i).count();
+	for (int i = 0; i < response.treats().treats_size(); i++)
+		result.treats[response.treats().treats(i).species()] = response.treats().treats(i).count();
+	for (int i = 0; i < response.inventory().items_size(); i++)
+		result.inventory[(ItemType)response.inventory().items(i).item()] = response.inventory().items(i).count();
+
+	return result;
 }

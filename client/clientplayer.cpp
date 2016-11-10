@@ -9,26 +9,22 @@ using namespace std;
 using namespace request;
 
 
-ClientPlayer::ClientPlayer(uint64_t id, const string& name): m_id(id), m_name(name)
+ClientPlayer::ClientPlayer(uint64_t id, const string& name, uint64_t challenge): m_id(id), m_name(name)
 {
-	GetPlayerDetailsResponse details = ClientRequest::GetClient()->GetPlayerDetails();
-	m_level = details.level();
-	m_xp = details.xp();
-	m_powder = details.powder();
-	m_x = details.x();
-	m_y = details.y();
-	m_team = (Team)details.team();
+	AllPlayerInfo info = ClientRequest::GetClient()->GetAllPlayerInfo(true,
+		Player::GetChallengeResponseValue(challenge));
+	m_level = info.level;
+	m_xp = info.xp;
+	m_powder = info.powder;
+	m_x = info.x;
+	m_y = info.y;
+	m_team = (Team)info.team;
+	m_monsters = info.monsters;
+	m_inventory = info.inventory;
+	m_seen = info.seen;
+	m_captured = info.captured;
+	m_treats = info.treats;
 
-	m_monsters = ClientRequest::GetClient()->GetMonsterList();
-	m_inventory = ClientRequest::GetClient()->GetInventory();
-
-	GetMonstersSeenAndCapturedResponse seenAndCaptured = ClientRequest::GetClient()->GetMonstersSeenAndCaptured();
-	for (int i = 0; i < seenAndCaptured.seen_size(); i++)
-		m_seen[seenAndCaptured.seen(i).species()] = seenAndCaptured.seen(i).count();
-	for (int i = 0; i < seenAndCaptured.captured_size(); i++)
-		m_captured[seenAndCaptured.captured(i).species()] = seenAndCaptured.captured(i).count();
-
-	m_treats = ClientRequest::GetClient()->GetTreats();
 	m_recentStopsVisited = ClientRequest::GetClient()->GetRecentStops();
 
 	m_lastSightingRequest = 0;
@@ -142,21 +138,15 @@ BallThrowResult ClientPlayer::ThrowBall(ItemType type)
 	if (result == THROW_RESULT_CATCH)
 	{
 		// Caught it, grab new player data
-		GetPlayerDetailsResponse details = ClientRequest::GetClient()->GetPlayerDetails();
-		m_level = details.level();
-		m_xp = details.xp();
-		m_powder = details.powder();
-
-		m_monsters = ClientRequest::GetClient()->GetMonsterList();
-		m_inventory = ClientRequest::GetClient()->GetInventory();
-
-		GetMonstersSeenAndCapturedResponse seenAndCaptured = ClientRequest::GetClient()->GetMonstersSeenAndCaptured();
-		for (int i = 0; i < seenAndCaptured.seen_size(); i++)
-			m_seen[seenAndCaptured.seen(i).species()] = seenAndCaptured.seen(i).count();
-		for (int i = 0; i < seenAndCaptured.captured_size(); i++)
-			m_captured[seenAndCaptured.captured(i).species()] = seenAndCaptured.captured(i).count();
-
-		m_treats = ClientRequest::GetClient()->GetTreats();
+		AllPlayerInfo info = ClientRequest::GetClient()->GetAllPlayerInfo();
+		m_level = info.level;
+		m_xp = info.xp;
+		m_powder = info.powder;
+		m_monsters = info.monsters;
+		m_inventory = info.inventory;
+		m_seen = info.seen;
+		m_captured = info.captured;
+		m_treats = info.treats;
 	}
 	else
 	{

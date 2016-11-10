@@ -27,7 +27,7 @@ class ClientPlayer: public Player
 	PitStatus GetPitStatus(int32_t x, int32_t y);
 
 public:
-	ClientPlayer(uint64_t id, const std::string& name);
+	ClientPlayer(uint64_t id, const std::string& name, uint64_t challenge);
 
 	virtual uint64_t GetID() override { return m_id; }
 	virtual std::string GetName() override { return m_name; }

@@ -79,7 +79,7 @@ def get_monsters_in_range(s, x, y):
     resp.ParseFromString(get_response(s))
     result = []
     for sighting in resp.sightings:
-        result.append((sighting.x, sighting.y))
+        result.append((sighting.x, sighting.y, sighting.species))
     return result
 
 def report_location(s, x, y):
@@ -284,5 +284,153 @@ print "Reaching level 40 took %d seconds" % int(time.time() - start_time)
 # Grab the flag
 send_request(s, Request.GetLevel40Flag)
 resp = GetLevel40FlagResponse()
+resp.ParseFromString(get_response(s))
+print resp.flag
+
+start_time = time.time()
+
+# Check to see what we caught
+send_request(s, Request.GetMonstersSeenAndCaptured)
+resp = GetMonstersSeenAndCapturedResponse()
+resp.ParseFromString(get_response(s))
+captured_set = set()
+for monster in resp.captured:
+    captured_set.add(monster.species)
+
+print "Caught %d of 103" % len(captured_set)
+print "Gotta catch 'em all!"
+
+looking_for = None
+caught_in_cycle = True
+
+while len(captured_set) < 103:
+    if looking_for is None:
+        for i in xrange(1, 104):
+            if i not in captured_set:
+                looking_for = i
+                break
+        if looking_for is None:
+            break
+        print "Looking for index %d" % looking_for
+
+    # Get current inventory to get ball counts
+    send_request(s, Request.GetInventory)
+    resp = GetInventoryResponse()
+    resp.ParseFromString(get_response(s))
+    balls = 0
+    super_balls = 0
+    uber_balls = 0
+    for i in resp.items:
+        if i.item == 0:
+            balls = i.count
+        if i.item == 1:
+            super_balls = i.count
+        if i.item == 2:
+            uber_balls = i.count
+
+    if balls < 10:
+        # Low on balls, get some more
+        req = GetItemsFromStopRequest()
+        req.x = stops[stop_id][0]
+        req.y = stops[stop_id][1]
+
+        # Don't move too far to avoid spoof ban
+        step_move(s, req.x, req.y)
+
+        stop_id += 1
+        if stop_id >= len(stops):
+            # Visited all the stops in the map, if there hasn't been enough time for refresh, wait
+            to_wait = int(60 - (time.time() - stop_round_time))
+            if to_wait > 0:
+                print "Used up all stops, waiting for %d seconds" % to_wait
+                time.sleep(to_wait)
+            stop_round_time = time.time()
+            stop_id = 0
+
+        send_request(s, Request.GetItemsFromStop, req)
+        resp = GetItemsFromStopResponse()
+        resp.ParseFromString(get_response(s))
+        continue
+
+    # Don't move too far to avoid spoof ban
+    step_move(s, x, y)
+
+    # Look for nearby monsters
+    monster = get_monsters_in_range(s, x, y)
+
+    # Move 64 units and try again, covering the entire map
+    x += x_move
+    if x >= 2048:
+        x = 2048 - 64
+        y += 64
+        x_move = -64
+    elif x <= -2048:
+        x = (-2048) + 64
+        y += 64
+        x_move = 64
+    if y > 2048:
+        y = (-2048) + 64
+    if (x == 0) and (y == 0):
+        to_wait = int(600 - (time.time() - catch_round_time))
+        if (not caught_in_cycle) and (to_wait > 0):
+            # Entire map explored, if the time spent is not enough for new spawns, wait
+            print "Explored entire map, waiting %d seconds for respawns" % to_wait
+            time.sleep(to_wait)
+        catch_round_time = time.time()
+        caught_in_cycle = False
+
+    # Look for the desired species and try to capture it
+    for m in monster:
+        if m[2] != looking_for:
+            continue
+
+        # Start the encounter for the current monster
+        req = StartEncounterRequest()
+        req.x = m[0]
+        req.y = m[1]
+        req.data = get_encounter_validation(req.x, req.y)
+        step_move(s, req.x, req.y)
+        send_request(s, Request.StartEncounter, req)
+        resp = StartEncounterResponse()
+        resp.ParseFromString(get_response(s))
+        if not resp.valid:
+            break
+
+        # Throw balls at it until it's captured
+        while True:
+            req = ThrowBallRequest()
+            if uber_balls > 0:
+                req.ball = 2
+                uber_balls -= 1
+            elif super_balls > 0:
+                req.ball = 1
+                super_balls -= 1
+            else:
+                req.ball = 0
+            send_request(s, Request.ThrowBall, req)
+            resp = ThrowBallResponse()
+            resp.ParseFromString(get_response(s))
+            if resp.result == ThrowBallResponse.THROW_RESULT_CATCH:
+                req = EvolveMonsterRequest()
+                req.id = resp.catchid
+                send_request(s, Request.EvolveMonster, req)
+                resp = EvolveMonsterResponse()
+                resp.ParseFromString(get_response(s))
+                captured_set.add(looking_for)
+                looking_for = None
+                caught_in_cycle = True
+                break
+            if resp.result == ThrowBallResponse.THROW_RESULT_RUN_AWAY_AFTER_ONE:
+                break
+            if resp.result == ThrowBallResponse.THROW_RESULT_RUN_AWAY_AFTER_TWO:
+                break
+            if resp.result == ThrowBallResponse.THROW_RESULT_RUN_AWAY_AFTER_THREE:
+                break
+
+print "Cathing them all took %d seconds" % int(time.time() - start_time)
+
+# Grab the flag
+send_request(s, Request.GetCatchEmAllFlag)
+resp = GetCatchEmAllFlagResponse()
 resp.ParseFromString(get_response(s))
 print resp.flag

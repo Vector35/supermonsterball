@@ -25,6 +25,7 @@ class ServerPlayer: public Player
 	std::string m_banReason;
 	time_t m_lastSavedLocation;
 	bool m_hasValidChallengeResponse;
+	bool m_pitOfDoomBeaten;
 
 	void EndEncounter(bool caught, ItemType ball = ITEM_STANDARD_BALL);
 	void EarnExperience(uint32_t xp);

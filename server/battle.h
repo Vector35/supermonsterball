@@ -19,6 +19,7 @@ class PitBattle
 	uint32_t m_attackerCharge, m_defenderCharge;
 	uint32_t m_largestAttackerCP;
 	bool m_newDefender;
+	bool m_won;
 
 public:
 	PitBattle(const std::vector<std::shared_ptr<Monster>>& attackers,
@@ -29,6 +30,7 @@ public:
 	int32_t GetPitX() const { return m_pitX; }
 	int32_t GetPitY() const { return m_pitY; }
 	uint32_t GetReputationChange() const { return m_reputationChange; }
+	bool DidWin() const { return m_won; }
 
 	std::vector<std::shared_ptr<Monster>> GetDefenders() { return m_defenders; }
 

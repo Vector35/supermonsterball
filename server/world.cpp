@@ -197,7 +197,7 @@ World::World(Database* db)
 
 	shared_ptr<Monster> monster(new Monster(MonsterSpecies::GetByIndex(12), 0, 0, 0)); // Beezer
 	monster->SetIV(8, 8, 8);
-	monster->SetLevel(30);
+	monster->SetLevel(40);
 	monster->SetSize(31);
 	monster->SetMoves(Move::GetByName("Bug Bite"), Move::GetByName("Infestation"));
 	monster->ResetHP();
@@ -207,7 +207,7 @@ World::World(Database* db)
 
 	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(72), 0, 0, 0)); // Bonedread
 	monster->SetIV(8, 8, 8);
-	monster->SetLevel(30);
+	monster->SetLevel(40);
 	monster->SetSize(31);
 	monster->SetMoves(Move::GetByName("Ghost Blade"), Move::GetByName("Shadow Claw"));
 	monster->ResetHP();
@@ -217,7 +217,7 @@ World::World(Database* db)
 
 	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(76), 0, 0, 0)); // Ogreat
 	monster->SetIV(8, 8, 8);
-	monster->SetLevel(30);
+	monster->SetLevel(40);
 	monster->SetSize(31);
 	monster->SetMoves(Move::GetByName("Pound"), Move::GetByName("Juggernaut"));
 	monster->ResetHP();
@@ -227,7 +227,7 @@ World::World(Database* db)
 
 	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(49), 0, 0, 0)); // Krabber
 	monster->SetIV(8, 8, 8);
-	monster->SetLevel(30);
+	monster->SetLevel(40);
 	monster->SetSize(31);
 	monster->SetMoves(Move::GetByName("Water Blast"), Move::GetByName("Heavy Rain"));
 	monster->ResetHP();
@@ -237,7 +237,7 @@ World::World(Database* db)
 
 	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(101), 0, 0, 0)); // Burninator
 	monster->SetIV(8, 8, 8);
-	monster->SetLevel(30);
+	monster->SetLevel(40);
 	monster->SetSize(31);
 	monster->SetMoves(Move::GetByName("Fireball"), Move::GetByName("Burninate"));
 	monster->ResetHP();
@@ -247,7 +247,7 @@ World::World(Database* db)
 
 	monster = shared_ptr<Monster>(new Monster(MonsterSpecies::GetByIndex(103), 0, 0, 0)); // Ehkaybear
 	monster->SetIV(8, 8, 8);
-	monster->SetLevel(30);
+	monster->SetLevel(40);
 	monster->SetSize(31);
 	monster->SetMoves(Move::GetByName("Burst Fire"), Move::GetByName("Aimed Shot"));
 	monster->ResetHP();

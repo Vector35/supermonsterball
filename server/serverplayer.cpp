@@ -21,6 +21,7 @@ ServerPlayer::ServerPlayer(const string& name, uint64_t id): m_name(name)
 	m_banned = false;
 	m_hasValidChallengeResponse = false;
 	m_banReason = "Unknown, try again with another account";
+	m_pitOfDoomBeaten = false;
 
 	m_inventory[ITEM_STANDARD_BALL] = 20;
 	m_inventory[ITEM_MEGA_SEED] = 5;
@@ -42,6 +43,7 @@ ServerPlayer::ServerPlayer(const string& name, const DatabaseLoginResult& login)
 	m_banned = false;
 	m_hasValidChallengeResponse = false;
 	m_banReason = "Unknown, try again with another account";
+	m_pitOfDoomBeaten = false;
 
 	map<uint32_t, uint32_t> inventory = Database::GetDatabase()->GetInventory(m_id);
 	for (auto& i : inventory)
@@ -640,7 +642,12 @@ void ServerPlayer::SetAttacker(shared_ptr<Monster> monster)
 PitBattleStatus ServerPlayer::StepPitBattle()
 {
 	if (m_battle)
-		return m_battle->Step();
+	{
+		PitBattleStatus status = m_battle->Step();
+		if (m_battle->DidWin() && (m_battle->GetPitX() == PIT_OF_DOOM_X) && (m_battle->GetPitY() == PIT_OF_DOOM_Y))
+			m_pitOfDoomBeaten = true;
+		return status;
+	}
 
 	PitBattleStatus status;
 	status.state = PIT_BATTLE_WAITING_FOR_ACTION;
@@ -715,6 +722,8 @@ string ServerPlayer::GetLevel40Flag()
 		return "You are not level 40!";
 	if (m_flaggedForBan)
 		return string("Cheater! You were caught: ") + m_banReason;
+	if (!m_pitOfDoomBeaten)
+		return "Take down the Pit of Doom to get the Flag!";
 	return "CSAW{Prepare4TrubbleAndMakeItDubble}";
 }
 

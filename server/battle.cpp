@@ -16,6 +16,7 @@ PitBattle::PitBattle(const vector<shared_ptr<Monster>>& attackers, const vector<
 	m_pitX = x;
 	m_pitY = y;
 	m_newDefender = true;
+	m_won = false;
 
 	m_attackerCooldown = 0;
 	m_defenderCooldown = 1;
@@ -70,6 +71,7 @@ PitBattleStatus PitBattle::Step()
 	if (!m_curDefender)
 	{
 		status.state = PIT_BATTLE_WIN;
+		m_won = true;
 		return status;
 	}
 

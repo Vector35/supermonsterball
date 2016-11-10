@@ -3,7 +3,7 @@ CLIENT_OBJS := $(patsubst %.cpp,%.o,$(wildcard client/*.cpp))
 SERVER_OBJS := $(patsubst %.cpp,%.o,$(wildcard server/*.cpp))
 INC := $(wildcard common/*.h) $(wildcard client/*.h) $(wildcard server/*.h)
 
-CFLAGS := -I/usr/local/include -g -O3 -DOSATOMIC_DEPRECATED
+CFLAGS := -I/usr/local/include -O3 -DOSATOMIC_DEPRECATED
 LDFLAGS := -L/usr/local/lib
 
 HOST := $(shell uname)

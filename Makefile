@@ -6,6 +6,11 @@ INC := $(wildcard common/*.h) $(wildcard client/*.h) $(wildcard server/*.h)
 CFLAGS := -I/usr/local/include -g -O3 -DOSATOMIC_DEPRECATED
 LDFLAGS := -L/usr/local/lib
 
+HOST := $(shell uname)
+ifeq ($(HOST),Linux)
+	LDFLAGS := $(LDFLAGS) -Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
+endif
+
 all: game_client game_server standalone
 
 common/request.pb.cc: common/request.proto Makefile

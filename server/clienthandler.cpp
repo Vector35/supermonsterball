@@ -1,4 +1,4 @@
-#define DEBUG_NO_RATE_LIMIT
+//#define DEBUG_NO_RATE_LIMIT
 
 #include <string.h>
 #include <time.h>
@@ -1071,8 +1071,8 @@ void ClientHandler::ProcessRequests()
 				lastRequest = curTime;
 			}
 			requestCount++;
-			if (requestCount > 20)
-				usleep(50000);
+			if (requestCount > 40)
+				usleep(25000);
 #endif
 
 			switch (request.type())

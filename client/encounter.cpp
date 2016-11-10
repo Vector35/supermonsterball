@@ -459,12 +459,12 @@ shared_ptr<Monster> Encounter(Player* player, int32_t x, int32_t y)
 				if (alreadyCaught == 0)
 				{
 					ShowEncounterText(encounterBoxX, encounterBoxY, encounterBoxWidth, encounterBoxHeight,
-						player->GetName() + " earned 600 XP.");
+						player->GetName() + " earned 1400 XP.");
 				}
 				else
 				{
 					ShowEncounterText(encounterBoxX, encounterBoxY, encounterBoxWidth, encounterBoxHeight,
-						player->GetName() + " earned 100 XP.");
+						player->GetName() + " earned 400 XP.");
 				}
 				break;
 			}

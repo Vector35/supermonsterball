@@ -107,6 +107,8 @@ Database::~Database()
 	sqlite3_finalize(m_setExperienceQuery);
 	sqlite3_finalize(m_setPowderQuery);
 	sqlite3_finalize(m_setTeamQuery);
+	sqlite3_finalize(m_flagForBanQuery);
+	sqlite3_finalize(m_banWaveQuery);
 
 	sqlite3_finalize(m_readPitQuery);
 	sqlite3_finalize(m_writePitQuery);
@@ -223,6 +225,10 @@ bool Database::InitStatements()
 	if (sqlite3_prepare_v2(m_db, "UPDATE users SET powder=? WHERE id=?", -1, &m_setPowderQuery, NULL) != SQLITE_OK)
 		return false;
 	if (sqlite3_prepare_v2(m_db, "UPDATE users SET team=? WHERE id=?", -1, &m_setTeamQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "UPDATE users SET flagged=1 WHERE id=?", -1, &m_flagForBanQuery, NULL) != SQLITE_OK)
+		return false;
+	if (sqlite3_prepare_v2(m_db, "UPDATE users SET banned=1 WHERE flagged=1", -1, &m_banWaveQuery, NULL) != SQLITE_OK)
 		return false;
 
 	if (sqlite3_prepare_v2(m_db, "SELECT id, team, reputation FROM pits WHERE x=? AND y=?",
@@ -954,6 +960,34 @@ void Database::SetTeam(uint64_t user, Team team)
 		if (sqlite3_step(m_setTeamQuery) != SQLITE_DONE)
 			throw DatabaseException(sqlite3_errmsg(m_db));
 		if (sqlite3_clear_bindings(m_setTeamQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+	});
+}
+
+
+void Database::FlagForBan(uint64_t user)
+{
+	PerformTransaction([&]() {
+		if (sqlite3_reset(m_flagForBanQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_bind_int64(m_flagForBanQuery, 1, user))
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_step(m_flagForBanQuery) != SQLITE_DONE)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_clear_bindings(m_flagForBanQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+	});
+}
+
+
+void Database::BanWave()
+{
+	PerformTransaction([&]() {
+		if (sqlite3_reset(m_banWaveQuery) != SQLITE_OK)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_step(m_banWaveQuery) != SQLITE_DONE)
+			throw DatabaseException(sqlite3_errmsg(m_db));
+		if (sqlite3_clear_bindings(m_banWaveQuery) != SQLITE_OK)
 			throw DatabaseException(sqlite3_errmsg(m_db));
 	});
 }

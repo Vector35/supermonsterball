@@ -1,5 +1,6 @@
 #pragma once
 
+#include <time.h>
 #include "player.h"
 #include "database.h"
 #include "battle.h"
@@ -20,8 +21,9 @@ class ServerPlayer: public Player
 	std::shared_ptr<Monster> m_encounter;
 	bool m_seedGiven;
 	std::shared_ptr<PitBattle> m_battle;
-	bool m_flaggedForBan;
+	bool m_flaggedForBan, m_banned;
 	std::string m_banReason;
+	time_t m_lastSavedLocation;
 
 	void EndEncounter(bool caught, ItemType ball = ITEM_STANDARD_BALL);
 	void EarnExperience(uint32_t xp);
@@ -92,4 +94,8 @@ public:
 
 	virtual std::string GetLevel40Flag() override;
 	virtual std::string GetCatchEmAllFlag() override;
+
+	void FlagForBan(const std::string& reason);
+	void BanWave();
+	bool IsBanned() const { return m_banned; }
 };

@@ -10,7 +10,8 @@
 #define SCANNER_RADIUS 100
 #define CAPTURE_RADIUS 15
 
-#define DEFAULT_SPAWN_TIME (15 * 60)
+#define DEFAULT_SPAWN_TIME (5 * 60)
+#define MONSTER_SPAWN_RESET_INTERVAL (10 * 60)
 
 #define PIT_OF_DOOM_X (-26)
 #define PIT_OF_DOOM_Y 16
@@ -85,6 +86,7 @@ public:
 	std::vector<SpawnPoint> GetSpawnPointsInRange(int32_t x, int32_t y);
 	bool GetSpawnPointAt(int32_t x, int32_t y, SpawnPoint& spawn);
 	std::shared_ptr<Monster> GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLevel);
+	MonsterSpecies* GetSpeciesForSpawnPoint(const SpawnPoint& spawn, uint32_t& spawnTime);
 
 	uint8_t GetMapTile(int32_t x, int32_t y);
 

@@ -181,7 +181,7 @@ World::World(Database* db)
 				SpawnPoint s;
 				s.x = x - (MAP_SIZE / 2);
 				s.y = y - (MAP_SIZE / 2);
-				s.timeOffset = timeValue % 3600;
+				s.timeOffset = timeValue % MONSTER_SPAWN_RESET_INTERVAL;
 				s.timeActive = DEFAULT_SPAWN_TIME;
 				s.biome = Biome::GetByName(spawnType);
 				AddSpawnPoint(s);
@@ -391,12 +391,12 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 
 	// Is spawn point currently active?
 	time_t t = time(NULL);
-	uint32_t hour = (uint32_t)(t / 3600);
-	uint32_t curTimeOffset = (uint32_t)(t % 3600);
+	uint32_t hour = (uint32_t)(t / MONSTER_SPAWN_RESET_INTERVAL);
+	uint32_t curTimeOffset = (uint32_t)(t % MONSTER_SPAWN_RESET_INTERVAL);
 	uint32_t spawnTimeOffset = spawn.timeOffset;
 	if (curTimeOffset < spawnTimeOffset)
 	{
-		curTimeOffset += 3600;
+		curTimeOffset += MONSTER_SPAWN_RESET_INTERVAL;
 		hour--;
 	}
 
@@ -450,6 +450,48 @@ shared_ptr<Monster> World::GetMonsterAt(int32_t x, int32_t y, uint32_t trainerLe
 		cur += i.weight;
 	}
 	return shared_ptr<Monster>();
+}
+
+
+MonsterSpecies* World::GetSpeciesForSpawnPoint(const SpawnPoint& spawn, uint32_t& spawnTime)
+{
+	// Is spawn point currently active?
+	time_t t = time(NULL);
+	uint32_t hour = (uint32_t)(t / MONSTER_SPAWN_RESET_INTERVAL);
+	uint32_t curTimeOffset = (uint32_t)(t % MONSTER_SPAWN_RESET_INTERVAL);
+	uint32_t spawnTimeOffset = spawn.timeOffset;
+	if (curTimeOffset < spawnTimeOffset)
+	{
+		curTimeOffset += MONSTER_SPAWN_RESET_INTERVAL;
+		hour--;
+	}
+
+	if (curTimeOffset > (spawnTimeOffset + spawn.timeActive))
+		return nullptr;
+
+	// Get total weighting of biome spawns
+	uint32_t total = 0;
+	for (auto& i : spawn.biome->spawns)
+		total += i.weight;
+
+	// Pick spawn parameters based on coordinates and current time
+	uint64_t seed = (((uint64_t)spawn.x * 694847539LL) + ((uint64_t)spawn.y * 91939LL) +
+		((uint64_t)hour * 349LL)) + 92893LL;
+	uint64_t n = ((uint64_t)seed * 25214903917LL) + 11LL;
+	uint32_t pick = (uint32_t)((n >> 16) % (uint64_t)total);
+
+	// Find the chosen spawn out of the possible spawns and return result
+	uint32_t cur = 0;
+	for (auto& i : spawn.biome->spawns)
+	{
+		if (pick < (cur + i.weight))
+		{
+			spawnTime = hour;
+			return i.species;
+		}
+		cur += i.weight;
+	}
+	return nullptr;
 }
 
 

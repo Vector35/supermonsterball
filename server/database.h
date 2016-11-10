@@ -75,6 +75,8 @@ class Database
 	sqlite3_stmt* m_setExperienceQuery;
 	sqlite3_stmt* m_setPowderQuery;
 	sqlite3_stmt* m_setTeamQuery;
+	sqlite3_stmt* m_flagForBanQuery;
+	sqlite3_stmt* m_banWaveQuery;
 
 	sqlite3_stmt* m_readPitQuery;
 	sqlite3_stmt* m_writePitQuery;
@@ -119,6 +121,8 @@ public:
 	void SetExperience(uint64_t user, uint32_t level, uint32_t xp);
 	void SetPowder(uint64_t user, uint32_t powder);
 	void SetTeam(uint64_t user, Team team);
+	void FlagForBan(uint64_t user);
+	void BanWave();
 
 	PitStatus GetPitStatus(int32_t x, int32_t y);
 	void SetPitStatus(const PitStatus& pit);

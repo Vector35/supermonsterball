@@ -1,3 +1,5 @@
+//#define DEBUG_FAST_LEVEL
+
 #include <cstdlib>
 #include <set>
 #include "serverplayer.h"
@@ -15,6 +17,8 @@ ServerPlayer::ServerPlayer(const string& name, uint64_t id): m_name(name)
 	m_x = SPAWN_X;
 	m_y = SPAWN_Y;
 	m_team = TEAM_UNASSIGNED;
+	m_flaggedForBan = false;
+	m_banned = false;
 	m_banReason = "Unknown, try again with another account";
 
 	m_inventory[ITEM_STANDARD_BALL] = 20;
@@ -33,6 +37,8 @@ ServerPlayer::ServerPlayer(const string& name, const DatabaseLoginResult& login)
 	m_x = login.x;
 	m_y = login.y;
 	m_team = login.team;
+	m_flaggedForBan = false;
+	m_banned = false;
 	m_banReason = "Unknown, try again with another account";
 
 	map<uint32_t, uint32_t> inventory = Database::GetDatabase()->GetInventory(m_id);
@@ -118,9 +124,23 @@ bool ServerPlayer::UseItem(ItemType type)
 
 void ServerPlayer::ReportLocation(int32_t x, int32_t y)
 {
+	int32_t maxDiff = 2 * (5000 / MIN_MOVEMENT_INTERVAL);
+	if (((x - m_x) < -maxDiff) || ((x - m_x) > maxDiff) || ((y - m_y) < -maxDiff) || ((y - m_y) > maxDiff))
+	{
+		if (!m_flaggedForBan)
+			printf("Player %s teleported from %d, %d to %d, %d\n", m_name.c_str(), m_x, m_y, x, y);
+		FlagForBan("Location spoofing");
+	}
+
 	m_x = x;
 	m_y = y;
-	Database::GetDatabase()->SetLocation(m_id, x, y);
+
+	time_t cur = time(NULL);
+	if (cur != m_lastSavedLocation)
+	{
+		Database::GetDatabase()->SetLocation(m_id, x, y);
+		m_lastSavedLocation = cur;
+	}
 }
 
 
@@ -130,12 +150,13 @@ vector<MonsterSighting> ServerPlayer::GetMonstersInRange()
 	vector<MonsterSighting> result;
 	for (auto& i : spawns)
 	{
-		shared_ptr<Monster> monster = World::GetWorld()->GetMonsterAt(i.x, i.y, m_level);
-		if (monster)
+		uint32_t spawnTime;
+		MonsterSpecies* species = World::GetWorld()->GetSpeciesForSpawnPoint(i, spawnTime);
+		if (species)
 		{
 			// Ensure the monster hasn't already been encountered
 			bool valid = true;
-			auto j = m_recentEncounters.find(monster->GetSpawnTime());
+			auto j = m_recentEncounters.find(spawnTime);
 			if (j != m_recentEncounters.end())
 			{
 				for (auto& k : j->second)
@@ -153,7 +174,7 @@ vector<MonsterSighting> ServerPlayer::GetMonstersInRange()
 				continue;
 
 			MonsterSighting sighting;
-			sighting.species = monster->GetSpecies();
+			sighting.species = species;
 			sighting.x = i.x;
 			sighting.y = i.y;
 			result.push_back(sighting);
@@ -170,6 +191,9 @@ shared_ptr<Monster> ServerPlayer::StartWildEncounter(int32_t x, int32_t y)
 		return nullptr;
 
 	m_encounter = World::GetWorld()->GetMonsterAt(x, y, m_level);
+	if (!m_encounter)
+		return nullptr;
+
 	m_encounter->SetOwner(m_id, m_name);
 	m_seedGiven = false;
 	return m_encounter;
@@ -250,10 +274,17 @@ BallThrowResult ServerPlayer::ThrowBall(ItemType type)
 	switch (result)
 	{
 	case THROW_RESULT_CATCH:
+#ifdef DEBUG_FAST_LEVEL
 		if (GetNumberCaptured(m_encounter->GetSpecies()) == 0)
-			EarnExperience(600);
+			EarnExperience(14000);
 		else
-			EarnExperience(100);
+			EarnExperience(4000);
+#else
+		if (GetNumberCaptured(m_encounter->GetSpecies()) == 0)
+			EarnExperience(1400);
+		else
+			EarnExperience(400);
+#endif
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
 		Database::GetDatabase()->SetMonsterSeenCount(m_id, m_encounter->GetSpecies()->GetIndex(),
 			m_seen[m_encounter->GetSpecies()->GetIndex()]);
@@ -328,10 +359,17 @@ bool ServerPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
 	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()] -= monster->GetSpecies()->GetEvolutionCost();
 	monster->Evolve();
 
+#ifdef DEBUG_FAST_LEVEL
 	if (GetNumberCaptured(monster->GetSpecies()) == 0)
-		EarnExperience(1000);
+		EarnExperience(20000);
 	else
-		EarnExperience(500);
+		EarnExperience(10000);
+#else
+	if (GetNumberCaptured(monster->GetSpecies()) == 0)
+		EarnExperience(2000);
+	else
+		EarnExperience(1000);
+#endif
 	m_seen[monster->GetSpecies()->GetIndex()]++;
 	Database::GetDatabase()->SetMonsterSeenCount(m_id, monster->GetSpecies()->GetIndex(),
 		m_seen[monster->GetSpecies()->GetIndex()]);
@@ -385,7 +423,7 @@ bool ServerPlayer::IsStopAvailable(int32_t x, int32_t y)
 		return false;
 	for (auto& i : m_recentStopsVisited)
 	{
-		if ((i.x == x) && (i.y == y) && ((time(NULL) - i.visitTime) < 300))
+		if ((i.x == x) && (i.y == y) && ((time(NULL) - i.visitTime) < STOP_COOLDOWN))
 			return false;
 	}
 	return true;
@@ -400,7 +438,7 @@ map<ItemType, uint32_t> ServerPlayer::GetItemsFromStop(int32_t x, int32_t y)
 	// Clear out old visits from recent list
 	for (size_t i = 0; i < m_recentStopsVisited.size(); )
 	{
-		if ((m_recentStopsVisited[i].visitTime - time(NULL)) > 300)
+		if ((m_recentStopsVisited[i].visitTime - time(NULL)) > STOP_COOLDOWN)
 		{
 			m_recentStopsVisited.erase(m_recentStopsVisited.begin() + i);
 			continue;
@@ -629,7 +667,7 @@ uint32_t ServerPlayer::EndPitBattle()
 			reputationChange);
 	}
 
-	EarnExperience(reputationChange / 10);
+	EarnExperience(reputationChange / 2);
 	return reputationChange;
 }
 
@@ -680,4 +718,25 @@ string ServerPlayer::GetCatchEmAllFlag()
 	if (m_flaggedForBan)
 		return string("Cheater! You were caught: ") + m_banReason;
 	return "CSAW{ImDaBestLikeNo1EvarWuz}";
+}
+
+
+void ServerPlayer::BanWave()
+{
+	if (m_flaggedForBan && (!m_banned))
+	{
+		printf("Player %s banned during ban wave\n", m_name.c_str());
+		m_banned = true;
+	}
+}
+
+
+void ServerPlayer::FlagForBan(const string& reason)
+{
+	if (m_flaggedForBan)
+		return;
+	m_flaggedForBan = true;
+	m_banReason = reason;
+	Database::GetDatabase()->FlagForBan(m_id);
+	printf("Player %s has pending ban for %s\n", m_name.c_str(), reason.c_str());
 }

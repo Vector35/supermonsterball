@@ -30,6 +30,20 @@ static void HandleConnection(SSL* ssl, int s)
 }
 
 
+static void BanWaveLoop()
+{
+	while (true)
+	{
+		sleep(600);
+
+		ProcessingThread::Instance()->Process([&]() {
+			Database::GetDatabase()->BanWave();
+			ClientHandler::BanWave();
+		});
+	}
+}
+
+
 static void ThreadIdCallback(CRYPTO_THREADID* id)
 {
 	CRYPTO_THREADID_set_pointer(id, (void*)pthread_self());
@@ -109,6 +123,9 @@ int main(int argc, char* argv[])
 		fprintf(stderr, "Unable to listen on port %d\n", SERVER_PORT);
 		return 1;
 	}
+
+	thread banThread(BanWaveLoop);
+	banThread.detach();
 
 	// Start connection loop
 	ProcessingThread processing;

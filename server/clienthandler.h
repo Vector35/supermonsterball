@@ -55,4 +55,5 @@ public:
 	void ProcessRequests();
 
 	static std::shared_ptr<ServerPlayer> GetPlayerByID(uint64_t id);
+	static void BanWave();
 };

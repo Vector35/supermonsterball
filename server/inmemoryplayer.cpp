@@ -247,9 +247,9 @@ BallThrowResult InMemoryPlayer::ThrowBall(ItemType type)
 	{
 	case THROW_RESULT_CATCH:
 		if (GetNumberCaptured(m_encounter->GetSpecies()) == 0)
-			EarnExperience(600);
+			EarnExperience(1400);
 		else
-			EarnExperience(100);
+			EarnExperience(400);
 		m_seen[m_encounter->GetSpecies()->GetIndex()]++;
 		m_captured[m_encounter->GetSpecies()->GetIndex()]++;
 		m_treats[m_encounter->GetSpecies()->GetBaseForm()->GetIndex()] += 3;
@@ -307,9 +307,9 @@ bool InMemoryPlayer::EvolveMonster(std::shared_ptr<Monster> monster)
 	monster->Evolve();
 
 	if (GetNumberCaptured(monster->GetSpecies()) == 0)
-		EarnExperience(1000);
+		EarnExperience(2000);
 	else
-		EarnExperience(500);
+		EarnExperience(1000);
 	m_seen[monster->GetSpecies()->GetIndex()]++;
 	m_captured[monster->GetSpecies()->GetIndex()]++;
 	m_treats[monster->GetSpecies()->GetBaseForm()->GetIndex()]++;
@@ -349,7 +349,7 @@ bool InMemoryPlayer::IsStopAvailable(int32_t x, int32_t y)
 		return false;
 	for (auto& i : m_recentStopsVisited)
 	{
-		if ((i.x == x) && (i.y == y) && ((time(NULL) - i.visitTime) < 300))
+		if ((i.x == x) && (i.y == y) && ((time(NULL) - i.visitTime) < STOP_COOLDOWN))
 			return false;
 	}
 	return true;
@@ -364,7 +364,7 @@ map<ItemType, uint32_t> InMemoryPlayer::GetItemsFromStop(int32_t x, int32_t y)
 	// Clear out old visits from recent list
 	for (size_t i = 0; i < m_recentStopsVisited.size(); )
 	{
-		if ((m_recentStopsVisited[i].visitTime - time(NULL)) > 300)
+		if ((m_recentStopsVisited[i].visitTime - time(NULL)) > STOP_COOLDOWN)
 		{
 			m_recentStopsVisited.erase(m_recentStopsVisited.begin() + i);
 			continue;
@@ -567,6 +567,8 @@ uint32_t InMemoryPlayer::EndPitBattle()
 		reputationChange = World::GetWorld()->RemovePitReputation(m_battle->GetPitX(), m_battle->GetPitY(),
 			reputationChange);
 	}
+
+	EarnExperience(reputationChange / 2);
 	return reputationChange;
 }
 

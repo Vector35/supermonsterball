@@ -626,7 +626,7 @@ static void PitBattle(Player* player, MapRenderer* map, vector<shared_ptr<Monste
 
 		if (reputation >= 10)
 		{
-			sprintf(msg, " earned %d XP.", reputation / 10);
+			sprintf(msg, " earned %d XP.", reputation / 2);
 			ShowBattleText(x, y, width, height, player->GetName() + msg);
 		}
 	}

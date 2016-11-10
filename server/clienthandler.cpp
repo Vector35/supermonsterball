@@ -1,5 +1,6 @@
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include "clienthandler.h"
 #include "processingthread.h"
 #include "database.h"
@@ -558,6 +559,8 @@ void ClientHandler::GetItemsFromStop(const string& msg)
 		if (!m_player)
 			throw SocketException("No active player");
 
+		m_player->ReportLocation(request.x(), request.y());
+
 		map<ItemType, uint32_t> items = m_player->GetItemsFromStop(request.x(), request.y());
 		for (auto& i : items)
 		{
@@ -939,6 +942,14 @@ void ClientHandler::ProcessRequests()
 			if (!request.ParseFromString(requestString))
 				throw SocketException("Bad request format");
 
+			bool ban = false;
+			ProcessingThread::Instance()->Process([&]() {
+				if (m_player && m_player->IsBanned())
+					ban = true;
+			});
+			if (ban)
+				break;
+
 			switch (request.type())
 			{
 			case Request_RequestType_Login:
@@ -1063,4 +1074,12 @@ shared_ptr<ServerPlayer> ClientHandler::GetPlayerByID(uint64_t id)
 	shared_ptr<ServerPlayer> player(new ServerPlayer(name, result));
 	m_playerCache[result.id] = player;
 	return player;
+}
+
+
+void ClientHandler::BanWave()
+{
+	unique_lock<mutex> lock(m_playerCacheMutex);
+	for (auto& i : m_playerCache)
+		i.second->BanWave();
 }

@@ -427,7 +427,7 @@ while len(captured_set) < 103:
             if resp.result == ThrowBallResponse.THROW_RESULT_RUN_AWAY_AFTER_THREE:
                 break
 
-print "Cathing them all took %d seconds" % int(time.time() - start_time)
+print "Catching them all took %d seconds" % int(time.time() - start_time)
 
 # Grab the flag
 send_request(s, Request.GetCatchEmAllFlag)

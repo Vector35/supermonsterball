@@ -176,7 +176,7 @@ static void AnimateThrow(size_t x, size_t y, size_t width, const std::string& it
 
 		term->BeginOutputQueue();
 		term->SetCursorPosition(curX, sourceY + yOffset);
-		term->Output(" ");
+		term->Output("  ");
 	}
 
 	term->EndOutputQueue();

@@ -1,3 +1,5 @@
+#define DEBUG_NO_RATE_LIMIT
+
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -935,6 +937,11 @@ void ClientHandler::ProcessRequests()
 {
 	try
 	{
+#ifndef DEBUG_NO_RATE_LIMIT
+		time_t lastRequest = time(NULL);
+		size_t requestCount = 0;
+#endif
+
 		while (true)
 		{
 			string requestString = ReadRequestPacket();
@@ -949,6 +956,18 @@ void ClientHandler::ProcessRequests()
 			});
 			if (ban)
 				break;
+
+#ifndef DEBUG_NO_RATE_LIMIT
+			time_t curTime = time(NULL);
+			if (curTime != lastRequest)
+			{
+				requestCount = 0;
+				lastRequest = curTime;
+			}
+			requestCount++;
+			if (requestCount > 20)
+				usleep(50000);
+#endif
 
 			switch (request.type())
 			{

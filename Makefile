@@ -25,9 +25,21 @@ server/sqlite3.o: server/sqlite3.c
 
 game_client: $(COMMON_OBJS) $(CLIENT_OBJS) game_client.o common/request.pb.o Makefile
 	g++ $(CFLAGS) $(LDFLAGS) -std=c++11 -o $@ $(COMMON_OBJS) $(CLIENT_OBJS) game_client.o common/request.pb.o -lprotobuf -lssl -lcrypto
+ifeq ($(HOST),Darwin)
+	install_name_tool -add_rpath "@executable_path" game_client
+	install_name_tool -change /usr/local/lib/libprotobuf.10.dylib "@executable_path/libprotobuf.10.dylib" game_client
+	install_name_tool -change /usr/local/lib/libssl.1.1.dylib "@executable_path/libssl.1.1.dylib" game_client
+	install_name_tool -change /usr/local/lib/libcrypto.1.1.dylib "@executable_path/libcrypto.1.1.dylib" game_client
+endif
 
 game_server: $(COMMON_OBJS) $(SERVER_OBJS) server/sqlite3.o game_server.o common/request.pb.o Makefile
 	g++ $(CFLAGS) $(LDFLAGS) -std=c++11 -o $@ $(COMMON_OBJS) $(SERVER_OBJS) server/sqlite3.o game_server.o common/request.pb.o -lprotobuf -lssl -lcrypto -lpthread -ldl
+ifeq ($(HOST),Darwin)
+	install_name_tool -add_rpath "@executable_path" game_server
+	install_name_tool -change /usr/local/lib/libprotobuf.10.dylib "@executable_path/libprotobuf.10.dylib" game_server
+	install_name_tool -change /usr/local/lib/libssl.1.1.dylib "@executable_path/libssl.1.1.dylib" game_server
+	install_name_tool -change /usr/local/lib/libcrypto.1.1.dylib "@executable_path/libcrypto.1.1.dylib" game_server
+endif
 
 standalone: $(COMMON_OBJS) $(CLIENT_OBJS) $(SERVER_OBJS) server/sqlite3.o standalone.o
 	g++ $(CFLAGS) $(LDFLAGS) -std=c++11 -o $@ $(COMMON_OBJS) $(CLIENT_OBJS) $(SERVER_OBJS) server/sqlite3.o standalone.o common/request.pb.o -lprotobuf -lssl -lcrypto -lpthread -ldl
